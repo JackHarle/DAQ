@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#667eea">
+  <title>Suspension Packing Analyzer</title>
+  <link rel="manifest" href="manifest.json">
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <style>
+    :root {
+      --primary: #667eea;
+      --primary-dark: #5a67d8;
+      --success: #48bb78;
+      --warning: #ed8936;
+      --danger: #f56565;
+      --bg: #f7fafc;
+      --card: #ffffff;
+      --text: #2d3748;
+      --text-light: #718096;
+      --border: #e2e8f0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 16px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 { font-size: 1.5rem; margin-bottom: 16px; color: var(--primary); }
+    h2 { font-size: 1.2rem; margin: 16px 0 8px; color: var(--text); }
+    h3 { font-size: 1rem; margin: 12px 0 6px; color: var(--text-light); }
+
+    .card {
+      background: var(--card);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .grid { display: grid; gap: 12px; }
+    .grid-2 { grid-template-columns: 1fr 1fr; }
+    .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+    @media (max-width: 600px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    }
+
+    label { display: block; font-size: 0.875rem; color: var(--text-light); margin-bottom: 4px; }
+
+    input, select {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    .btn-primary:hover { background: var(--primary-dark); }
+
+    .btn-secondary {
+      background: var(--border);
+      color: var(--text);
+    }
+    .btn-secondary:hover { background: #cbd5e0; }
+
+    .btn-group { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+
+    .file-input {
+      border: 2px dashed var(--border);
+      padding: 20px;
+      text-align: center;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .file-input:hover { border-color: var(--primary); }
+    .file-input input { display: none; }
+
+    .status { padding: 8px 12px; border-radius: 6px; margin: 8px 0; }
+    .status.info { background: #ebf8ff; color: #2b6cb0; }
+    .status.success { background: #f0fff4; color: #276749; }
+    .status.error { background: #fff5f5; color: #c53030; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    th { background: var(--bg); font-weight: 600; }
+
+    .rating-box {
+      text-align: center;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+    .rating-box .score { font-size: 3rem; font-weight: bold; }
+    .rating-box .label { font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; }
+
+    .rating-excellent { background: linear-gradient(135deg, #48bb78, #38a169); color: white; }
+    .rating-good { background: linear-gradient(135deg, #68d391, #48bb78); color: white; }
+    .rating-moderate { background: linear-gradient(135deg, #ed8936, #dd6b20); color: white; }
+    .rating-poor { background: linear-gradient(135deg, #f56565, #e53e3e); color: white; }
+    .rating-critical { background: linear-gradient(135deg, #c53030, #9b2c2c); color: white; }
+
+    .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+    .metric {
+      background: var(--bg);
+      padding: 12px;
+      border-radius: 6px;
+      text-align: center;
+    }
+    .metric .value { font-size: 1.5rem; font-weight: bold; color: var(--primary); }
+    .metric .label { font-size: 0.75rem; color: var(--text-light); }
+
+    .chart-container { width: 100%; height: 400px; }
+
+    .collapsible { cursor: pointer; user-select: none; }
+    .collapsible::before { content: '▶ '; font-size: 0.8em; }
+    .collapsible.open::before { content: '▼ '; }
+    .collapsible-content { display: none; }
+    .collapsible-content.open { display: block; }
+
+    .tabs { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 16px; }
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+    }
+    .tab.active { border-bottom-color: var(--primary); color: var(--primary); font-weight: 600; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    #installButton { display: none; }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <h1>Suspension Packing Analyzer</h1>
+
+  <!-- Data Loading Section -->
+  <div class="card">
+    <h2>1. Load Data</h2>
+    <div class="grid grid-2">
+      <div>
+        <label class="file-input">
+          <input type="file" id="fileInput" accept=".csv">
+          <div>📁 Click to select CSV file</div>
+          <div style="font-size:0.875rem;color:var(--text-light);margin-top:8px;">or drag and drop</div>
+        </label>
+      </div>
+      <div>
+        <label>Or fetch from ESP32:</label>
+        <input type="text" id="espUrl" value="http://192.168.4.1/data.csv" placeholder="ESP32 URL">
+        <div class="btn-group">
+          <button class="btn-secondary" onclick="fetchFromESP()">Fetch from ESP</button>
+        </div>
+      </div>
+    </div>
+    <div id="loadStatus" class="status info hidden"></div>
+  </div>
+
+  <!-- Setup Parameters Section -->
+  <div class="card">
+    <h2>2. Setup Parameters</h2>
+
+    <h3>Suspension Travel</h3>
+    <div class="grid grid-3">
+      <div>
+        <label>Front Travel (mm)</label>
+        <input type="number" id="frontTravel" value="150" min="50" max="300">
+      </div>
+      <div>
+        <label>Rear Travel (mm)</label>
+        <input type="number" id="rearTravel" value="150" min="50" max="300">
+      </div>
+      <div>
+        <label>Sag Percentage (%)</label>
+        <input type="number" id="sagPercent" value="30" min="10" max="50">
+      </div>
+    </div>
+
+    <h3>ADC to mm Conversion</h3>
+    <div class="grid grid-2">
+      <div>
+        <label>Front Pot Stroke (mm)</label>
+        <input type="number" id="frontPotStroke" value="225" step="1" min="0">
+        <small style="color:var(--text-light);">Physical travel of front potentiometer</small>
+      </div>
+      <div>
+        <label>Rear Pot Stroke (mm)</label>
+        <input type="number" id="rearPotStroke" value="85" step="1" min="0">
+        <small style="color:var(--text-light);">Physical travel of rear shock potentiometer</small>
+      </div>
+    </div>
+
+    <h3>Rear Linkage: Shock → Wheel Travel</h3>
+    <div style="background:var(--bg);padding:12px;border-radius:6px;">
+      <label>Cubic Polynomial Coefficients</label>
+      <div class="grid grid-2" style="margin-top:4px;gap:8px;">
+        <div>
+          <small style="color:var(--text-light);">a (constant)</small>
+          <input type="number" id="rearA" value="0" step="0.0001">
+        </div>
+        <div>
+          <small style="color:var(--text-light);">b (linear)</small>
+          <input type="number" id="rearB" value="2.8574" step="0.0001">
+        </div>
+        <div>
+          <small style="color:var(--text-light);">c (x²)</small>
+          <input type="number" id="rearC" value="0" step="0.000001">
+        </div>
+        <div>
+          <small style="color:var(--text-light);">d (x³)</small>
+          <input type="number" id="rearD" value="0" step="0.00000001">
+        </div>
+      </div>
+      <small style="color:var(--text-light);display:block;margin-top:8px;">
+        Conversion: ADC → shock_mm = ADC × (pot_stroke / 4095)<br>
+        Then: wheel_mm = a + b×shock + c×shock² + d×shock³
+      </small>
+      <div style="margin-top:8px;">
+        <label class="file-input" style="padding:10px;border-width:1px;">
+          <input type="file" id="linkageInput" accept=".csv,.txt" onchange="loadLinkageCSV(event)">
+          <span>📊 Upload Linkage CSV to auto-calculate coefficients</span>
+        </label>
+      </div>
+      <div id="linkageStatus" class="status info hidden" style="margin-top:8px;"></div>
+    </div>
+
+    <h3>Time Trim (Optional)</h3>
+    <div class="grid grid-3">
+      <div>
+        <label>Start Time (s)</label>
+        <input type="number" id="trimStart" value="0" min="0" step="0.1">
+      </div>
+      <div>
+        <label>End Time (s)</label>
+        <input type="number" id="trimEnd" value="" placeholder="Auto">
+      </div>
+      <div style="display:flex;align-items:end;gap:12px;">
+        <label><input type="checkbox" id="invertFront"> Invert Front</label>
+        <label><input type="checkbox" id="invertRear"> Invert Rear</label>
+      </div>
+    </div>
+
+    <h3 class="collapsible" onclick="toggleCollapsible(this)">Advanced Packing Detection Settings</h3>
+    <div class="collapsible-content">
+      <div class="grid grid-3">
+        <div>
+          <label>Extension Threshold (mm)</label>
+          <input type="number" id="extensionThreshold" value="15" min="0">
+        </div>
+        <div>
+          <label>Packed Threshold (mm)</label>
+          <input type="number" id="packedThreshold" value="20" min="0">
+        </div>
+        <div>
+          <label>Min Packed Hits</label>
+          <input type="number" id="minPackedHits" value="3" min="2">
+        </div>
+        <div>
+          <label>Stuck Threshold (mm)</label>
+          <input type="number" id="stuckThreshold" value="8" min="0">
+        </div>
+        <div>
+          <label>Ratchet Delta (mm)</label>
+          <input type="number" id="ratchetDelta" value="5" min="0">
+        </div>
+        <div>
+          <label>Velocity Threshold (mm/s)</label>
+          <input type="number" id="velocityThreshold" value="50" min="0">
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn-primary" onclick="runAnalysis()">Analyze Data</button>
+      <button class="btn-secondary" onclick="resetAll()">Reset</button>
+      <button id="installButton" class="btn-secondary" onclick="installApp()">Install App</button>
+    </div>
+  </div>
+
+  <!-- Results Section -->
+  <div id="resultsSection" class="hidden">
+
+    <!-- Overall Rating -->
+    <div id="ratingBox" class="card rating-box rating-moderate">
+      <div class="score" id="packingScore">--</div>
+      <div class="label" id="packingRating">Loading...</div>
+    </div>
+
+    <!-- Metrics Summary -->
+    <div class="card">
+      <h2>Packing Summary</h2>
+      <div class="metric-grid">
+        <div class="metric">
+          <div class="value" id="metricRatio">--</div>
+          <div class="label">Packing Ratio %</div>
+        </div>
+        <div class="metric">
+          <div class="value" id="metricAvgSeverity">--</div>
+          <div class="label">Avg Severity</div>
+        </div>
+        <div class="metric">
+          <div class="value" id="metricWorstSeverity">--</div>
+          <div class="label">Worst Event</div>
+        </div>
+        <div class="metric">
+          <div class="value" id="metricTimePercent">--</div>
+          <div class="label">Time Packed %</div>
+        </div>
+        <div class="metric">
+          <div class="value" id="metricEvents">--</div>
+          <div class="label">Packing Events</div>
+        </div>
+        <div class="metric">
+          <div class="value" id="metricImpacts">--</div>
+          <div class="label">Total Impacts</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs for Charts/Tables -->
+    <div class="card">
+      <div class="tabs">
+        <div class="tab active" onclick="showTab('charts')">Charts</div>
+        <div class="tab" onclick="showTab('stats')">Statistics</div>
+        <div class="tab" onclick="showTab('events')">Events</div>
+      </div>
+
+      <div id="tab-charts" class="tab-content active">
+        <h3>Position vs Time</h3>
+        <div id="positionChart" class="chart-container"></div>
+
+        <h3>Velocity vs Time</h3>
+        <div id="velocityChart" class="chart-container"></div>
+      </div>
+
+      <div id="tab-stats" class="tab-content">
+        <h3>Front Suspension Statistics</h3>
+        <table id="frontStatsTable"></table>
+
+        <h3>Rear Suspension Statistics</h3>
+        <table id="rearStatsTable"></table>
+      </div>
+
+      <div id="tab-events" class="tab-content">
+        <h3>Packing Events Detail</h3>
+        <table id="eventsTable"></table>
+      </div>
+    </div>
+
+    <!-- Export -->
+    <div class="card">
+      <h2>Export Results</h2>
+      <div class="btn-group">
+        <button class="btn-secondary" onclick="exportJSON()">Download JSON</button>
+        <button class="btn-secondary" onclick="copyToClipboard()">Copy Summary</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==================== GLOBAL STATE ====================
+    let rawData = [];
+    let processedData = [];
+    let impacts = { front: [], rear: [] };
+    let packingEvents = { front: [], rear: [] };
+    let analysisResults = null;
+
+    // ==================== DATA LOADING ====================
+    document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+
+    // Drag and drop
+    const fileLabel = document.querySelector('.file-input');
+    fileLabel.addEventListener('dragover', (e) => { e.preventDefault(); fileLabel.style.borderColor = 'var(--primary)'; });
+    fileLabel.addEventListener('dragleave', () => { fileLabel.style.borderColor = 'var(--border)'; });
+    fileLabel.addEventListener('drop', (e) => {
+      e.preventDefault();
+      fileLabel.style.borderColor = 'var(--border)';
+      if (e.dataTransfer.files.length) {
+        document.getElementById('fileInput').files = e.dataTransfer.files;
+        handleFileSelect({ target: { files: e.dataTransfer.files } });
+      }
+    });
+
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      showStatus('Loading file...', 'info');
+
+      Papa.parse(file, {
+        header: true,
+        dynamicTyping: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          rawData = results.data;
+          showStatus(`Loaded ${rawData.length} samples from ${file.name}`, 'success');
+          updateTrimEnd();
+        },
+        error: (err) => {
+          showStatus(`Error parsing CSV: ${err.message}`, 'error');
+        }
+      });
+    }
+
+    function fetchFromESP() {
+      const url = document.getElementById('espUrl').value;
+      showStatus('Fetching from ESP32...', 'info');
+
+      fetch(url)
+        .then(response => {
+          if (!response.ok) throw new Error('Network error');
+          return response.text();
+        })
+        .then(csvText => {
+          Papa.parse(csvText, {
+            header: true,
+            dynamicTyping: true,
+            skipEmptyLines: true,
+            complete: (results) => {
+              rawData = results.data;
+              showStatus(`Loaded ${rawData.length} samples from ESP32`, 'success');
+              updateTrimEnd();
+            }
+          });
+        })
+        .catch(err => {
+          showStatus(`Failed to fetch: ${err.message}. Make sure you're connected to ESP32 WiFi.`, 'error');
+        });
+    }
+
+    function updateTrimEnd() {
+      if (rawData.length > 0) {
+        const maxTime = Math.max(...rawData.map(d => d.time || 0));
+        document.getElementById('trimEnd').placeholder = maxTime.toFixed(2);
+      }
+    }
+
+    // ==================== LINKAGE CSV LOADING ====================
+    function loadLinkageCSV(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const statusEl = document.getElementById('linkageStatus');
+      statusEl.textContent = 'Loading linkage data...';
+      statusEl.className = 'status info';
+      statusEl.classList.remove('hidden');
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const text = event.target.result;
+        const lines = text.trim().split('\n');
+
+        const shockData = [];
+        const wheelData = [];
+
+        // Skip header line, parse data
+        for (let i = 1; i < lines.length; i++) {
+          const parts = lines[i].split(/[\t,]/);
+          if (parts.length >= 2) {
+            const shock = parseFloat(parts[0]);
+            const wheel = parseFloat(parts[1]);
+            if (!isNaN(shock) && !isNaN(wheel)) {
+              shockData.push(shock);
+              wheelData.push(wheel);
+            }
+          }
+        }
+
+        if (shockData.length < 4) {
+          statusEl.textContent = 'Need at least 4 data points';
+          statusEl.className = 'status error';
+          return;
+        }
+
+        // Fit cubic polynomial using least squares
+        const coeffs = fitPolynomial(shockData, wheelData, 3);
+
+        // Fill in the fields (coeffs are [d, c, b, a] from highest to lowest)
+        document.getElementById('rearA').value = coeffs[3].toFixed(6);
+        document.getElementById('rearB').value = coeffs[2].toFixed(6);
+        document.getElementById('rearC').value = coeffs[1].toFixed(8);
+        document.getElementById('rearD').value = coeffs[0].toFixed(10);
+
+        // Calculate fit quality
+        let maxError = 0;
+        let sumSqError = 0;
+        for (let i = 0; i < shockData.length; i++) {
+          const predicted = coeffs[3] + coeffs[2]*shockData[i] + coeffs[1]*shockData[i]**2 + coeffs[0]*shockData[i]**3;
+          const error = Math.abs(wheelData[i] - predicted);
+          maxError = Math.max(maxError, error);
+          sumSqError += error * error;
+        }
+        const rmsError = Math.sqrt(sumSqError / shockData.length);
+
+        // Also set rear travel from max wheel value
+        const maxWheel = Math.max(...wheelData);
+        document.getElementById('rearTravel').value = Math.round(maxWheel);
+
+        statusEl.textContent = `Loaded ${shockData.length} points. Max error: ${maxError.toFixed(2)}mm, RMS: ${rmsError.toFixed(2)}mm. Rear travel set to ${Math.round(maxWheel)}mm`;
+        statusEl.className = 'status success';
+      };
+      reader.readAsText(file);
+    }
+
+    // Polynomial least squares fit using normal equations
+    function fitPolynomial(x, y, degree) {
+      const n = x.length;
+      const size = degree + 1;
+
+      // Build Vandermonde matrix and solve normal equations
+      // A^T * A * coeffs = A^T * y
+
+      // Compute A^T * A (size x size)
+      const ATA = [];
+      for (let i = 0; i < size; i++) {
+        ATA[i] = [];
+        for (let j = 0; j < size; j++) {
+          let sum = 0;
+          for (let k = 0; k < n; k++) {
+            sum += Math.pow(x[k], i + j);
+          }
+          ATA[i][j] = sum;
+        }
+      }
+
+      // Compute A^T * y (size x 1)
+      const ATy = [];
+      for (let i = 0; i < size; i++) {
+        let sum = 0;
+        for (let k = 0; k < n; k++) {
+          sum += Math.pow(x[k], i) * y[k];
+        }
+        ATy[i] = sum;
+      }
+
+      // Solve using Gaussian elimination with partial pivoting
+      const coeffs = solveLinear(ATA, ATy);
+
+      // Return in descending order [d, c, b, a] for degree 3
+      return coeffs.reverse();
+    }
+
+    function solveLinear(A, b) {
+      const n = A.length;
+      // Augmented matrix
+      const aug = A.map((row, i) => [...row, b[i]]);
+
+      // Forward elimination with partial pivoting
+      for (let col = 0; col < n; col++) {
+        // Find pivot
+        let maxRow = col;
+        for (let row = col + 1; row < n; row++) {
+          if (Math.abs(aug[row][col]) > Math.abs(aug[maxRow][col])) {
+            maxRow = row;
+          }
+        }
+        [aug[col], aug[maxRow]] = [aug[maxRow], aug[col]];
+
+        // Eliminate
+        for (let row = col + 1; row < n; row++) {
+          const factor = aug[row][col] / aug[col][col];
+          for (let j = col; j <= n; j++) {
+            aug[row][j] -= factor * aug[col][j];
+          }
+        }
+      }
+
+      // Back substitution
+      const x = new Array(n);
+      for (let i = n - 1; i >= 0; i--) {
+        x[i] = aug[i][n];
+        for (let j = i + 1; j < n; j++) {
+          x[i] -= aug[i][j] * x[j];
+        }
+        x[i] /= aug[i][i];
+      }
+
+      return x;
+    }
+
+    function showStatus(msg, type) {
+      const el = document.getElementById('loadStatus');
+      el.textContent = msg;
+      el.className = `status ${type}`;
+      el.classList.remove('hidden');
+    }
+
+    // ==================== DATA PROCESSING ====================
+    function getParams() {
+      return {
+        frontTravel: parseFloat(document.getElementById('frontTravel').value),
+        rearTravel: parseFloat(document.getElementById('rearTravel').value),
+        sagPercent: parseFloat(document.getElementById('sagPercent').value),
+        // Pot strokes for ADC conversion
+        frontPotStroke: parseFloat(document.getElementById('frontPotStroke').value),
+        rearPotStroke: parseFloat(document.getElementById('rearPotStroke').value),
+        // Rear linkage polynomial coefficients
+        rearA: parseFloat(document.getElementById('rearA').value),
+        rearB: parseFloat(document.getElementById('rearB').value),
+        rearC: parseFloat(document.getElementById('rearC').value),
+        rearD: parseFloat(document.getElementById('rearD').value),
+        trimStart: parseFloat(document.getElementById('trimStart').value) || 0,
+        trimEnd: parseFloat(document.getElementById('trimEnd').value) || Infinity,
+        invertFront: document.getElementById('invertFront').checked,
+        invertRear: document.getElementById('invertRear').checked,
+        extensionThreshold: parseFloat(document.getElementById('extensionThreshold').value),
+        packedThreshold: parseFloat(document.getElementById('packedThreshold').value),
+        minPackedHits: parseInt(document.getElementById('minPackedHits').value),
+        stuckThreshold: parseFloat(document.getElementById('stuckThreshold').value),
+        ratchetDelta: parseFloat(document.getElementById('ratchetDelta').value),
+        velocityThreshold: parseFloat(document.getElementById('velocityThreshold').value)
+      };
+    }
+
+    function convertADCtoMM(adc, type, params) {
+      if (type === 'front') {
+        // Front: direct linear conversion from ADC to wheel travel (mm)
+        // ADC range 0-4095 maps to 0-frontPotStroke mm
+        return adc * (params.frontPotStroke / 4095);
+      } else {
+        // Rear: two-step conversion
+        // Step 1: ADC to shock stroke (mm)
+        const shockMM = adc * (params.rearPotStroke / 4095);
+        // Step 2: Shock stroke to wheel travel via cubic polynomial
+        // wheel_mm = a + b*shock + c*shock² + d*shock³
+        return params.rearA +
+               params.rearB * shockMM +
+               params.rearC * shockMM * shockMM +
+               params.rearD * shockMM * shockMM * shockMM;
+      }
+    }
+
+    function processData(params) {
+      // Find column names (handle different formats)
+      const sample = rawData[0];
+      const frontCol = sample.hasOwnProperty('front_disp') ? 'front_disp' : 'front';
+      const rearCol = sample.hasOwnProperty('rear_disp') ? 'rear_disp' : 'rear';
+      const timeCol = 'time';
+
+      // Filter by time and convert
+      let filtered = rawData.filter(d => d[timeCol] >= params.trimStart && d[timeCol] <= params.trimEnd);
+
+      // Convert and calculate velocities
+      processedData = [];
+      for (let i = 0; i < filtered.length; i++) {
+        const d = filtered[i];
+        const prev = i > 0 ? filtered[i - 1] : d;
+
+        let frontMM = convertADCtoMM(d[frontCol], 'front', params);
+        let rearMM = convertADCtoMM(d[rearCol], 'rear', params);
+
+        if (params.invertFront) frontMM = params.frontTravel - frontMM;
+        if (params.invertRear) rearMM = params.rearTravel - rearMM;
+
+        const dt = d[timeCol] - prev[timeCol];
+        let prevFrontMM = convertADCtoMM(prev[frontCol], 'front', params);
+        let prevRearMM = convertADCtoMM(prev[rearCol], 'rear', params);
+        if (params.invertFront) prevFrontMM = params.frontTravel - prevFrontMM;
+        if (params.invertRear) prevRearMM = params.rearTravel - prevRearMM;
+
+        const frontVel = dt > 0 ? (frontMM - prevFrontMM) / dt : 0;
+        const rearVel = dt > 0 ? (rearMM - prevRearMM) / dt : 0;
+
+        processedData.push({
+          time: d[timeCol],
+          front: frontMM,
+          rear: rearMM,
+          front_vel: frontVel,
+          rear_vel: rearVel,
+          index: i
+        });
+      }
+
+      return processedData;
+    }
+
+    // ==================== IMPACT DETECTION ====================
+    function detectImpacts(data, velKey, posKey, params) {
+      const impacts = [];
+      const velThresh = params.velocityThreshold;
+      let state = 'searching';
+      let currentImpact = {};
+
+      for (let i = 1; i < data.length; i++) {
+        const vel = data[i][velKey];
+        const pos = data[i][posKey];
+        const prevVel = data[i - 1][velKey];
+
+        if (state === 'searching') {
+          // Look for compression start (velocity goes positive)
+          if (prevVel <= velThresh && vel > velThresh) {
+            state = 'compressing';
+            currentImpact = {
+              start_index: i,
+              start_position: data[i - 1][posKey],
+              start_time: data[i - 1].time,
+              peak_position: pos
+            };
+          }
+        } else if (state === 'compressing') {
+          // Track peak
+          if (pos > currentImpact.peak_position) {
+            currentImpact.peak_position = pos;
+            currentImpact.peak_index = i;
+          }
+
+          // Look for rebound start (velocity goes negative)
+          if (prevVel >= -velThresh && vel < -velThresh) {
+            state = 'rebounding';
+            currentImpact.rebound_achieved = true;
+          }
+        } else if (state === 'rebounding') {
+          // Look for next compression or settling
+          if (prevVel <= velThresh && vel > velThresh) {
+            // New impact starting - finalize current
+            currentImpact.end_index = i - 1;
+            currentImpact.end_position = data[i - 1][posKey];
+            currentImpact.end_time = data[i - 1].time;
+
+            if (currentImpact.rebound_achieved) {
+              impacts.push({ ...currentImpact });
+            }
+
+            // Start new impact
+            state = 'compressing';
+            currentImpact = {
+              start_index: i,
+              start_position: data[i - 1][posKey],
+              start_time: data[i - 1].time,
+              peak_position: pos
+            };
+          }
+        }
+      }
+
+      // Finalize last impact if rebounding
+      if (state === 'rebounding' && currentImpact.rebound_achieved) {
+        currentImpact.end_index = data.length - 1;
+        currentImpact.end_position = data[data.length - 1][posKey];
+        currentImpact.end_time = data[data.length - 1].time;
+        impacts.push(currentImpact);
+      }
+
+      return impacts;
+    }
+
+    // ==================== PACKING DETECTION ====================
+    function detectPackingEvents(impacts, params, totalTravel) {
+      const baseline = totalTravel * (params.sagPercent / 100);
+      const packingEvents = [];
+      let packedSequence = [];
+
+      for (let i = 0; i < impacts.length; i++) {
+        const impact = impacts[i];
+        const startPos = impact.start_position;
+
+        // Rule 1: Skip if starting from extended position (drop/jump)
+        if (startPos < (baseline - params.extensionThreshold)) {
+          if (packedSequence.length >= params.minPackedHits) {
+            packingEvents.push(finalizePackingEvent(packedSequence, params, baseline, totalTravel));
+          }
+          packedSequence = [];
+          continue;
+        }
+
+        // Rule 2: Check if this hit is packed
+        if (startPos > (baseline + params.packedThreshold)) {
+          packedSequence.push(impact);
+
+          // Rule 3: Detect phase
+          if (packedSequence.length >= 2) {
+            const prevStart = packedSequence[packedSequence.length - 2].start_position;
+            const delta = startPos - prevStart;
+
+            if (delta > params.ratchetDelta) {
+              impact.phase = 'Progressive Ratcheting';
+            } else if (Math.abs(delta) < params.stuckThreshold) {
+              impact.phase = 'Stuck Deep';
+            } else {
+              impact.phase = 'Mixed';
+            }
+          } else {
+            impact.phase = 'Initial';
+          }
+        } else {
+          // Rule 4: Hit recovered to normal
+          if (packedSequence.length >= params.minPackedHits) {
+            packingEvents.push(finalizePackingEvent(packedSequence, params, baseline, totalTravel));
+          }
+          packedSequence = [];
+        }
+      }
+
+      // Handle packing at end of data
+      if (packedSequence.length >= params.minPackedHits) {
+        packingEvents.push(finalizePackingEvent(packedSequence, params, baseline, totalTravel));
+      }
+
+      return packingEvents;
+    }
+
+    function finalizePackingEvent(sequence, params, baseline, totalTravel) {
+      const startPositions = sequence.map(imp => imp.start_position);
+      const peakPositions = sequence.map(imp => imp.peak_position);
+
+      const severity = calculateSeverity(sequence, params, baseline, totalTravel);
+
+      return {
+        hit_count: sequence.length,
+        start_time: sequence[0].start_time,
+        end_time: sequence[sequence.length - 1].end_time,
+        duration: sequence[sequence.length - 1].end_time - sequence[0].start_time,
+        baseline_used: baseline,
+        max_depth: Math.max(...peakPositions),
+        max_start_depth: Math.max(...startPositions),
+        depth_above_baseline: Math.max(...startPositions) - baseline,
+        phases_present: [...new Set(sequence.map(imp => imp.phase || 'Initial'))],
+        impacts: sequence,
+        severity: severity,
+        category: getSeverityCategory(severity)
+      };
+    }
+
+    function calculateSeverity(sequence, params, baseline, totalTravel) {
+      let score = 0;
+
+      // Component 1: Number of hits (3 = +10, 4 = +20, etc.)
+      score += (sequence.length - 2) * 10;
+
+      // Component 2: Depth above baseline
+      const startPositions = sequence.map(imp => imp.start_position);
+      const maxDepth = Math.max(...startPositions);
+      const depthAboveBaseline = maxDepth - baseline;
+      score += depthAboveBaseline * 0.5;
+
+      // Component 3: Stuck phase bonus
+      if (sequence.some(imp => imp.phase === 'Stuck Deep')) {
+        score += 20;
+      }
+
+      // Component 4: Very deep in travel penalty
+      const maxPeak = Math.max(...sequence.map(imp => imp.peak_position));
+      if (maxPeak > totalTravel * 0.70) {
+        score += 15;
+      }
+
+      return Math.min(Math.round(score), 100);
+    }
+
+    function getSeverityCategory(score) {
+      if (score <= 25) return 'Mild';
+      if (score <= 50) return 'Moderate';
+      if (score <= 75) return 'Severe';
+      return 'Critical';
+    }
+
+    // ==================== OVERALL RATING ====================
+    function calculatePackingIndex(impacts, packingEvents, totalRunTime, params) {
+      const totalImpacts = impacts.length;
+      if (totalImpacts === 0) return 0;
+
+      const packedImpacts = packingEvents.reduce((sum, evt) => sum + evt.hit_count, 0);
+      const totalPackedTime = packingEvents.reduce((sum, evt) => sum + evt.duration, 0);
+
+      // Frequency component (40% weight)
+      const frequencyScore = (packedImpacts / totalImpacts) * 40;
+
+      // Severity component (40% weight)
+      const avgEventSeverity = packingEvents.length > 0
+        ? packingEvents.reduce((sum, evt) => sum + evt.severity, 0) / packingEvents.length
+        : 0;
+      const severityScore = (avgEventSeverity / 100) * 40;
+
+      // Duration component (20% weight)
+      const durationScore = totalRunTime > 0 ? (totalPackedTime / totalRunTime) * 20 : 0;
+
+      return Math.min(Math.round(frequencyScore + severityScore + durationScore), 100);
+    }
+
+    function getOverallRating(packingIndex) {
+      if (packingIndex <= 15) return 'Excellent';
+      if (packingIndex <= 30) return 'Good';
+      if (packingIndex <= 50) return 'Moderate';
+      if (packingIndex <= 75) return 'Poor';
+      return 'Critical';
+    }
+
+    // ==================== STATISTICS ====================
+    function calculateStats(data, key) {
+      const values = data.map(d => d[key]).filter(v => !isNaN(v));
+      if (values.length === 0) return null;
+
+      values.sort((a, b) => a - b);
+      const n = values.length;
+      const sum = values.reduce((a, b) => a + b, 0);
+      const mean = sum / n;
+      const variance = values.reduce((a, v) => a + (v - mean) ** 2, 0) / n;
+      const std = Math.sqrt(variance);
+      const p95Index = Math.floor(n * 0.95);
+
+      return {
+        min: values[0],
+        max: values[n - 1],
+        mean: mean,
+        std: std,
+        p95: values[p95Index],
+        range: values[n - 1] - values[0]
+      };
+    }
+
+    function calculateVelocityStats(data, velKey) {
+      const velocities = data.map(d => d[velKey]).filter(v => !isNaN(v));
+      const compression = velocities.filter(v => v > 0);
+      const rebound = velocities.filter(v => v < 0).map(v => Math.abs(v));
+
+      const compStats = compression.length > 0 ? {
+        mean: compression.reduce((a, b) => a + b, 0) / compression.length,
+        max: Math.max(...compression),
+        p95: compression.sort((a, b) => a - b)[Math.floor(compression.length * 0.95)]
+      } : { mean: 0, max: 0, p95: 0 };
+
+      const rebStats = rebound.length > 0 ? {
+        mean: rebound.reduce((a, b) => a + b, 0) / rebound.length,
+        max: Math.max(...rebound),
+        p95: rebound.sort((a, b) => a - b)[Math.floor(rebound.length * 0.95)]
+      } : { mean: 0, max: 0, p95: 0 };
+
+      return { compression: compStats, rebound: rebStats };
+    }
+
+    // ==================== MAIN ANALYSIS ====================
+    function runAnalysis() {
+      if (rawData.length === 0) {
+        showStatus('Please load data first', 'error');
+        return;
+      }
+
+      const params = getParams();
+
+      // Process data
+      processData(params);
+
+      if (processedData.length < 10) {
+        showStatus('Not enough data after filtering', 'error');
+        return;
+      }
+
+      // Detect impacts
+      impacts.front = detectImpacts(processedData, 'front_vel', 'front', params);
+      impacts.rear = detectImpacts(processedData, 'rear_vel', 'rear', params);
+
+      // Detect packing
+      packingEvents.front = detectPackingEvents(impacts.front, params, params.frontTravel);
+      packingEvents.rear = detectPackingEvents(impacts.rear, params, params.rearTravel);
+
+      // Calculate overall metrics (use rear as primary, or combine)
+      const totalRunTime = processedData[processedData.length - 1].time - processedData[0].time;
+      const rearPackingIndex = calculatePackingIndex(impacts.rear, packingEvents.rear, totalRunTime, params);
+      const frontPackingIndex = calculatePackingIndex(impacts.front, packingEvents.front, totalRunTime, params);
+      const combinedIndex = Math.round((rearPackingIndex + frontPackingIndex) / 2);
+
+      // Calculate statistics
+      const frontPosStats = calculateStats(processedData, 'front');
+      const rearPosStats = calculateStats(processedData, 'rear');
+      const frontVelStats = calculateVelocityStats(processedData, 'front_vel');
+      const rearVelStats = calculateVelocityStats(processedData, 'rear_vel');
+
+      // Store results
+      analysisResults = {
+        timestamp: Date.now(),
+        params: params,
+        packingIndex: combinedIndex,
+        frontPackingIndex: frontPackingIndex,
+        rearPackingIndex: rearPackingIndex,
+        rating: getOverallRating(combinedIndex),
+        totalImpacts: { front: impacts.front.length, rear: impacts.rear.length },
+        packedImpacts: {
+          front: packingEvents.front.reduce((s, e) => s + e.hit_count, 0),
+          rear: packingEvents.rear.reduce((s, e) => s + e.hit_count, 0)
+        },
+        packingEvents: { front: packingEvents.front, rear: packingEvents.rear },
+        totalRunTime: totalRunTime,
+        totalPackedTime: {
+          front: packingEvents.front.reduce((s, e) => s + e.duration, 0),
+          rear: packingEvents.rear.reduce((s, e) => s + e.duration, 0)
+        },
+        stats: {
+          front: { position: frontPosStats, velocity: frontVelStats },
+          rear: { position: rearPosStats, velocity: rearVelStats }
+        }
+      };
+
+      // Update UI
+      displayResults();
+
+      showStatus('Analysis complete!', 'success');
+    }
+
+    // ==================== DISPLAY RESULTS ====================
+    function displayResults() {
+      document.getElementById('resultsSection').classList.remove('hidden');
+
+      const r = analysisResults;
+
+      // Rating box
+      const ratingBox = document.getElementById('ratingBox');
+      ratingBox.className = `card rating-box rating-${r.rating.toLowerCase()}`;
+      document.getElementById('packingScore').textContent = r.packingIndex;
+      document.getElementById('packingRating').textContent = r.rating;
+
+      // Metrics
+      const totalImpacts = r.totalImpacts.front + r.totalImpacts.rear;
+      const packedImpacts = r.packedImpacts.front + r.packedImpacts.rear;
+      const totalEvents = r.packingEvents.front.length + r.packingEvents.rear.length;
+      const avgSeverity = totalEvents > 0
+        ? Math.round([...r.packingEvents.front, ...r.packingEvents.rear].reduce((s, e) => s + e.severity, 0) / totalEvents)
+        : 0;
+      const worstSeverity = totalEvents > 0
+        ? Math.max(...[...r.packingEvents.front, ...r.packingEvents.rear].map(e => e.severity))
+        : 0;
+      const timePercent = r.totalRunTime > 0
+        ? ((r.totalPackedTime.front + r.totalPackedTime.rear) / r.totalRunTime * 100).toFixed(1)
+        : 0;
+
+      document.getElementById('metricRatio').textContent = totalImpacts > 0 ? Math.round(packedImpacts / totalImpacts * 100) : 0;
+      document.getElementById('metricAvgSeverity').textContent = avgSeverity;
+      document.getElementById('metricWorstSeverity').textContent = worstSeverity;
+      document.getElementById('metricTimePercent').textContent = timePercent;
+      document.getElementById('metricEvents').textContent = totalEvents;
+      document.getElementById('metricImpacts').textContent = totalImpacts;
+
+      // Charts
+      plotPositionChart();
+      plotVelocityChart();
+
+      // Statistics tables
+      renderStatsTable('frontStatsTable', 'Front', r.stats.front, analysisResults.params.frontTravel);
+      renderStatsTable('rearStatsTable', 'Rear', r.stats.rear, analysisResults.params.rearTravel);
+
+      // Events table
+      renderEventsTable();
+    }
+
+    function plotPositionChart() {
+      const params = analysisResults.params;
+      const frontBaseline = params.frontTravel * (params.sagPercent / 100);
+      const rearBaseline = params.rearTravel * (params.sagPercent / 100);
+
+      // Create packing zone shapes
+      const shapes = [];
+      const allEvents = [
+        ...packingEvents.front.map(e => ({ ...e, type: 'front' })),
+        ...packingEvents.rear.map(e => ({ ...e, type: 'rear' }))
+      ];
+
+      allEvents.forEach(event => {
+        const color = event.severity <= 25 ? 'rgba(255,255,0,0.2)' :
+                      event.severity <= 50 ? 'rgba(255,165,0,0.2)' :
+                      event.severity <= 75 ? 'rgba(255,100,0,0.3)' :
+                      'rgba(255,0,0,0.3)';
+        shapes.push({
+          type: 'rect',
+          xref: 'x',
+          yref: 'paper',
+          x0: event.start_time,
+          x1: event.end_time,
+          y0: 0,
+          y1: 1,
+          fillcolor: color,
+          opacity: 0.5,
+          line: { width: 0 }
+        });
+      });
+
+      // Add baseline lines
+      shapes.push({
+        type: 'line',
+        xref: 'paper',
+        yref: 'y',
+        x0: 0,
+        x1: 1,
+        y0: rearBaseline,
+        y1: rearBaseline,
+        line: { color: 'red', width: 1, dash: 'dash' }
+      });
+
+      const traces = [
+        {
+          x: processedData.map(d => d.time),
+          y: processedData.map(d => d.front),
+          name: 'Front',
+          type: 'scatter',
+          mode: 'lines',
+          line: { color: '#3182ce', width: 1 }
+        },
+        {
+          x: processedData.map(d => d.time),
+          y: processedData.map(d => d.rear),
+          name: 'Rear',
+          type: 'scatter',
+          mode: 'lines',
+          line: { color: '#e53e3e', width: 1 }
+        }
+      ];
+
+      const layout = {
+        margin: { t: 30, r: 30, b: 40, l: 50 },
+        xaxis: { title: 'Time (s)' },
+        yaxis: { title: 'Position (mm)' },
+        shapes: shapes,
+        legend: { orientation: 'h', y: 1.1 },
+        hovermode: 'x unified'
+      };
+
+      Plotly.newPlot('positionChart', traces, layout, { responsive: true });
+    }
+
+    function plotVelocityChart() {
+      const traces = [
+        {
+          x: processedData.map(d => d.time),
+          y: processedData.map(d => d.front_vel),
+          name: 'Front Vel',
+          type: 'scatter',
+          mode: 'lines',
+          line: { color: '#3182ce', width: 1 }
+        },
+        {
+          x: processedData.map(d => d.time),
+          y: processedData.map(d => d.rear_vel),
+          name: 'Rear Vel',
+          type: 'scatter',
+          mode: 'lines',
+          line: { color: '#e53e3e', width: 1 }
+        }
+      ];
+
+      const layout = {
+        margin: { t: 30, r: 30, b: 40, l: 50 },
+        xaxis: { title: 'Time (s)' },
+        yaxis: { title: 'Velocity (mm/s)' },
+        shapes: [{
+          type: 'line',
+          xref: 'paper',
+          yref: 'y',
+          x0: 0, x1: 1, y0: 0, y1: 0,
+          line: { color: '#666', width: 1, dash: 'dot' }
+        }],
+        legend: { orientation: 'h', y: 1.1 },
+        hovermode: 'x unified'
+      };
+
+      Plotly.newPlot('velocityChart', traces, layout, { responsive: true });
+    }
+
+    function renderStatsTable(tableId, label, stats, totalTravel) {
+      const pos = stats.position;
+      const vel = stats.velocity;
+
+      const html = `
+        <thead>
+          <tr><th colspan="2">${label} Position</th><th colspan="2">${label} Velocity</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Min</td><td>${pos.min.toFixed(1)} mm</td><td>Comp Mean</td><td>${vel.compression.mean.toFixed(0)} mm/s</td></tr>
+          <tr><td>Max</td><td>${pos.max.toFixed(1)} mm</td><td>Comp Max</td><td>${vel.compression.max.toFixed(0)} mm/s</td></tr>
+          <tr><td>Mean</td><td>${pos.mean.toFixed(1)} mm</td><td>Comp 95%</td><td>${vel.compression.p95.toFixed(0)} mm/s</td></tr>
+          <tr><td>Std Dev</td><td>${pos.std.toFixed(1)} mm</td><td>Reb Mean</td><td>${vel.rebound.mean.toFixed(0)} mm/s</td></tr>
+          <tr><td>95th %</td><td>${pos.p95.toFixed(1)} mm</td><td>Reb Max</td><td>${vel.rebound.max.toFixed(0)} mm/s</td></tr>
+          <tr><td>Travel Used</td><td>${pos.range.toFixed(1)} mm (${(pos.range/totalTravel*100).toFixed(0)}%)</td><td>Reb 95%</td><td>${vel.rebound.p95.toFixed(0)} mm/s</td></tr>
+        </tbody>
+      `;
+
+      document.getElementById(tableId).innerHTML = html;
+    }
+
+    function renderEventsTable() {
+      const allEvents = [
+        ...packingEvents.front.map((e, i) => ({ ...e, location: 'Front', num: i + 1 })),
+        ...packingEvents.rear.map((e, i) => ({ ...e, location: 'Rear', num: i + 1 }))
+      ].sort((a, b) => a.start_time - b.start_time);
+
+      if (allEvents.length === 0) {
+        document.getElementById('eventsTable').innerHTML = '<tr><td colspan="7">No packing events detected</td></tr>';
+        return;
+      }
+
+      let html = `
+        <thead>
+          <tr><th>#</th><th>Location</th><th>Severity</th><th>Hits</th><th>Duration</th><th>Max Depth</th><th>Phases</th></tr>
+        </thead>
+        <tbody>
+      `;
+
+      allEvents.forEach((e, i) => {
+        html += `<tr>
+          <td>${i + 1}</td>
+          <td>${e.location}</td>
+          <td>${e.severity} (${e.category})</td>
+          <td>${e.hit_count}</td>
+          <td>${e.duration.toFixed(2)}s</td>
+          <td>${e.max_depth.toFixed(1)} mm</td>
+          <td>${e.phases_present.join(', ')}</td>
+        </tr>`;
+      });
+
+      html += '</tbody>';
+      document.getElementById('eventsTable').innerHTML = html;
+    }
+
+    // ==================== UI HELPERS ====================
+    function showTab(tabName) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelector(`.tab[onclick="showTab('${tabName}')"]`).classList.add('active');
+      document.getElementById(`tab-${tabName}`).classList.add('active');
+
+      // Resize charts when showing
+      if (tabName === 'charts') {
+        Plotly.Plots.resize('positionChart');
+        Plotly.Plots.resize('velocityChart');
+      }
+    }
+
+    function toggleCollapsible(el) {
+      el.classList.toggle('open');
+      el.nextElementSibling.classList.toggle('open');
+    }
+
+    function resetAll() {
+      rawData = [];
+      processedData = [];
+      impacts = { front: [], rear: [] };
+      packingEvents = { front: [], rear: [] };
+      analysisResults = null;
+      document.getElementById('resultsSection').classList.add('hidden');
+      document.getElementById('loadStatus').classList.add('hidden');
+      document.getElementById('fileInput').value = '';
+    }
+
+    // ==================== EXPORT ====================
+    function exportJSON() {
+      if (!analysisResults) return;
+
+      const blob = new Blob([JSON.stringify(analysisResults, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `suspension_analysis_${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function copyToClipboard() {
+      if (!analysisResults) return;
+
+      const r = analysisResults;
+      const summary = `Suspension Analysis Summary
+========================
+Packing Index: ${r.packingIndex}/100 (${r.rating})
+Front: ${r.frontPackingIndex}/100 | Rear: ${r.rearPackingIndex}/100
+
+Impacts: ${r.totalImpacts.front + r.totalImpacts.rear} total
+Packing Events: ${r.packingEvents.front.length + r.packingEvents.rear.length}
+Run Time: ${r.totalRunTime.toFixed(1)}s
+
+Generated: ${new Date().toLocaleString()}`;
+
+      navigator.clipboard.writeText(summary).then(() => {
+        showStatus('Summary copied to clipboard', 'success');
+      });
+    }
+
+    // ==================== PWA ====================
+    let deferredPrompt;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('installButton').style.display = 'inline-block';
+    });
+
+    function installApp() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((result) => {
+          deferredPrompt = null;
+          document.getElementById('installButton').style.display = 'none';
+        });
+      }
+    }
+
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js')
+        .then(reg => console.log('SW registered'))
+        .catch(err => console.log('SW registration failed:', err));
+    }
+  </script>
+</body>
+</html>
