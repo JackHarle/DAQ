@@ -234,7 +234,7 @@
       </div>
     </div>
 
-    <h3>ðŸŽ›ï¸ Data Filtering</h3>
+    <h3>Data Filtering</h3>
     <div style="background:#f0f4ff;padding:12px;border-radius:6px;border:1px solid #d0d9f0;">
       <div class="grid grid-3">
         <div>
@@ -792,65 +792,37 @@
       return result;
     }
 
-    // Savitzky-Golay filter coefficients for derivative calculation
-    // window=21, polyorder=3, deriv=1
-    // Pre-computed coefficients for efficiency
+    // Savitzky-Golay smoothing coefficients (deriv=0 only)
+    // For velocity, we use a more robust approach: diff then smooth
     function getSavitzkyGolayCoeffs(windowSize, polyOrder, deriv) {
-      // For window=21, polyorder=3, deriv=1
-      // These are normalized coefficients that compute the derivative
       const halfWindow = Math.floor(windowSize / 2);
       const coeffs = new Array(windowSize);
 
-      // For derivative with window=21, poly=3, we use a least-squares fit approach
-      // These coefficients are pre-calculated for the specific window/poly/deriv combo
-      if (windowSize === 21 && polyOrder === 3 && deriv === 1) {
-        // Pre-computed SG coefficients for window=21, poly=3, deriv=1
-        // Normalized to give derivative in units per sample
-        const rawCoeffs = [
-          -0.04761905, -0.03968254, -0.03253968, -0.02619048, -0.02063492,
-          -0.01587302, -0.01190476, -0.00873016, -0.00634921, -0.00476190,
-           0.00000000,
-           0.00476190,  0.00634921,  0.00873016,  0.01190476,  0.01587302,
-           0.02063492,  0.02619048,  0.03253968,  0.03968254,  0.04761905
-        ];
-        for (let i = 0; i < windowSize; i++) {
-          coeffs[i] = rawCoeffs[i];
-        }
-      } else {
-        // Generic computation for other window sizes
-        if (deriv === 0) {
-          // Smoothing: use symmetric weights that sum to 1
-          // Simple parabolic weighting for smoothing
-          let weightSum = 0;
-          for (let i = 0; i < windowSize; i++) {
-            const x = i - halfWindow;
-            // Parabolic weight: 1 - (x/halfWindow)^2
-            const weight = 1 - (x / halfWindow) * (x / halfWindow);
-            coeffs[i] = Math.max(0.1, weight); // Ensure positive weights
-            weightSum += coeffs[i];
-          }
-          // Normalize to sum to 1
-          for (let i = 0; i < windowSize; i++) {
-            coeffs[i] /= weightSum;
-          }
-        } else if (deriv === 1) {
-          // Derivative: weighted central difference
-          for (let i = 0; i < windowSize; i++) {
-            const x = i - halfWindow;
-            coeffs[i] = x / (halfWindow * halfWindow * (halfWindow + 1) * 2 / 3);
-          }
-        }
+      // Only support smoothing (deriv=0) - velocity uses diff-then-smooth approach
+      // Parabolic weighting gives good smoothing while preserving peaks
+      let weightSum = 0;
+      for (let i = 0; i < windowSize; i++) {
+        const x = i - halfWindow;
+        // Parabolic weight: 1 - (x/halfWindow)^2, minimum 0.1 at edges
+        const weight = Math.max(0.1, 1 - (x / halfWindow) * (x / halfWindow));
+        coeffs[i] = weight;
+        weightSum += weight;
       }
+      // Normalize to sum to 1
+      for (let i = 0; i < windowSize; i++) {
+        coeffs[i] /= weightSum;
+      }
+
       return coeffs;
     }
 
-    // Apply Savitzky-Golay filter (for smoothing or derivative)
+    // Apply Savitzky-Golay smoothing filter (deriv=0 only)
     function savitzkyGolayFilter(arr, windowSize, polyOrder, deriv, sampleRate) {
       const halfWindow = Math.floor(windowSize / 2);
-      const coeffs = getSavitzkyGolayCoeffs(windowSize, polyOrder, deriv);
+      const coeffs = getSavitzkyGolayCoeffs(windowSize, polyOrder, 0); // Always smoothing
       const result = new Array(arr.length);
 
-      // Handle edges with reduced window
+      // Handle edges with proper normalization
       for (let i = 0; i < arr.length; i++) {
         let sum = 0;
         let coeffSum = 0;
@@ -859,16 +831,12 @@
           const dataIndex = i + j - halfWindow;
           if (dataIndex >= 0 && dataIndex < arr.length) {
             sum += coeffs[j] * arr[dataIndex];
-            coeffSum += Math.abs(coeffs[j]);
+            coeffSum += coeffs[j]; // Track actual coefficients used
           }
         }
 
-        // For derivative, multiply by sample rate to get units/second
-        if (deriv === 1) {
-          result[i] = sum * sampleRate;
-        } else {
-          result[i] = sum;
-        }
+        // Normalize by actual coefficient sum (important at edges)
+        result[i] = coeffSum > 0 ? sum / coeffSum : arr[i];
       }
 
       return result;
@@ -879,11 +847,6 @@
       let filtered = medianFilter(arr, medianSize);
       filtered = limitPositionChange(filtered, maxChange);
       return filtered;
-    }
-
-    // Calculate smoothed velocity using Savitzky-Golay derivative
-    function calculateSmoothedVelocity(positions, sampleRate, windowSize, polyOrder) {
-      return savitzkyGolayFilter(positions, windowSize, polyOrder, 1, sampleRate);
     }
 
     // Apply user-selected filter type to data array
@@ -925,6 +888,7 @@
     }
 
     // Calculate velocity with filtering using actual time differences
+    // Robust approach: calculate raw velocity, remove spikes, then smooth
     function calculateFilteredVelocity(positions, times, windowSize) {
       const params = getParams();
       const filterType = params.filterType || 'savgol';
@@ -932,6 +896,10 @@
       // Ensure odd window size
       let win = Math.max(3, Math.floor(windowSize));
       if (win % 2 === 0) win += 1;
+
+      // Maximum reasonable velocity for mountain bike suspension (mm/s)
+      // Pro DH bikes rarely exceed 3000 mm/s even on huge hits
+      const MAX_VELOCITY = 5000;
 
       // Debug: analyze time intervals
       let minDt = Infinity, maxDt = 0, sumDt = 0;
@@ -948,43 +916,49 @@
       debugLog('Time analysis: avgDt=' + (avgDt*1000).toFixed(3) + 'ms, minDt=' + (minDt*1000).toFixed(3) + 'ms, maxDt=' + (maxDt*1000).toFixed(3) + 'ms');
       debugLog('  Zero/negative dt: ' + zeroDtCount + ', Very small dt (<0.1ms): ' + smallDtCount);
 
-      if (filterType === 'none') {
-        // Raw velocity from simple differences
-        const velocities = new Array(positions.length);
-        velocities[0] = 0;
-        let maxVel = 0, maxVelIdx = 0;
-        for (let i = 1; i < positions.length; i++) {
-          const dt = times[i] - times[i - 1];
-          const dp = positions[i] - positions[i - 1];
-          velocities[i] = dt > 0.0001 ? dp / dt : 0; // Require at least 0.1ms
-          if (Math.abs(velocities[i]) > Math.abs(maxVel)) {
-            maxVel = velocities[i];
-            maxVelIdx = i;
-          }
+      // Step 1: Calculate raw velocity from position differences
+      const rawVel = new Array(positions.length);
+      rawVel[0] = 0;
+      for (let i = 1; i < positions.length; i++) {
+        const dt = times[i] - times[i - 1];
+        if (dt > 0.0001) { // Require at least 0.1ms
+          rawVel[i] = (positions[i] - positions[i - 1]) / dt;
+        } else {
+          rawVel[i] = rawVel[i - 1]; // Carry forward if dt too small
         }
-        debugLog('Raw velocity: max=' + maxVel.toFixed(0) + ' at idx=' + maxVelIdx);
-        if (maxVelIdx > 0) {
-          const dt = times[maxVelIdx] - times[maxVelIdx-1];
-          const dp = positions[maxVelIdx] - positions[maxVelIdx-1];
-          debugLog('  dt=' + (dt*1000).toFixed(3) + 'ms, dp=' + dp.toFixed(2) + 'mm');
-        }
-        return velocities;
-      } else if (filterType === 'moving_average') {
-        // Calculate raw velocity first, then smooth
-        const rawVel = new Array(positions.length);
-        rawVel[0] = 0;
-        for (let i = 1; i < positions.length; i++) {
-          const dt = times[i] - times[i - 1];
-          rawVel[i] = dt > 0.0001 ? (positions[i] - positions[i - 1]) / dt : 0;
-        }
-        return movingAverageFilter(rawVel, win);
-      } else {
-        // Savitzky-Golay derivative - use average sample rate
-        const totalTime = times[times.length - 1] - times[0];
-        const avgSampleRate = (positions.length - 1) / totalTime;
-        debugLog('SavGol velocity: avgSampleRate=' + avgSampleRate.toFixed(1) + ' Hz, window=' + win);
-        return savitzkyGolayFilter(positions, win, 3, 1, avgSampleRate);
       }
+
+      // Debug raw velocity stats
+      const rawMin = Math.min(...rawVel);
+      const rawMax = Math.max(...rawVel);
+      debugLog('Raw velocity range: ' + rawMin.toFixed(0) + ' to ' + rawMax.toFixed(0) + ' mm/s');
+
+      if (filterType === 'none') {
+        // Even "no filter" should clamp extreme outliers
+        return rawVel.map(v => Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, v)));
+      }
+
+      // Step 2: Apply median filter to remove spikes (very effective)
+      const medianWin = Math.min(7, win); // Median window shouldn't be too large
+      let filtered = medianFilter(rawVel, medianWin);
+
+      // Step 3: Clamp extreme values before smoothing
+      filtered = filtered.map(v => Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, v)));
+
+      // Step 4: Apply smoothing
+      if (filterType === 'moving_average') {
+        filtered = movingAverageFilter(filtered, win);
+      } else {
+        // Savitzky-Golay smoothing (not derivative)
+        filtered = savitzkyGolayFilter(filtered, win, 3, 0, 1);
+      }
+
+      // Debug filtered velocity stats
+      const filtMin = Math.min(...filtered);
+      const filtMax = Math.max(...filtered);
+      debugLog('Filtered velocity range: ' + filtMin.toFixed(0) + ' to ' + filtMax.toFixed(0) + ' mm/s');
+
+      return filtered;
     }
 
     // Get current filter status for display
@@ -1232,8 +1206,8 @@
         debugLog('Average dt: ' + (avgDt * 1000).toFixed(2) + 'ms (' + (1/avgDt).toFixed(0) + ' Hz)');
         
         if (backwardsCount > 0) {
-          debugLog('âš ï¸ WARNING: Time goes backwards ' + backwardsCount + ' times! Data needs sorting.');
-          showStatus('âš ï¸ Time data issue detected - ' + backwardsCount + ' backwards jumps. Will auto-fix.', 'warning');
+          debugLog('[!] WARNING: Time goes backwards ' + backwardsCount + ' times! Data needs sorting.');
+          showStatus('[!] Time data issue detected - ' + backwardsCount + ' backwards jumps. Will auto-fix.', 'warning');
         }
       }
 
@@ -1242,8 +1216,8 @@
       const statusEl = document.getElementById('filterStatus');
       if (statusEl) {
         statusEl.innerHTML = filterStatus.active ? 
-          `ðŸŽ›ï¸ <strong>Active Filter:</strong> ${filterStatus.type} | Position: ${filterStatus.posWindow} samples | Velocity: ${filterStatus.velWindow} samples` :
-          `âš ï¸ <strong>No filtering applied</strong> - using raw data`;
+          `[*] <strong>Active Filter:</strong> ${filterStatus.type} | Position: ${filterStatus.posWindow} samples | Velocity: ${filterStatus.velWindow} samples` :
+          `[!] <strong>No filtering applied</strong> - using raw data`;
       }
 
       // Step 2: SORT AND CLEAN DATA FIRST (before velocity calculation!)
@@ -1285,7 +1259,7 @@
         debugLog('Time data cleaned: Removed ' + timeIssues + ' backwards, ' + duplicates + ' duplicates');
         const filterStatusEl = document.getElementById('filterStatus');
         if (filterStatusEl) {
-          filterStatusEl.innerHTML = '<span style="color:#48bb78;">âœ“ Data cleaned: ' + (timeIssues + duplicates) + ' problematic points removed</span><br>' + filterStatusEl.innerHTML;
+          filterStatusEl.innerHTML = '<span style="color:#48bb78;">[OK] Data cleaned: ' + (timeIssues + duplicates) + ' problematic points removed</span><br>' + filterStatusEl.innerHTML;
         }
       }
 
