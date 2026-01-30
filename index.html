@@ -888,7 +888,7 @@
     }
 
     // Calculate velocity with filtering using actual time differences
-    // Robust approach: calculate raw velocity, remove spikes, then smooth
+    // Robust approach: calculate raw velocity, handle gaps, remove spikes, then smooth
     function calculateFilteredVelocity(positions, times, windowSize) {
       const params = getParams();
       const filterType = params.filterType || 'savgol';
@@ -901,30 +901,75 @@
       // Pro DH bikes rarely exceed 3000 mm/s even on huge hits
       const MAX_VELOCITY = 5000;
 
+      // Expected sample interval (1ms at 1000Hz)
+      const EXPECTED_DT = 0.001;
+      // Gap threshold: if dt > 10x expected, it's a gap
+      const GAP_THRESHOLD = EXPECTED_DT * 10; // 10ms
+
       // Debug: analyze time intervals
       let minDt = Infinity, maxDt = 0, sumDt = 0;
-      let smallDtCount = 0, zeroDtCount = 0;
+      let smallDtCount = 0, zeroDtCount = 0, gapCount = 0;
       for (let i = 1; i < Math.min(times.length, 1000); i++) {
         const dt = times[i] - times[i - 1];
         if (dt <= 0) zeroDtCount++;
         else if (dt < 0.0001) smallDtCount++; // < 0.1ms
+        else if (dt > GAP_THRESHOLD) gapCount++;
         minDt = Math.min(minDt, dt);
         maxDt = Math.max(maxDt, dt);
         sumDt += dt;
       }
       const avgDt = sumDt / (Math.min(times.length, 1000) - 1);
       debugLog('Time analysis: avgDt=' + (avgDt*1000).toFixed(3) + 'ms, minDt=' + (minDt*1000).toFixed(3) + 'ms, maxDt=' + (maxDt*1000).toFixed(3) + 'ms');
-      debugLog('  Zero/negative dt: ' + zeroDtCount + ', Very small dt (<0.1ms): ' + smallDtCount);
+      debugLog('  Zero/negative dt: ' + zeroDtCount + ', Very small dt: ' + smallDtCount + ', Gaps (>10ms): ' + gapCount);
 
-      // Step 1: Calculate raw velocity from position differences
+      // Step 1: Calculate raw velocity, marking gaps as invalid
       const rawVel = new Array(positions.length);
+      const isGap = new Array(positions.length).fill(false);
       rawVel[0] = 0;
+
       for (let i = 1; i < positions.length; i++) {
         const dt = times[i] - times[i - 1];
-        if (dt > 0.0001) { // Require at least 0.1ms
+
+        if (dt > GAP_THRESHOLD) {
+          // This is a gap - velocity during gap is unreliable
+          // Use interpolated velocity based on position change over whole gap
+          // but mark it so we can handle it specially
+          isGap[i] = true;
+          rawVel[i] = (positions[i] - positions[i - 1]) / dt;
+        } else if (dt > 0.0001) {
+          // Normal sample
           rawVel[i] = (positions[i] - positions[i - 1]) / dt;
         } else {
-          rawVel[i] = rawVel[i - 1]; // Carry forward if dt too small
+          // dt too small - carry forward
+          rawVel[i] = rawVel[i - 1];
+        }
+      }
+
+      // Step 1b: Smooth over gaps by interpolating from valid neighbors
+      for (let i = 1; i < positions.length; i++) {
+        if (isGap[i]) {
+          // Find valid neighbors before and after the gap
+          let beforeIdx = i - 1;
+          let afterIdx = i + 1;
+
+          // Walk back to find valid sample
+          while (beforeIdx > 0 && isGap[beforeIdx]) beforeIdx--;
+          // Walk forward to find valid sample
+          while (afterIdx < positions.length - 1 && isGap[afterIdx]) afterIdx++;
+
+          // Interpolate velocity at gap
+          if (beforeIdx >= 0 && afterIdx < positions.length && !isGap[beforeIdx] && !isGap[afterIdx]) {
+            // Linear interpolation between valid neighbors
+            const t = (times[i] - times[beforeIdx]) / (times[afterIdx] - times[beforeIdx]);
+            rawVel[i] = rawVel[beforeIdx] + t * (rawVel[afterIdx] - rawVel[beforeIdx]);
+          } else if (beforeIdx >= 0 && !isGap[beforeIdx]) {
+            // Only have before - use it
+            rawVel[i] = rawVel[beforeIdx];
+          } else if (afterIdx < positions.length && !isGap[afterIdx]) {
+            // Only have after - use it
+            rawVel[i] = rawVel[afterIdx];
+          }
+          // else keep the gap velocity as calculated
         }
       }
 
@@ -939,7 +984,7 @@
       }
 
       // Step 2: Apply median filter to remove spikes (very effective)
-      const medianWin = Math.min(7, win); // Median window shouldn't be too large
+      const medianWin = Math.min(7, win);
       let filtered = medianFilter(rawVel, medianWin);
 
       // Step 3: Clamp extreme values before smoothing
