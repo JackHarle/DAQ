@@ -183,7 +183,7 @@
         </label>
       </div>
       <div>
-        <label>Or fetch from ESP32:</label>
+        <label for="espUrl">Or fetch from ESP32:</label>
         <input type="text" id="espUrl" value="http://192.168.4.1/data.csv" placeholder="ESP32 URL">
         <div class="btn-group">
           <button class="btn-secondary" onclick="fetchFromESP()">Fetch from ESP</button>
@@ -191,6 +191,8 @@
       </div>
     </div>
     <div id="loadStatus" class="status info hidden"></div>
+    <div id="debugOutput" style="display:none;background:#1a1a2e;color:#0f0;padding:10px;font-family:monospace;font-size:11px;max-height:200px;overflow-y:auto;margin-top:10px;border-radius:6px;white-space:pre-wrap;"></div>
+    <button type="button" onclick="document.getElementById('debugOutput').style.display=document.getElementById('debugOutput').style.display==='none'?'block':'none'" style="margin-top:5px;font-size:12px;padding:5px 10px;">Toggle Debug Log</button>
   </div>
 
   <!-- Setup Parameters Section -->
@@ -667,20 +669,38 @@
       }
     }
 
+    // Debug logging function - writes to both console and on-screen panel
+    function debugLog(msg) {
+      console.log(msg);
+      const el = document.getElementById('debugOutput');
+      if (el) {
+        el.style.display = 'block'; // Auto-show when there's output
+        el.textContent += msg + '\n';
+        el.scrollTop = el.scrollHeight;
+      }
+    }
+
+    function clearDebug() {
+      const el = document.getElementById('debugOutput');
+      if (el) el.textContent = '';
+    }
+
     function processData(params) {
-      console.log('=== processData called ===');
-      console.log('rawData length:', rawData.length);
+      clearDebug();
+      debugLog('=== processData called ===');
+      debugLog('rawData length: ' + rawData.length);
 
       if (rawData.length === 0) {
-        console.error('No data loaded!');
+        debugLog('ERROR: No data loaded!');
         return [];
       }
 
       // Find column names (handle different formats)
       const sample = rawData[0];
-      console.log('First row sample:', sample);
+      debugLog('First row keys: ' + Object.keys(sample).join(', '));
+      debugLog('First row time value: ' + sample.time + ' (type: ' + typeof sample.time + ')');
       const cols = Object.keys(sample);
-      console.log('CSV columns found:', cols);
+      debugLog('CSV columns found: ' + cols.length + ' columns');
 
       // Flexible column detection
       const findCol = (options) => {
@@ -705,16 +725,14 @@
       if (!timeCol) missing.push('time');
 
       if (missing.length > 0) {
-        console.error('Missing columns:', missing, 'Available:', cols);
+        debugLog('ERROR: Missing columns: ' + missing.join(', '));
+        debugLog('Available columns: ' + cols.join(', '));
         showStatus(`Missing columns: ${missing.join(', ')}. Found: ${cols.slice(0, 5).join(', ')}...`, 'error');
         processedData = [];
         return processedData;
       }
 
-      console.log('Using columns - time:', timeCol, 'front:', frontCol, 'rear:', rearCol, 'micros:', microsCol);
-
-      // Debug: show first 3 rows of data
-      console.log('First 3 rows:', rawData.slice(0, 3));
+      debugLog('Using columns - time: ' + timeCol + ', front: ' + frontCol + ', rear: ' + rearCol);
 
       // Check if time column data looks valid
       const timeTest = rawData.slice(0, 10).filter(d => {
@@ -722,11 +740,11 @@
         return t !== undefined && t !== null && !isNaN(Number(t));
       }).length;
 
-      console.log('Time column validity check:', timeTest, '/ 10 rows valid');
+      debugLog('Time column validity: ' + timeTest + '/10 rows have valid time');
 
       // If time column is mostly invalid but we have micros, use that instead
       if (timeTest < 5 && microsCol) {
-        console.log('Switching to micros column as time source');
+        debugLog('Switching to micros column as time source');
         useMicrosAsTime = true;
       }
 
@@ -745,13 +763,10 @@
         timeOffset = getTime(rawData[0]);
       }
 
-      console.log('Time values (first 5):', rawData.slice(0, 5).map(d => ({
-        raw: d[timeCol],
-        micros: d[microsCol],
-        computed: getTime(d) - timeOffset,
-        type: typeof d[timeCol]
-      })));
-      console.log('Trim params:', { start: params.trimStart, end: params.trimEnd });
+      // Show sample time values
+      const sampleTimes = rawData.slice(0, 3).map(d => getTime(d) - timeOffset);
+      debugLog('First 3 time values: ' + sampleTimes.join(', '));
+      debugLog('Trim: start=' + params.trimStart + ', end=' + params.trimEnd);
 
       // Filter by time - very permissive, just check for valid numbers
       let filtered = rawData.filter(d => {
@@ -760,26 +775,21 @@
         return !isNaN(t) && isFinite(t) && t >= params.trimStart && t <= params.trimEnd;
       });
 
-      console.log('Filtered from', rawData.length, 'to', filtered.length, 'samples');
+      debugLog('Filter result: ' + rawData.length + ' -> ' + filtered.length + ' samples');
 
       // FALLBACK: If filtering failed, use all data with index-based time
       let useFallbackTime = false;
       if (filtered.length < 10 && rawData.length > 10) {
-        console.log('Filter issue! First 5 rows analysis:', rawData.slice(0, 5).map((d, i) => {
-          const t = getTime(d) - timeOffset;
-          return {
-            row: i,
-            time: d[timeCol],
-            micros: d[microsCol],
-            computed: t,
-            isNum: !isNaN(t),
-            isFinite: isFinite(t),
-            passStart: t >= params.trimStart,
-            passEnd: t <= params.trimEnd
-          };
-        }));
+        debugLog('WARNING: Filter failed! Analyzing first row...');
+        const d = rawData[0];
+        const t = getTime(d) - timeOffset;
+        debugLog('  Row 0 time raw: ' + d[timeCol]);
+        debugLog('  Row 0 time computed: ' + t);
+        debugLog('  isNaN: ' + isNaN(t) + ', isFinite: ' + isFinite(t));
+        debugLog('  >= trimStart: ' + (t >= params.trimStart));
+        debugLog('  <= trimEnd: ' + (t <= params.trimEnd));
 
-        console.log('Using fallback: all rows with index-based time (assuming 1000Hz)');
+        debugLog('Using FALLBACK: index-based time at 1000Hz');
         filtered = rawData.slice(); // Make a copy
         useFallbackTime = true;
       }
@@ -827,6 +837,10 @@
         });
       }
 
+      debugLog('processedData created: ' + processedData.length + ' samples');
+      if (processedData.length > 0) {
+        debugLog('First processed: time=' + processedData[0].time.toFixed(4) + ', front=' + processedData[0].front.toFixed(1) + ', rear=' + processedData[0].rear.toFixed(1));
+      }
       return processedData;
     }
 
