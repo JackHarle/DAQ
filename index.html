@@ -1771,62 +1771,66 @@
         line: { color: 'red', width: 1, dash: 'dash' }
       });
 
+      // Use scattergl for large datasets - better performance and no decimation
+      const useWebGL = processedData.length > 5000;
+      const traceType = useWebGL ? 'scattergl' : 'scatter';
+
       const traces = [
         {
           x: processedData.map(d => d.time),
           y: processedData.map(d => d.front),
           name: 'Front (Filtered)',
-          type: 'scatter',
+          type: traceType,
           mode: 'lines',
-          line: { color: '#3182ce', width: 2 }
+          line: { color: '#3182ce', width: 1.5, simplify: false }
         },
         {
           x: processedData.map(d => d.time),
           y: processedData.map(d => d.rear),
           name: 'Rear (Filtered)',
-          type: 'scatter',
+          type: traceType,
           mode: 'lines',
-          line: { color: '#e53e3e', width: 2 }
+          line: { color: '#e53e3e', width: 1.5, simplify: false }
         }
       ];
-      
+
       // Add raw data overlay if enabled
       if (document.getElementById('showRawData')?.checked && rawData.length > 0) {
         const params = getParams();
         const rawFrontPos = [];
         const rawRearPos = [];
         const rawTimes = [];
-        
+
         for (let i = 0; i < Math.min(rawData.length, processedData.length); i++) {
           const d = rawData[i];
           let frontMM = convertADCtoMM(d.front || d.front_disp || d.Front, 'front', params);
           let rearMM = convertADCtoMM(d.rear || d.rear_disp || d.Rear, 'rear', params);
-          
+
           if (params.invertFront) frontMM = params.frontTravel - frontMM;
           if (params.invertRear) rearMM = params.rearTravel - rearMM;
-          
+
           rawFrontPos.push(frontMM);
           rawRearPos.push(rearMM);
           rawTimes.push(processedData[i].time);
         }
-        
+
         traces.push({
           x: rawTimes,
           y: rawFrontPos,
           name: 'Front (Raw)',
-          type: 'scatter',
+          type: traceType,
           mode: 'lines',
-          line: { color: '#3182ce', width: 0.5, dash: 'dot' },
+          line: { color: '#3182ce', width: 0.5, simplify: false },
           opacity: 0.3
         });
-        
+
         traces.push({
           x: rawTimes,
           y: rawRearPos,
           name: 'Rear (Raw)',
-          type: 'scatter',
+          type: traceType,
           mode: 'lines',
-          line: { color: '#e53e3e', width: 0.5, dash: 'dot' },
+          line: { color: '#e53e3e', width: 0.5, simplify: false },
           opacity: 0.3
         });
       }
@@ -1844,22 +1848,26 @@
     }
 
     function plotVelocityChart() {
+      // Use scattergl for large datasets - much better performance
+      const useWebGL = processedData.length > 5000;
+      const traceType = useWebGL ? 'scattergl' : 'scatter';
+
       const traces = [
         {
           x: processedData.map(d => d.time),
           y: processedData.map(d => d.front_vel),
           name: 'Front Vel (Filtered)',
-          type: 'scatter',
+          type: traceType,
           mode: 'lines',
-          line: { color: '#3182ce', width: 2 }
+          line: { color: '#3182ce', width: 1.5, simplify: false }
         },
         {
           x: processedData.map(d => d.time),
           y: processedData.map(d => d.rear_vel),
           name: 'Rear Vel (Filtered)',
-          type: 'scatter',
+          type: traceType,
           mode: 'lines',
-          line: { color: '#e53e3e', width: 2 }
+          line: { color: '#e53e3e', width: 1.5, simplify: false }
         }
       ];
 
