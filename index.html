@@ -1014,21 +1014,27 @@
       const isGap = new Array(positions.length).fill(false);
       rawVel[0] = 0;
 
+      let spikeCount = 0;
       for (let i = 1; i < positions.length; i++) {
         const dt = times[i] - times[i - 1];
+        const dp = positions[i] - positions[i - 1];
 
         if (dt > GAP_THRESHOLD) {
           // This is a gap - velocity during gap is unreliable
-          // Use interpolated velocity based on position change over whole gap
-          // but mark it so we can handle it specially
           isGap[i] = true;
-          rawVel[i] = (positions[i] - positions[i - 1]) / dt;
+          rawVel[i] = dp / dt;
         } else if (dt > 0.0001) {
           // Normal sample
-          rawVel[i] = (positions[i] - positions[i - 1]) / dt;
+          rawVel[i] = dp / dt;
         } else {
           // dt too small - carry forward
           rawVel[i] = rawVel[i - 1];
+        }
+
+        // Log any suspicious large velocities
+        if (Math.abs(rawVel[i]) > 2500 && spikeCount < 10) {
+          spikeCount++;
+          debugLog('[SPIKE] i=' + i + ' t=' + times[i].toFixed(4) + ' dt=' + (dt*1000).toFixed(2) + 'ms dp=' + dp.toFixed(2) + 'mm vel=' + rawVel[i].toFixed(0) + 'mm/s');
         }
       }
 
@@ -1511,6 +1517,34 @@
         // Check for data around specific time range (user's problem area)
         const around429 = processedData.filter(d => d.time >= 4.28 && d.time <= 4.41);
         debugLog('Points in range 4.28-4.41s: ' + around429.length);
+
+        // Log samples in problem range for debugging
+        if (around429.length > 0) {
+          debugLog('=== SAMPLE DATA IN PROBLEM RANGE ===');
+          for (let j = 0; j < Math.min(5, around429.length); j++) {
+            const s = around429[j];
+            debugLog('  t=' + s.time.toFixed(4) + ' front=' + s.front.toFixed(1) + 'mm fvel=' + s.front_vel.toFixed(0) +
+                     ' rear=' + s.rear.toFixed(1) + 'mm rvel=' + s.rear_vel.toFixed(0));
+          }
+        } else {
+          debugLog('[WARNING] NO DATA in 4.28-4.41s range!');
+        }
+
+        // Also check raw data to compare
+        debugLog('=== RAW DATA CHECK at t~4.35 ===');
+        const rawAround435 = rawData.filter(d => {
+          const t = Number(d.time);
+          return t >= 4.34 && t <= 4.36;
+        });
+        debugLog('Raw rows at t=4.34-4.36: ' + rawAround435.length);
+        if (rawAround435.length > 0) {
+          for (let j = 0; j < Math.min(3, rawAround435.length); j++) {
+            const r = rawAround435[j];
+            debugLog('  RAW: t=' + r.time + ' front_disp=' + r.front_disp + ' rear_disp=' + r.rear_disp);
+          }
+        } else {
+          debugLog('[WARNING] NO RAW DATA at t=4.34-4.36!');
+        }
       }
       return processedData;
     }
