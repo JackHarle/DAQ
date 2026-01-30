@@ -1218,22 +1218,72 @@
           `⚠️ <strong>No filtering applied</strong> - using raw data`;
       }
 
-      // Step 2: Filter positions (median + limit first, then apply user filter)
+      // Step 2: SORT AND CLEAN DATA FIRST (before velocity calculation!)
+      // Combine into objects for sorting
+      debugLog('Sorting and cleaning data by time...');
+      let dataPoints = [];
+      for (let i = 0; i < rawFront.length; i++) {
+        dataPoints.push({
+          time: times[i],
+          rawFront: rawFront[i],
+          rawRear: rawRear[i]
+        });
+      }
+
+      // Sort by time
+      dataPoints.sort((a, b) => a.time - b.time);
+
+      // Remove duplicates and backwards time
+      let timeIssues = 0;
+      let duplicates = 0;
+      const cleanedPoints = [];
+      let lastTime = -Infinity;
+
+      for (let i = 0; i < dataPoints.length; i++) {
+        const pt = dataPoints[i];
+        if (pt.time < lastTime) {
+          timeIssues++;
+          continue;
+        }
+        if (Math.abs(pt.time - lastTime) < 0.0001) {
+          duplicates++;
+          continue;
+        }
+        cleanedPoints.push(pt);
+        lastTime = pt.time;
+      }
+
+      if (timeIssues > 0 || duplicates > 0) {
+        debugLog('Time data cleaned: Removed ' + timeIssues + ' backwards, ' + duplicates + ' duplicates');
+        const filterStatusEl = document.getElementById('filterStatus');
+        if (filterStatusEl) {
+          filterStatusEl.innerHTML = '<span style="color:#48bb78;">✓ Data cleaned: ' + (timeIssues + duplicates) + ' problematic points removed</span><br>' + filterStatusEl.innerHTML;
+        }
+      }
+
+      // Extract clean arrays
+      const cleanTimes = cleanedPoints.map(p => p.time);
+      const cleanFront = cleanedPoints.map(p => p.rawFront);
+      const cleanRear = cleanedPoints.map(p => p.rawRear);
+
+      debugLog('After cleaning: ' + cleanedPoints.length + ' samples (removed ' + (dataPoints.length - cleanedPoints.length) + ')');
+
+      // Step 3: Filter positions on CLEAN data
       debugLog('Applying position filters (median=' + MEDIAN_FILTER_SIZE + ', maxChange=' + MAX_POSITION_CHANGE + ')...');
-      let filteredFront = filterPosition(rawFront, MEDIAN_FILTER_SIZE, MAX_POSITION_CHANGE);
-      let filteredRear = filterPosition(rawRear, MEDIAN_FILTER_SIZE, MAX_POSITION_CHANGE);
-      
+      let filteredFront = filterPosition(cleanFront, MEDIAN_FILTER_SIZE, MAX_POSITION_CHANGE);
+      let filteredRear = filterPosition(cleanRear, MEDIAN_FILTER_SIZE, MAX_POSITION_CHANGE);
+
       // Apply user-selected filter
       const posFilterWindow = params.positionFilterWindow || 5;
       debugLog('Applying user filter: ' + params.filterType + ' (window=' + posFilterWindow + ')');
       filteredFront = applyDataFilter(filteredFront, posFilterWindow);
       filteredRear = applyDataFilter(filteredRear, posFilterWindow);
 
-      // Step 3: Calculate velocities using improved filtering
+      // Step 4: Calculate velocities on CLEAN, SORTED data
       const velFilterWindow = params.velocityFilterWindow || 11;
       debugLog('Calculating filtered velocities (window=' + velFilterWindow + ')...');
-      const frontVelocities = calculateFilteredVelocity(filteredFront, times, velFilterWindow);
-      const rearVelocities = calculateFilteredVelocity(filteredRear, times, velFilterWindow);
+      const frontVelocities = calculateFilteredVelocity(filteredFront, cleanTimes, velFilterWindow);
+      const rearVelocities = calculateFilteredVelocity(filteredRear, cleanTimes, velFilterWindow);
 
       // Debug velocity range
       const frontVelMin = Math.min(...frontVelocities);
@@ -1243,11 +1293,11 @@
       debugLog('Front velocity range: ' + frontVelMin.toFixed(0) + ' to ' + frontVelMax.toFixed(0) + ' mm/s');
       debugLog('Rear velocity range: ' + rearVelMin.toFixed(0) + ' to ' + rearVelMax.toFixed(0) + ' mm/s');
 
-      // Step 4: Build processed data array
+      // Step 5: Build final processed data array
       processedData = [];
-      for (let i = 0; i < filtered.length; i++) {
+      for (let i = 0; i < cleanedPoints.length; i++) {
         processedData.push({
-          time: times[i],
+          time: cleanTimes[i],
           front: filteredFront[i],
           rear: filteredRear[i],
           front_vel: frontVelocities[i],
@@ -1256,57 +1306,10 @@
         });
       }
 
-      debugLog('processedData created: ' + processedData.length + ' samples (before sorting)');
-      
-      // CRITICAL: Sort by time to fix backwards lines in plots
-      processedData.sort((a, b) => a.time - b.time);
-      
-      // Validate time monotonicity and remove duplicates
-      let timeIssues = 0;
-      let duplicates = 0;
-      const cleanedData = [];
-      let lastTime = -Infinity;
-      
-      for (let i = 0; i < processedData.length; i++) {
-        const current = processedData[i];
-        const currentTime = current.time;
-        
-        // Check for backwards time
-        if (currentTime < lastTime) {
-          timeIssues++;
-          debugLog('WARNING: Time goes backwards at index ' + i + ': ' + lastTime.toFixed(4) + ' -> ' + currentTime.toFixed(4));
-          continue; // Skip this point
-        }
-        
-        // Check for duplicate timestamps
-        if (Math.abs(currentTime - lastTime) < 0.0001) {
-          duplicates++;
-          continue; // Skip duplicates
-        }
-        
-        cleanedData.push(current);
-        lastTime = currentTime;
-      }
-      
-      processedData = cleanedData;
-      
-      if (timeIssues > 0 || duplicates > 0) {
-        debugLog('Time data cleaned: Removed ' + timeIssues + ' backwards points, ' + duplicates + ' duplicates');
-        const totalRemoved = timeIssues + duplicates;
-        const msg = '✓ Time data auto-fixed: Removed ' + totalRemoved + ' problematic point' + (totalRemoved > 1 ? 's' : '') + 
-                    ' (' + timeIssues + ' backwards, ' + duplicates + ' duplicates)';
-        showStatus(msg, 'success');
-        
-        // Also show in filter status for visibility
-        const filterStatusEl = document.getElementById('filterStatus');
-        if (filterStatusEl) {
-          filterStatusEl.innerHTML = '<span style="color:#48bb78;">✓ Data quality: Time ordering corrected (' + totalRemoved + ' points cleaned)</span><br>' + filterStatusEl.innerHTML;
-        }
-      }
-      
-      debugLog('processedData after sorting and cleaning: ' + processedData.length + ' samples');
+      debugLog('processedData created: ' + processedData.length + ' samples');
       if (processedData.length > 0) {
-        debugLog('First processed: time=' + processedData[0].time.toFixed(4) + ', front=' + processedData[0].front.toFixed(1) + ', rear=' + processedData[0].rear.toFixed(1));
+        debugLog('Time range: ' + processedData[0].time.toFixed(3) + 's to ' + processedData[processedData.length-1].time.toFixed(3) + 's');
+        debugLog('First: front=' + processedData[0].front.toFixed(1) + 'mm, rear=' + processedData[0].rear.toFixed(1) + 'mm');
       }
       return processedData;
     }
