@@ -700,13 +700,32 @@
 
       console.log('Using columns - time:', timeCol, 'front:', frontCol, 'rear:', rearCol);
 
+      // Debug: show first 3 rows of data
+      console.log('First 3 rows:', rawData.slice(0, 3));
+      console.log('Time values (first 5):', rawData.slice(0, 5).map(d => ({ raw: d[timeCol], type: typeof d[timeCol] })));
+      console.log('Trim params:', { start: params.trimStart, end: params.trimEnd });
+
       // Filter by time and convert
       let filtered = rawData.filter(d => {
         const t = d[timeCol];
-        return t !== undefined && t !== null && !isNaN(t) && t >= params.trimStart && t <= params.trimEnd;
+        // More permissive: accept any truthy time value or 0
+        return (t !== undefined && t !== null && (t === 0 || !isNaN(Number(t)))) &&
+               Number(t) >= params.trimStart && Number(t) <= params.trimEnd;
       });
 
       console.log('Filtered from', rawData.length, 'to', filtered.length, 'samples');
+      if (filtered.length < 10 && rawData.length > 10) {
+        console.log('Filter issue! Sample failed rows:', rawData.slice(0, 5).map(d => {
+          const t = d[timeCol];
+          return {
+            time: t,
+            type: typeof t,
+            isNum: !isNaN(Number(t)),
+            passStart: Number(t) >= params.trimStart,
+            passEnd: Number(t) <= params.trimEnd
+          };
+        }));
+      }
 
       // Convert and calculate velocities
       processedData = [];
