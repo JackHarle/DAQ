@@ -426,19 +426,47 @@
 
       showStatus('Loading file...', 'info');
 
-      Papa.parse(file, {
-        header: true,
-        dynamicTyping: true,
-        skipEmptyLines: true,
-        complete: (results) => {
-          rawData = results.data;
-          showStatus(`Loaded ${rawData.length} samples from ${file.name}`, 'success');
-          updateTrimEnd();
-        },
-        error: (err) => {
-          showStatus(`Error parsing CSV: ${err.message}`, 'error');
+      // First read as text to check for issues
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        let text = e.target.result;
+
+        // Debug: show file info
+        console.log('File size:', text.length, 'bytes');
+        console.log('First 200 chars:', text.substring(0, 200));
+        console.log('Line ending check - has \\r\\n:', text.includes('\r\n'), 'has \\r only:', text.includes('\r') && !text.includes('\n'));
+
+        // Normalize line endings (convert all to \n)
+        text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+        // Remove BOM if present
+        if (text.charCodeAt(0) === 0xFEFF) {
+          text = text.substring(1);
         }
-      });
+
+        // Count lines for debugging
+        const lineCount = text.split('\n').length;
+        console.log('Line count after normalization:', lineCount);
+
+        Papa.parse(text, {
+          header: true,
+          dynamicTyping: true,
+          skipEmptyLines: true,
+          complete: (results) => {
+            console.log('PapaParse results:', results.data.length, 'rows,', results.errors.length, 'errors');
+            if (results.errors.length > 0) {
+              console.log('Parse errors:', results.errors.slice(0, 5));
+            }
+            rawData = results.data;
+            showStatus(`Loaded ${rawData.length} samples from ${file.name}`, 'success');
+            updateTrimEnd();
+          },
+          error: (err) => {
+            showStatus(`Error parsing CSV: ${err.message}`, 'error');
+          }
+        });
+      };
+      reader.readAsText(file);
     }
 
     function fetchFromESP() {
