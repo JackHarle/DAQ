@@ -758,6 +758,93 @@
     }
 
     // ==================== SIGNAL FILTERING ====================
+
+    // Gap detection threshold (milliseconds) - gaps larger than this are treated as discontinuities
+    const GAP_THRESHOLD_MS = 10;
+
+    // Find indices where time gaps occur (returns array of indices AFTER each gap)
+    function findGapIndices(times, thresholdSec) {
+      const gaps = [];
+      for (let i = 1; i < times.length; i++) {
+        if ((times[i] - times[i - 1]) > thresholdSec) {
+          gaps.push(i);
+        }
+      }
+      return gaps;
+    }
+
+    // Apply filter to data, respecting time gaps (don't smooth across gaps)
+    // This prevents artificial position interpolation at discontinuities
+    function applyFilterWithGaps(arr, times, filterFn, windowSize) {
+      const gapThreshold = GAP_THRESHOLD_MS / 1000; // Convert to seconds
+      const gaps = findGapIndices(times, gapThreshold);
+
+      if (gaps.length === 0) {
+        // No gaps - apply filter normally
+        return filterFn(arr, windowSize);
+      }
+
+      debugLog('Gap-aware filtering: found ' + gaps.length + ' time gaps (>' + GAP_THRESHOLD_MS + 'ms)');
+
+      // Log gap locations with times
+      for (let g = 0; g < Math.min(gaps.length, 5); g++) {
+        const gapIdx = gaps[g];
+        const beforeTime = times[gapIdx - 1];
+        const afterTime = times[gapIdx];
+        const gapSize = ((afterTime - beforeTime) * 1000).toFixed(1);
+        debugLog('  Gap ' + (g+1) + ': index ' + gapIdx + ', time ' + beforeTime.toFixed(4) + 's -> ' + afterTime.toFixed(4) + 's (' + gapSize + 'ms)');
+      }
+      if (gaps.length > 5) {
+        debugLog('  ... and ' + (gaps.length - 5) + ' more gaps');
+      }
+
+      // Split into segments at gaps
+      const segments = [];
+      let segStart = 0;
+      for (const gapIdx of gaps) {
+        if (gapIdx > segStart) {
+          segments.push({ start: segStart, end: gapIdx });
+        }
+        segStart = gapIdx;
+      }
+      // Add final segment
+      if (segStart < arr.length) {
+        segments.push({ start: segStart, end: arr.length });
+      }
+
+      debugLog('  Created ' + segments.length + ' segments, total points: ' + arr.length);
+
+      // Filter each segment independently
+      const result = new Array(arr.length);
+      let filledCount = 0;
+
+      for (const seg of segments) {
+        const segLen = seg.end - seg.start;
+        const segData = arr.slice(seg.start, seg.end);
+
+        // Only apply filter if segment is large enough
+        const filtered = segLen >= windowSize ?
+          filterFn(segData, windowSize) : segData.slice();
+
+        // Verify filter didn't change array length
+        if (filtered.length !== segData.length) {
+          debugLog('[ERROR] Filter changed segment length! Was ' + segData.length + ', now ' + filtered.length);
+        }
+
+        for (let i = 0; i < filtered.length; i++) {
+          result[seg.start + i] = filtered[i];
+          filledCount++;
+        }
+      }
+
+      // Verify all positions were filled
+      if (filledCount !== arr.length) {
+        debugLog('[ERROR] Gap-aware filter data loss! Input: ' + arr.length + ', filled: ' + filledCount);
+      }
+
+      return result;
+    }
+
     // Median filter for spike removal (sliding window)
     function medianFilter(arr, windowSize) {
       const halfWindow = Math.floor(windowSize / 2);
@@ -1171,17 +1258,28 @@
 
       // Show sample time values
       const sampleTimes = rawData.slice(0, 3).map(d => getTime(d) - timeOffset);
-      debugLog('First 3 time values: ' + sampleTimes.join(', '));
-      debugLog('Trim: start=' + params.trimStart + ', end=' + params.trimEnd);
+      const lastSampleTimes = rawData.slice(-3).map(d => getTime(d) - timeOffset);
+      debugLog('First 3 time values: ' + sampleTimes.map(t => t.toFixed(4)).join(', '));
+      debugLog('Last 3 time values: ' + lastSampleTimes.map(t => t.toFixed(4)).join(', '));
+      debugLog('Trim settings: start=' + params.trimStart + ', end=' + (params.trimEnd === Infinity ? 'Infinity' : params.trimEnd));
 
       // Filter by time - very permissive, just check for valid numbers
+      let rejectedByNaN = 0, rejectedByInfinite = 0, rejectedByTrimStart = 0, rejectedByTrimEnd = 0;
+
       let filtered = rawData.filter(d => {
         const t = getTime(d) - timeOffset;
-        // Accept any valid number within trim range
-        return !isNaN(t) && isFinite(t) && t >= params.trimStart && t <= params.trimEnd;
+        if (isNaN(t)) { rejectedByNaN++; return false; }
+        if (!isFinite(t)) { rejectedByInfinite++; return false; }
+        if (t < params.trimStart) { rejectedByTrimStart++; return false; }
+        if (t > params.trimEnd) { rejectedByTrimEnd++; return false; }
+        return true;
       });
 
-      debugLog('Filter result: ' + rawData.length + ' -> ' + filtered.length + ' samples');
+      debugLog('Time filter: ' + rawData.length + ' -> ' + filtered.length + ' samples');
+      if (rejectedByNaN + rejectedByInfinite + rejectedByTrimStart + rejectedByTrimEnd > 0) {
+        debugLog('  Rejected: NaN=' + rejectedByNaN + ', Infinite=' + rejectedByInfinite +
+                 ', <trimStart=' + rejectedByTrimStart + ', >trimEnd=' + rejectedByTrimEnd);
+      }
 
       // FALLBACK: If filtering failed, use all data with index-based time
       let useFallbackTime = false;
@@ -1280,32 +1378,60 @@
       // Sort by time
       dataPoints.sort((a, b) => a.time - b.time);
 
-      // Remove duplicates and backwards time
+      // Remove ONLY strictly backwards time (keep all forward/equal timestamps)
+      // This is more permissive to avoid losing data
       let timeIssues = 0;
       let duplicates = 0;
       const cleanedPoints = [];
       let lastTime = -Infinity;
+      let firstRemovedTime = null;
+      let lastRemovedTime = null;
+
+      // MUCH more permissive: only skip if time goes BACKWARDS
+      // Keep duplicates and very close timestamps - they're valid data!
+      const DUPLICATE_THRESHOLD = 0.00001; // 10 microseconds - only true duplicates
 
       for (let i = 0; i < dataPoints.length; i++) {
         const pt = dataPoints[i];
-        if (pt.time < lastTime) {
+        // Only skip if time is strictly less than previous (backwards)
+        if (pt.time < lastTime - DUPLICATE_THRESHOLD) {
           timeIssues++;
+          if (!firstRemovedTime) firstRemovedTime = pt.time;
+          lastRemovedTime = pt.time;
           continue;
         }
-        if (Math.abs(pt.time - lastTime) < 0.0001) {
+        // Only skip true duplicates (exactly same timestamp)
+        if (Math.abs(pt.time - lastTime) < DUPLICATE_THRESHOLD && cleanedPoints.length > 0) {
           duplicates++;
+          if (!firstRemovedTime) firstRemovedTime = pt.time;
+          lastRemovedTime = pt.time;
           continue;
         }
         cleanedPoints.push(pt);
         lastTime = pt.time;
       }
 
+      debugLog('=== DATA PIPELINE VERIFICATION ===');
+      debugLog('Step 1: Raw CSV rows: ' + rawData.length);
+      debugLog('Step 2: After time trim: ' + filtered.length);
+      debugLog('Step 3: After extraction: ' + dataPoints.length);
+      debugLog('Step 4: After cleaning: ' + cleanedPoints.length);
+
       if (timeIssues > 0 || duplicates > 0) {
-        debugLog('Time data cleaned: Removed ' + timeIssues + ' backwards, ' + duplicates + ' duplicates');
+        debugLog('  Removed: ' + timeIssues + ' backwards, ' + duplicates + ' duplicates');
+        if (firstRemovedTime !== null) {
+          debugLog('  Removed points time range: ' + firstRemovedTime.toFixed(4) + 's to ' + lastRemovedTime.toFixed(4) + 's');
+        }
         const filterStatusEl = document.getElementById('filterStatus');
         if (filterStatusEl) {
           filterStatusEl.innerHTML = '<span style="color:#48bb78;">[OK] Data cleaned: ' + (timeIssues + duplicates) + ' problematic points removed</span><br>' + filterStatusEl.innerHTML;
         }
+      }
+
+      // Verify no major data loss
+      const lossPercent = ((rawData.length - cleanedPoints.length) / rawData.length * 100).toFixed(1);
+      if (cleanedPoints.length < rawData.length * 0.9) {
+        debugLog('[WARNING] Significant data loss: ' + lossPercent + '% of points removed!');
       }
 
       // Extract clean arrays
@@ -1315,16 +1441,32 @@
 
       debugLog('After cleaning: ' + cleanedPoints.length + ' samples (removed ' + (dataPoints.length - cleanedPoints.length) + ')');
 
-      // Step 3: Filter positions on CLEAN data
-      debugLog('Applying position filters (median=' + MEDIAN_FILTER_SIZE + ', maxChange=' + MAX_POSITION_CHANGE + ')...');
-      let filteredFront = filterPosition(cleanFront, MEDIAN_FILTER_SIZE, MAX_POSITION_CHANGE);
-      let filteredRear = filterPosition(cleanRear, MEDIAN_FILTER_SIZE, MAX_POSITION_CHANGE);
+      // Step 3: Filter positions on CLEAN data (gap-aware to prevent cross-gap smoothing)
+      debugLog('Applying position filters (median=' + MEDIAN_FILTER_SIZE + ', maxChange=' + MAX_POSITION_CHANGE + ', gap-aware)...');
 
-      // Apply user-selected filter
+      // Median filter with gap awareness
+      const medianFn = (arr, win) => medianFilter(arr, win);
+      let filteredFront = applyFilterWithGaps(cleanFront, cleanTimes, medianFn, MEDIAN_FILTER_SIZE);
+      let filteredRear = applyFilterWithGaps(cleanRear, cleanTimes, medianFn, MEDIAN_FILTER_SIZE);
+
+      // Position change limiting (already gap-aware by nature - operates sample by sample)
+      filteredFront = limitPositionChange(filteredFront, MAX_POSITION_CHANGE);
+      filteredRear = limitPositionChange(filteredRear, MAX_POSITION_CHANGE);
+
+      // Apply user-selected filter WITH GAP AWARENESS
+      // This prevents artificial smoothing across time discontinuities
       const posFilterWindow = params.positionFilterWindow || 5;
-      debugLog('Applying user filter: ' + params.filterType + ' (window=' + posFilterWindow + ')');
-      filteredFront = applyDataFilter(filteredFront, posFilterWindow);
-      filteredRear = applyDataFilter(filteredRear, posFilterWindow);
+      debugLog('Applying user filter: ' + params.filterType + ' (window=' + posFilterWindow + ', gap-aware)');
+
+      // Create filter function based on user selection
+      const posFilterFn = (arr, win) => {
+        if (params.filterType === 'moving_average') return movingAverageFilter(arr, win);
+        if (params.filterType === 'none') return arr.slice();
+        return savitzkyGolayFilter(arr, win, 3, 0, 1); // Default: Savitzky-Golay
+      };
+
+      filteredFront = applyFilterWithGaps(filteredFront, cleanTimes, posFilterFn, posFilterWindow);
+      filteredRear = applyFilterWithGaps(filteredRear, cleanTimes, posFilterFn, posFilterWindow);
 
       // Step 4: Calculate velocities on CLEAN, SORTED data
       const velFilterWindow = params.velocityFilterWindow || 11;
@@ -1353,10 +1495,22 @@
         });
       }
 
-      debugLog('processedData created: ' + processedData.length + ' samples');
+      debugLog('Step 5: Filtered arrays - front: ' + filteredFront.length + ', rear: ' + filteredRear.length);
+      debugLog('Step 6: Velocity arrays - front: ' + frontVelocities.length + ', rear: ' + rearVelocities.length);
+      debugLog('Step 7: Final processedData: ' + processedData.length + ' samples');
+
+      // Final verification
+      if (processedData.length !== cleanedPoints.length) {
+        debugLog('[ERROR] Data mismatch! cleanedPoints=' + cleanedPoints.length + ' but processedData=' + processedData.length);
+      }
+
       if (processedData.length > 0) {
-        debugLog('Time range: ' + processedData[0].time.toFixed(3) + 's to ' + processedData[processedData.length-1].time.toFixed(3) + 's');
+        debugLog('Time range: ' + processedData[0].time.toFixed(4) + 's to ' + processedData[processedData.length-1].time.toFixed(4) + 's');
         debugLog('First: front=' + processedData[0].front.toFixed(1) + 'mm, rear=' + processedData[0].rear.toFixed(1) + 'mm');
+
+        // Check for data around specific time range (user's problem area)
+        const around429 = processedData.filter(d => d.time >= 4.28 && d.time <= 4.41);
+        debugLog('Points in range 4.28-4.41s: ' + around429.length);
       }
       return processedData;
     }
@@ -1729,6 +1883,11 @@
     }
 
     function plotPositionChart() {
+      debugLog('plotPositionChart: plotting ' + processedData.length + ' points');
+      if (processedData.length > 0) {
+        debugLog('  X range: ' + processedData[0].time.toFixed(4) + ' to ' + processedData[processedData.length-1].time.toFixed(4));
+      }
+
       const params = analysisResults.params;
       const frontBaseline = params.frontTravel * (params.sagPercent / 100);
       const rearBaseline = params.rearTravel * (params.sagPercent / 100);
