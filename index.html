@@ -817,15 +817,26 @@
           coeffs[i] = rawCoeffs[i];
         }
       } else {
-        // Generic computation using least squares
-        // Build Vandermonde-like matrix and solve for coefficients
-        // This is a simplified approximation for other window sizes
-        const h = 1; // sample spacing
-        for (let i = 0; i < windowSize; i++) {
-          const x = i - halfWindow;
-          // Simple derivative approximation using central difference weights
-          if (deriv === 1) {
-            // Weighted central difference
+        // Generic computation for other window sizes
+        if (deriv === 0) {
+          // Smoothing: use symmetric weights that sum to 1
+          // Simple parabolic weighting for smoothing
+          let weightSum = 0;
+          for (let i = 0; i < windowSize; i++) {
+            const x = i - halfWindow;
+            // Parabolic weight: 1 - (x/halfWindow)^2
+            const weight = 1 - (x / halfWindow) * (x / halfWindow);
+            coeffs[i] = Math.max(0.1, weight); // Ensure positive weights
+            weightSum += coeffs[i];
+          }
+          // Normalize to sum to 1
+          for (let i = 0; i < windowSize; i++) {
+            coeffs[i] /= weightSum;
+          }
+        } else if (deriv === 1) {
+          // Derivative: weighted central difference
+          for (let i = 0; i < windowSize; i++) {
+            const x = i - halfWindow;
             coeffs[i] = x / (halfWindow * halfWindow * (halfWindow + 1) * 2 / 3);
           }
         }
@@ -873,6 +884,93 @@
     // Calculate smoothed velocity using Savitzky-Golay derivative
     function calculateSmoothedVelocity(positions, sampleRate, windowSize, polyOrder) {
       return savitzkyGolayFilter(positions, windowSize, polyOrder, 1, sampleRate);
+    }
+
+    // Apply user-selected filter type to data array
+    function applyDataFilter(arr, windowSize) {
+      const params = getParams();
+      const filterType = params.filterType || 'savgol';
+
+      // Ensure odd window size
+      let win = Math.max(1, Math.floor(windowSize));
+      if (win % 2 === 0) win += 1;
+
+      if (filterType === 'none') {
+        return arr.slice(); // Return copy of original
+      } else if (filterType === 'moving_average') {
+        return movingAverageFilter(arr, win);
+      } else {
+        // Default: Savitzky-Golay smoothing (deriv=0)
+        return savitzkyGolayFilter(arr, win, 3, 0, 1);
+      }
+    }
+
+    // Moving average filter
+    function movingAverageFilter(arr, windowSize) {
+      const halfWindow = Math.floor(windowSize / 2);
+      const result = new Array(arr.length);
+
+      for (let i = 0; i < arr.length; i++) {
+        const start = Math.max(0, i - halfWindow);
+        const end = Math.min(arr.length - 1, i + halfWindow);
+        let sum = 0;
+        let count = 0;
+        for (let j = start; j <= end; j++) {
+          sum += arr[j];
+          count++;
+        }
+        result[i] = sum / count;
+      }
+      return result;
+    }
+
+    // Calculate velocity with filtering using actual time differences
+    function calculateFilteredVelocity(positions, times, windowSize) {
+      const params = getParams();
+      const filterType = params.filterType || 'savgol';
+
+      // Ensure odd window size
+      let win = Math.max(3, Math.floor(windowSize));
+      if (win % 2 === 0) win += 1;
+
+      if (filterType === 'none') {
+        // Raw velocity from simple differences
+        const velocities = new Array(positions.length);
+        velocities[0] = 0;
+        for (let i = 1; i < positions.length; i++) {
+          const dt = times[i] - times[i - 1];
+          velocities[i] = dt > 0 ? (positions[i] - positions[i - 1]) / dt : 0;
+        }
+        return velocities;
+      } else if (filterType === 'moving_average') {
+        // Calculate raw velocity first, then smooth
+        const rawVel = new Array(positions.length);
+        rawVel[0] = 0;
+        for (let i = 1; i < positions.length; i++) {
+          const dt = times[i] - times[i - 1];
+          rawVel[i] = dt > 0 ? (positions[i] - positions[i - 1]) / dt : 0;
+        }
+        return movingAverageFilter(rawVel, win);
+      } else {
+        // Savitzky-Golay derivative - use average sample rate
+        const totalTime = times[times.length - 1] - times[0];
+        const avgSampleRate = (positions.length - 1) / totalTime;
+        return savitzkyGolayFilter(positions, win, 3, 1, avgSampleRate);
+      }
+    }
+
+    // Get current filter status for display
+    function getFilterStatus() {
+      const params = getParams();
+      const filterType = params.filterType || 'savgol';
+
+      return {
+        active: filterType !== 'none',
+        type: filterType === 'savgol' ? 'Savitzky-Golay' :
+              filterType === 'moving_average' ? 'Moving Average' : 'None',
+        posWindow: params.positionFilterWindow || 5,
+        velWindow: params.velocityFilterWindow || 11
+      };
     }
 
     // ==================== DATA PROCESSING ====================
