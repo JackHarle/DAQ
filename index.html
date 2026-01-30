@@ -62,6 +62,11 @@
       border-radius: 6px;
       font-size: 1rem;
     }
+    
+    input[type="checkbox"] {
+      width: auto;
+      cursor: pointer;
+    }
 
     input:focus, select:focus {
       outline: none;
@@ -147,8 +152,8 @@
     .chart-container { width: 100%; height: 400px; }
 
     .collapsible { cursor: pointer; user-select: none; }
-    .collapsible::before { content: '▶ '; font-size: 0.8em; }
-    .collapsible.open::before { content: '▼ '; }
+    .collapsible::before { content: 'â–¶ '; font-size: 0.8em; }
+    .collapsible.open::before { content: 'â–¼ '; }
     .collapsible-content { display: none; }
     .collapsible-content.open { display: block; }
 
@@ -178,7 +183,7 @@
       <div>
         <label class="file-input">
           <input type="file" id="fileInput" accept=".csv">
-          <div>📁 Click to select CSV file</div>
+          <div>ðŸ“ Click to select CSV file</div>
           <div style="font-size:0.875rem;color:var(--text-light);margin-top:8px;">or drag and drop</div>
         </label>
       </div>
@@ -229,7 +234,46 @@
       </div>
     </div>
 
-    <h3>Rear Linkage: Shock → Wheel Travel</h3>
+    <h3>🎛️ Data Filtering</h3>
+    <div style="background:#f0f4ff;padding:12px;border-radius:6px;border:1px solid #d0d9f0;">
+      <div class="grid grid-3">
+        <div>
+          <label>Filter Type</label>
+          <select id="filterType" onchange="if(document.getElementById('autoReprocess').checked) processData()">
+            <option value="savgol" selected>Savitzky-Golay (Best)</option>
+            <option value="moving_average">Moving Average</option>
+            <option value="none">None (Raw Data)</option>
+          </select>
+        </div>
+        <div>
+          <label>Position Smoothing</label>
+          <input type="number" id="positionFilterWindow" value="5" min="1" max="20" step="2" onchange="if(document.getElementById('autoReprocess').checked) processData()">
+          <small style="color:var(--text-light);">Odd number, 1-20 (higher = smoother)</small>
+        </div>
+        <div>
+          <label>Velocity Smoothing</label>
+          <input type="number" id="velocityFilterWindow" value="11" min="1" max="50" step="2" onchange="if(document.getElementById('autoReprocess').checked) processData()">
+          <small style="color:var(--text-light);">Odd number, 1-50 (higher = smoother)</small>
+        </div>
+      </div>
+      <div class="grid grid-2" style="margin-top:8px;">
+        <div>
+          <label style="display:flex;align-items:center;cursor:pointer;">
+            <input type="checkbox" id="showRawData" onchange="if(document.getElementById('autoReprocess').checked) processData()" style="width:auto;margin-right:8px;">
+            <span>Show raw data overlay (gray, for comparison)</span>
+          </label>
+        </div>
+        <div>
+          <label style="display:flex;align-items:center;cursor:pointer;">
+            <input type="checkbox" id="autoReprocess" checked style="width:auto;margin-right:8px;">
+            <span>Auto-reprocess on filter change</span>
+          </label>
+        </div>
+      </div>
+      <div id="filterStatus" style="margin-top:8px;padding:8px;background:#fff;border-radius:4px;font-size:0.85rem;color:var(--text-light);"></div>
+    </div>
+
+    <h3>Rear Linkage: Shock â†’ Wheel Travel</h3>
     <div style="background:var(--bg);padding:12px;border-radius:6px;">
       <label>Cubic Polynomial Coefficients</label>
       <div class="grid grid-2" style="margin-top:4px;gap:8px;">
@@ -242,22 +286,22 @@
           <input type="number" id="rearB" value="2.8574" step="0.0001">
         </div>
         <div>
-          <small style="color:var(--text-light);">c (x²)</small>
+          <small style="color:var(--text-light);">c (xÂ²)</small>
           <input type="number" id="rearC" value="0" step="0.000001">
         </div>
         <div>
-          <small style="color:var(--text-light);">d (x³)</small>
+          <small style="color:var(--text-light);">d (xÂ³)</small>
           <input type="number" id="rearD" value="0" step="0.00000001">
         </div>
       </div>
       <small style="color:var(--text-light);display:block;margin-top:8px;">
-        Conversion: ADC → shock_mm = ADC × (pot_stroke / 4095)<br>
-        Then: wheel_mm = a + b×shock + c×shock² + d×shock³
+        Conversion: ADC â†’ shock_mm = ADC Ã— (pot_stroke / 4095)<br>
+        Then: wheel_mm = a + bÃ—shock + cÃ—shockÂ² + dÃ—shockÂ³
       </small>
       <div style="margin-top:8px;">
         <label class="file-input" style="padding:10px;border-width:1px;">
           <input type="file" id="linkageInput" accept=".csv,.txt" onchange="loadLinkageCSV(event)">
-          <span>📊 Upload Linkage CSV to auto-calculate coefficients</span>
+          <span>ðŸ“Š Upload Linkage CSV to auto-calculate coefficients</span>
         </label>
       </div>
       <div id="linkageStatus" class="status info hidden" style="margin-top:8px;"></div>
@@ -441,6 +485,38 @@
       }
     });
 
+    // Sort raw data by time column (handles multiple possible column names)
+    function sortRawDataByTime() {
+      if (rawData.length === 0) return;
+      
+      // Find the time column
+      const sample = rawData[0];
+      const timeCol = ['time', 'Time', 'TIME', 't', 'timestamp', 'seconds', 'micros', 'Micros'].find(col => 
+        sample.hasOwnProperty(col) && sample[col] !== null && sample[col] !== undefined
+      );
+      
+      if (!timeCol) {
+        console.log('No time column found, skipping sort');
+        return;
+      }
+      
+      console.log('Sorting raw data by column:', timeCol);
+      
+      // Sort by time column
+      rawData.sort((a, b) => {
+        const aTime = Number(a[timeCol]);
+        const bTime = Number(b[timeCol]);
+        
+        // Handle NaN or invalid values
+        if (isNaN(aTime)) return 1;
+        if (isNaN(bTime)) return -1;
+        
+        return aTime - bTime;
+      });
+      
+      console.log('Raw data sorted. First time:', rawData[0][timeCol], 'Last time:', rawData[rawData.length-1][timeCol]);
+    }
+
     function handleFileSelect(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -479,6 +555,10 @@
               console.log('Parse errors:', results.errors.slice(0, 5));
             }
             rawData = results.data;
+            
+            // CRITICAL: Sort raw data by time immediately after loading
+            sortRawDataByTime();
+            
             showStatus(`Loaded ${rawData.length} samples from ${file.name}`, 'success');
             updateTrimEnd();
           },
@@ -506,6 +586,10 @@
             skipEmptyLines: true,
             complete: (results) => {
               rawData = results.data;
+              
+              // CRITICAL: Sort raw data by time immediately after loading
+              sortRawDataByTime();
+              
               showStatus(`Loaded ${rawData.length} samples from ESP32`, 'success');
               updateTrimEnd();
             }
@@ -813,6 +897,11 @@
         medianFilterSize: parseInt(document.getElementById('medianFilterSize').value) || 5,
         maxPosChange: parseFloat(document.getElementById('maxPosChange').value) || 15,
         velocityWindow: parseInt(document.getElementById('velocityWindow').value) || 21,
+        // NEW: User-controlled filtering
+        filterType: document.getElementById('filterType')?.value || 'savgol',
+        positionFilterWindow: parseInt(document.getElementById('positionFilterWindow')?.value) || 5,
+        velocityFilterWindow: parseInt(document.getElementById('velocityFilterWindow')?.value) || 11,
+        showRawData: document.getElementById('showRawData')?.checked || false,
         // Packing detection
         extensionThreshold: parseFloat(document.getElementById('extensionThreshold').value),
         packedThreshold: parseFloat(document.getElementById('packedThreshold').value),
@@ -833,7 +922,7 @@
         // Step 1: ADC to shock stroke (mm)
         const shockMM = adc * (params.rearPotStroke / 4095);
         // Step 2: Shock stroke to wheel travel via cubic polynomial
-        // wheel_mm = a + b*shock + c*shock² + d*shock³
+        // wheel_mm = a + b*shock + c*shockÂ² + d*shockÂ³
         return params.rearA +
                params.rearB * shockMM +
                params.rearC * shockMM * shockMM +
@@ -999,16 +1088,54 @@
       }
 
       debugLog('Raw positions extracted: ' + rawFront.length + ' samples');
+      
+      // Debug: Check time data quality
+      if (times.length > 0) {
+        const timeMin = Math.min(...times);
+        const timeMax = Math.max(...times);
+        const timeRange = timeMax - timeMin;
+        const avgDt = timeRange / (times.length - 1);
+        
+        // Check for backwards time
+        let backwardsCount = 0;
+        for (let i = 1; i < times.length; i++) {
+          if (times[i] < times[i-1]) backwardsCount++;
+        }
+        
+        debugLog('Time range: ' + timeMin.toFixed(4) + 's to ' + timeMax.toFixed(4) + 's (duration: ' + timeRange.toFixed(2) + 's)');
+        debugLog('Average dt: ' + (avgDt * 1000).toFixed(2) + 'ms (' + (1/avgDt).toFixed(0) + ' Hz)');
+        
+        if (backwardsCount > 0) {
+          debugLog('⚠️ WARNING: Time goes backwards ' + backwardsCount + ' times! Data needs sorting.');
+          showStatus('⚠️ Time data issue detected - ' + backwardsCount + ' backwards jumps. Will auto-fix.', 'warning');
+        }
+      }
 
-      // Step 2: Filter positions (median + limit)
+      // Update filter status display
+      const filterStatus = getFilterStatus();
+      const statusEl = document.getElementById('filterStatus');
+      if (statusEl) {
+        statusEl.innerHTML = filterStatus.active ? 
+          `🎛️ <strong>Active Filter:</strong> ${filterStatus.type} | Position: ${filterStatus.posWindow} samples | Velocity: ${filterStatus.velWindow} samples` :
+          `⚠️ <strong>No filtering applied</strong> - using raw data`;
+      }
+
+      // Step 2: Filter positions (median + limit first, then apply user filter)
       debugLog('Applying position filters (median=' + MEDIAN_FILTER_SIZE + ', maxChange=' + MAX_POSITION_CHANGE + ')...');
-      const filteredFront = filterPosition(rawFront, MEDIAN_FILTER_SIZE, MAX_POSITION_CHANGE);
-      const filteredRear = filterPosition(rawRear, MEDIAN_FILTER_SIZE, MAX_POSITION_CHANGE);
+      let filteredFront = filterPosition(rawFront, MEDIAN_FILTER_SIZE, MAX_POSITION_CHANGE);
+      let filteredRear = filterPosition(rawRear, MEDIAN_FILTER_SIZE, MAX_POSITION_CHANGE);
+      
+      // Apply user-selected filter
+      const posFilterWindow = params.positionFilterWindow || 5;
+      debugLog('Applying user filter: ' + params.filterType + ' (window=' + posFilterWindow + ')');
+      filteredFront = applyDataFilter(filteredFront, posFilterWindow);
+      filteredRear = applyDataFilter(filteredRear, posFilterWindow);
 
-      // Step 3: Calculate smoothed velocities using Savitzky-Golay
-      debugLog('Calculating velocities with Savitzky-Golay (window=' + VELOCITY_WINDOW + ', poly=' + VELOCITY_POLYORDER + ')...');
-      const frontVelocities = calculateSmoothedVelocity(filteredFront, sampleRate, VELOCITY_WINDOW, VELOCITY_POLYORDER);
-      const rearVelocities = calculateSmoothedVelocity(filteredRear, sampleRate, VELOCITY_WINDOW, VELOCITY_POLYORDER);
+      // Step 3: Calculate velocities using improved filtering
+      const velFilterWindow = params.velocityFilterWindow || 11;
+      debugLog('Calculating filtered velocities (window=' + velFilterWindow + ')...');
+      const frontVelocities = calculateFilteredVelocity(filteredFront, times, velFilterWindow);
+      const rearVelocities = calculateFilteredVelocity(filteredRear, times, velFilterWindow);
 
       // Debug velocity range
       const frontVelMin = Math.min(...frontVelocities);
@@ -1031,7 +1158,55 @@
         });
       }
 
-      debugLog('processedData created: ' + processedData.length + ' samples');
+      debugLog('processedData created: ' + processedData.length + ' samples (before sorting)');
+      
+      // CRITICAL: Sort by time to fix backwards lines in plots
+      processedData.sort((a, b) => a.time - b.time);
+      
+      // Validate time monotonicity and remove duplicates
+      let timeIssues = 0;
+      let duplicates = 0;
+      const cleanedData = [];
+      let lastTime = -Infinity;
+      
+      for (let i = 0; i < processedData.length; i++) {
+        const current = processedData[i];
+        const currentTime = current.time;
+        
+        // Check for backwards time
+        if (currentTime < lastTime) {
+          timeIssues++;
+          debugLog('WARNING: Time goes backwards at index ' + i + ': ' + lastTime.toFixed(4) + ' -> ' + currentTime.toFixed(4));
+          continue; // Skip this point
+        }
+        
+        // Check for duplicate timestamps
+        if (Math.abs(currentTime - lastTime) < 0.0001) {
+          duplicates++;
+          continue; // Skip duplicates
+        }
+        
+        cleanedData.push(current);
+        lastTime = currentTime;
+      }
+      
+      processedData = cleanedData;
+      
+      if (timeIssues > 0 || duplicates > 0) {
+        debugLog('Time data cleaned: Removed ' + timeIssues + ' backwards points, ' + duplicates + ' duplicates');
+        const totalRemoved = timeIssues + duplicates;
+        const msg = '✓ Time data auto-fixed: Removed ' + totalRemoved + ' problematic point' + (totalRemoved > 1 ? 's' : '') + 
+                    ' (' + timeIssues + ' backwards, ' + duplicates + ' duplicates)';
+        showStatus(msg, 'success');
+        
+        // Also show in filter status for visibility
+        const filterStatusEl = document.getElementById('filterStatus');
+        if (filterStatusEl) {
+          filterStatusEl.innerHTML = '<span style="color:#48bb78;">✓ Data quality: Time ordering corrected (' + totalRemoved + ' points cleaned)</span><br>' + filterStatusEl.innerHTML;
+        }
+      }
+      
+      debugLog('processedData after sorting and cleaning: ' + processedData.length + ' samples');
       if (processedData.length > 0) {
         debugLog('First processed: time=' + processedData[0].time.toFixed(4) + ', front=' + processedData[0].front.toFixed(1) + ', rear=' + processedData[0].rear.toFixed(1));
       }
@@ -1452,20 +1627,61 @@
         {
           x: processedData.map(d => d.time),
           y: processedData.map(d => d.front),
-          name: 'Front',
+          name: 'Front (Filtered)',
           type: 'scatter',
           mode: 'lines',
-          line: { color: '#3182ce', width: 1 }
+          line: { color: '#3182ce', width: 2 }
         },
         {
           x: processedData.map(d => d.time),
           y: processedData.map(d => d.rear),
-          name: 'Rear',
+          name: 'Rear (Filtered)',
           type: 'scatter',
           mode: 'lines',
-          line: { color: '#e53e3e', width: 1 }
+          line: { color: '#e53e3e', width: 2 }
         }
       ];
+      
+      // Add raw data overlay if enabled
+      if (document.getElementById('showRawData')?.checked && rawData.length > 0) {
+        const params = getParams();
+        const rawFrontPos = [];
+        const rawRearPos = [];
+        const rawTimes = [];
+        
+        for (let i = 0; i < Math.min(rawData.length, processedData.length); i++) {
+          const d = rawData[i];
+          let frontMM = convertADCtoMM(d.front || d.front_disp || d.Front, 'front', params);
+          let rearMM = convertADCtoMM(d.rear || d.rear_disp || d.Rear, 'rear', params);
+          
+          if (params.invertFront) frontMM = params.frontTravel - frontMM;
+          if (params.invertRear) rearMM = params.rearTravel - rearMM;
+          
+          rawFrontPos.push(frontMM);
+          rawRearPos.push(rearMM);
+          rawTimes.push(processedData[i].time);
+        }
+        
+        traces.push({
+          x: rawTimes,
+          y: rawFrontPos,
+          name: 'Front (Raw)',
+          type: 'scatter',
+          mode: 'lines',
+          line: { color: '#3182ce', width: 0.5, dash: 'dot' },
+          opacity: 0.3
+        });
+        
+        traces.push({
+          x: rawTimes,
+          y: rawRearPos,
+          name: 'Rear (Raw)',
+          type: 'scatter',
+          mode: 'lines',
+          line: { color: '#e53e3e', width: 0.5, dash: 'dot' },
+          opacity: 0.3
+        });
+      }
 
       const layout = {
         margin: { t: 30, r: 30, b: 40, l: 50 },
@@ -1484,18 +1700,18 @@
         {
           x: processedData.map(d => d.time),
           y: processedData.map(d => d.front_vel),
-          name: 'Front Vel',
+          name: 'Front Vel (Filtered)',
           type: 'scatter',
           mode: 'lines',
-          line: { color: '#3182ce', width: 1 }
+          line: { color: '#3182ce', width: 2 }
         },
         {
           x: processedData.map(d => d.time),
           y: processedData.map(d => d.rear_vel),
-          name: 'Rear Vel',
+          name: 'Rear Vel (Filtered)',
           type: 'scatter',
           mode: 'lines',
-          line: { color: '#e53e3e', width: 1 }
+          line: { color: '#e53e3e', width: 2 }
         }
       ];
 
