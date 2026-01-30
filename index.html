@@ -683,7 +683,11 @@
 
       const frontCol = findCol(['front_disp', 'front', 'Front', 'FRONT', 'front_mm']);
       const rearCol = findCol(['rear_disp', 'rear', 'Rear', 'REAR', 'rear_mm']);
-      const timeCol = findCol(['time', 'Time', 'TIME', 't', 'timestamp', 'seconds']);
+      let timeCol = findCol(['time', 'Time', 'TIME', 't', 'timestamp', 'seconds']);
+      const microsCol = findCol(['micros', 'Micros', 'microseconds']);
+
+      // If time column has issues, try to use micros column
+      let useMicrosAsTime = false;
 
       // Check for missing columns
       const missing = [];
@@ -698,33 +702,84 @@
         return processedData;
       }
 
-      console.log('Using columns - time:', timeCol, 'front:', frontCol, 'rear:', rearCol);
+      console.log('Using columns - time:', timeCol, 'front:', frontCol, 'rear:', rearCol, 'micros:', microsCol);
 
       // Debug: show first 3 rows of data
       console.log('First 3 rows:', rawData.slice(0, 3));
-      console.log('Time values (first 5):', rawData.slice(0, 5).map(d => ({ raw: d[timeCol], type: typeof d[timeCol] })));
+
+      // Check if time column data looks valid
+      const timeTest = rawData.slice(0, 10).filter(d => {
+        const t = d[timeCol];
+        return t !== undefined && t !== null && !isNaN(Number(t));
+      }).length;
+
+      console.log('Time column validity check:', timeTest, '/ 10 rows valid');
+
+      // If time column is mostly invalid but we have micros, use that instead
+      if (timeTest < 5 && microsCol) {
+        console.log('Switching to micros column as time source');
+        useMicrosAsTime = true;
+      }
+
+      // Get time value from row, using appropriate column
+      const getTime = (d) => {
+        if (useMicrosAsTime && microsCol) {
+          // Convert micros to seconds, relative to first sample
+          return Number(d[microsCol]) / 1000000;
+        }
+        return Number(d[timeCol]);
+      };
+
+      // Calculate time offset (for micros, we need to subtract the first timestamp)
+      let timeOffset = 0;
+      if (useMicrosAsTime && rawData.length > 0) {
+        timeOffset = getTime(rawData[0]);
+      }
+
+      console.log('Time values (first 5):', rawData.slice(0, 5).map(d => ({
+        raw: d[timeCol],
+        micros: d[microsCol],
+        computed: getTime(d) - timeOffset,
+        type: typeof d[timeCol]
+      })));
       console.log('Trim params:', { start: params.trimStart, end: params.trimEnd });
 
-      // Filter by time and convert
+      // Filter by time - very permissive, just check for valid numbers
       let filtered = rawData.filter(d => {
-        const t = d[timeCol];
-        // More permissive: accept any truthy time value or 0
-        return (t !== undefined && t !== null && (t === 0 || !isNaN(Number(t)))) &&
-               Number(t) >= params.trimStart && Number(t) <= params.trimEnd;
+        const t = getTime(d) - timeOffset;
+        // Accept any valid number within trim range
+        return !isNaN(t) && isFinite(t) && t >= params.trimStart && t <= params.trimEnd;
       });
 
       console.log('Filtered from', rawData.length, 'to', filtered.length, 'samples');
       if (filtered.length < 10 && rawData.length > 10) {
-        console.log('Filter issue! Sample failed rows:', rawData.slice(0, 5).map(d => {
-          const t = d[timeCol];
+        console.log('Filter issue! First 5 rows analysis:', rawData.slice(0, 5).map((d, i) => {
+          const t = getTime(d) - timeOffset;
           return {
-            time: t,
-            type: typeof t,
-            isNum: !isNaN(Number(t)),
-            passStart: Number(t) >= params.trimStart,
-            passEnd: Number(t) <= params.trimEnd
+            row: i,
+            time: d[timeCol],
+            micros: d[microsCol],
+            computed: t,
+            isNum: !isNaN(t),
+            isFinite: isFinite(t),
+            passStart: t >= params.trimStart,
+            passEnd: t <= params.trimEnd
           };
         }));
+
+        // FALLBACK: If filtering failed badly, use all data with auto-generated time
+        // Assume 1000Hz sample rate
+        console.log('Using fallback: all rows with auto-generated time (assuming 1000Hz)');
+        filtered = rawData;
+        // Override getTime to use index-based time
+        const sampleRate = 1000; // Hz
+        const fallbackGetTime = (d, idx) => idx / sampleRate;
+        // Create new getTime that uses index
+        for (let i = 0; i < filtered.length; i++) {
+          filtered[i]._autoTime = i / sampleRate;
+        }
+        // Modify getTime for fallback
+        timeOffset = 0;
       }
 
       // Convert and calculate velocities
@@ -739,7 +794,11 @@
         if (params.invertFront) frontMM = params.frontTravel - frontMM;
         if (params.invertRear) rearMM = params.rearTravel - rearMM;
 
-        const dt = d[timeCol] - prev[timeCol];
+        // Use auto-time if available (fallback mode), otherwise use getTime
+        const currentTime = d._autoTime !== undefined ? d._autoTime : (getTime(d) - timeOffset);
+        const prevTime = prev._autoTime !== undefined ? prev._autoTime : (getTime(prev) - timeOffset);
+        const dt = currentTime - prevTime;
+
         let prevFrontMM = convertADCtoMM(prev[frontCol], 'front', params);
         let prevRearMM = convertADCtoMM(prev[rearCol], 'rear', params);
         if (params.invertFront) prevFrontMM = params.frontTravel - prevFrontMM;
@@ -749,7 +808,7 @@
         const rearVel = dt > 0 ? (rearMM - prevRearMM) / dt : 0;
 
         processedData.push({
-          time: d[timeCol],
+          time: currentTime,
           front: frontMM,
           rear: rearMM,
           front_vel: frontVel,
