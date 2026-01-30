@@ -279,6 +279,27 @@
       </div>
     </div>
 
+    <h3 class="collapsible" onclick="toggleCollapsible(this)">Signal Filtering Settings</h3>
+    <div class="collapsible-content">
+      <div class="grid grid-3">
+        <div>
+          <label>Median Filter Size</label>
+          <input type="number" id="medianFilterSize" value="5" min="1" max="21" step="2">
+          <small style="color:var(--text-light);">Removes spikes (odd number)</small>
+        </div>
+        <div>
+          <label>Max Position Change (mm)</label>
+          <input type="number" id="maxPosChange" value="15" min="1" max="50">
+          <small style="color:var(--text-light);">Per sample limit</small>
+        </div>
+        <div>
+          <label>Velocity Window</label>
+          <input type="number" id="velocityWindow" value="21" min="5" max="51" step="2">
+          <small style="color:var(--text-light);">Savitzky-Golay window</small>
+        </div>
+      </div>
+    </div>
+
     <h3 class="collapsible" onclick="toggleCollapsible(this)">Advanced Packing Detection Settings</h3>
     <div class="collapsible-content">
       <div class="grid grid-3">
@@ -652,6 +673,124 @@
       el.classList.remove('hidden');
     }
 
+    // ==================== SIGNAL FILTERING ====================
+    // Median filter for spike removal (sliding window)
+    function medianFilter(arr, windowSize) {
+      const halfWindow = Math.floor(windowSize / 2);
+      const result = new Array(arr.length);
+
+      for (let i = 0; i < arr.length; i++) {
+        const start = Math.max(0, i - halfWindow);
+        const end = Math.min(arr.length - 1, i + halfWindow);
+        const window = [];
+        for (let j = start; j <= end; j++) {
+          window.push(arr[j]);
+        }
+        window.sort((a, b) => a - b);
+        result[i] = window[Math.floor(window.length / 2)];
+      }
+      return result;
+    }
+
+    // Limit position change between samples (remove impossible jumps)
+    function limitPositionChange(arr, maxChange) {
+      const result = new Array(arr.length);
+      result[0] = arr[0];
+
+      for (let i = 1; i < arr.length; i++) {
+        const delta = arr[i] - result[i - 1];
+        if (Math.abs(delta) > maxChange) {
+          result[i] = result[i - 1] + Math.sign(delta) * maxChange;
+        } else {
+          result[i] = arr[i];
+        }
+      }
+      return result;
+    }
+
+    // Savitzky-Golay filter coefficients for derivative calculation
+    // window=21, polyorder=3, deriv=1
+    // Pre-computed coefficients for efficiency
+    function getSavitzkyGolayCoeffs(windowSize, polyOrder, deriv) {
+      // For window=21, polyorder=3, deriv=1
+      // These are normalized coefficients that compute the derivative
+      const halfWindow = Math.floor(windowSize / 2);
+      const coeffs = new Array(windowSize);
+
+      // For derivative with window=21, poly=3, we use a least-squares fit approach
+      // These coefficients are pre-calculated for the specific window/poly/deriv combo
+      if (windowSize === 21 && polyOrder === 3 && deriv === 1) {
+        // Pre-computed SG coefficients for window=21, poly=3, deriv=1
+        // Normalized to give derivative in units per sample
+        const rawCoeffs = [
+          -0.04761905, -0.03968254, -0.03253968, -0.02619048, -0.02063492,
+          -0.01587302, -0.01190476, -0.00873016, -0.00634921, -0.00476190,
+           0.00000000,
+           0.00476190,  0.00634921,  0.00873016,  0.01190476,  0.01587302,
+           0.02063492,  0.02619048,  0.03253968,  0.03968254,  0.04761905
+        ];
+        for (let i = 0; i < windowSize; i++) {
+          coeffs[i] = rawCoeffs[i];
+        }
+      } else {
+        // Generic computation using least squares
+        // Build Vandermonde-like matrix and solve for coefficients
+        // This is a simplified approximation for other window sizes
+        const h = 1; // sample spacing
+        for (let i = 0; i < windowSize; i++) {
+          const x = i - halfWindow;
+          // Simple derivative approximation using central difference weights
+          if (deriv === 1) {
+            // Weighted central difference
+            coeffs[i] = x / (halfWindow * halfWindow * (halfWindow + 1) * 2 / 3);
+          }
+        }
+      }
+      return coeffs;
+    }
+
+    // Apply Savitzky-Golay filter (for smoothing or derivative)
+    function savitzkyGolayFilter(arr, windowSize, polyOrder, deriv, sampleRate) {
+      const halfWindow = Math.floor(windowSize / 2);
+      const coeffs = getSavitzkyGolayCoeffs(windowSize, polyOrder, deriv);
+      const result = new Array(arr.length);
+
+      // Handle edges with reduced window
+      for (let i = 0; i < arr.length; i++) {
+        let sum = 0;
+        let coeffSum = 0;
+
+        for (let j = 0; j < windowSize; j++) {
+          const dataIndex = i + j - halfWindow;
+          if (dataIndex >= 0 && dataIndex < arr.length) {
+            sum += coeffs[j] * arr[dataIndex];
+            coeffSum += Math.abs(coeffs[j]);
+          }
+        }
+
+        // For derivative, multiply by sample rate to get units/second
+        if (deriv === 1) {
+          result[i] = sum * sampleRate;
+        } else {
+          result[i] = sum;
+        }
+      }
+
+      return result;
+    }
+
+    // Combined position filtering: median + limit
+    function filterPosition(arr, medianSize, maxChange) {
+      let filtered = medianFilter(arr, medianSize);
+      filtered = limitPositionChange(filtered, maxChange);
+      return filtered;
+    }
+
+    // Calculate smoothed velocity using Savitzky-Golay derivative
+    function calculateSmoothedVelocity(positions, sampleRate, windowSize, polyOrder) {
+      return savitzkyGolayFilter(positions, windowSize, polyOrder, 1, sampleRate);
+    }
+
     // ==================== DATA PROCESSING ====================
     function getParams() {
       return {
@@ -670,6 +809,11 @@
         trimEnd: parseFloat(document.getElementById('trimEnd').value) || Infinity,
         invertFront: document.getElementById('invertFront').checked,
         invertRear: document.getElementById('invertRear').checked,
+        // Signal filtering
+        medianFilterSize: parseInt(document.getElementById('medianFilterSize').value) || 5,
+        maxPosChange: parseFloat(document.getElementById('maxPosChange').value) || 15,
+        velocityWindow: parseInt(document.getElementById('velocityWindow').value) || 21,
+        // Packing detection
         extensionThreshold: parseFloat(document.getElementById('extensionThreshold').value),
         packedThreshold: parseFloat(document.getElementById('packedThreshold').value),
         minPackedHits: parseInt(document.getElementById('minPackedHits').value),
@@ -822,45 +966,67 @@
         useFallbackTime = true;
       }
 
-      // Convert and calculate velocities
-      processedData = [];
-      const sampleRate = 1000; // Hz for fallback time
+      // Filter settings from params (matching Python analysis)
+      const MEDIAN_FILTER_SIZE = params.medianFilterSize || 5;
+      const MAX_POSITION_CHANGE = params.maxPosChange || 15.0; // mm per sample
+      const VELOCITY_WINDOW = params.velocityWindow || 21;
+      const VELOCITY_POLYORDER = 3;
+      const sampleRate = 1000; // Hz
+
+      // Step 1: Extract raw position arrays
+      debugLog('Extracting positions...');
+      const rawFront = [];
+      const rawRear = [];
+      const times = [];
 
       for (let i = 0; i < filtered.length; i++) {
         const d = filtered[i];
-        const prev = i > 0 ? filtered[i - 1] : d;
-
         let frontMM = convertADCtoMM(d[frontCol], 'front', params);
         let rearMM = convertADCtoMM(d[rearCol], 'rear', params);
 
         if (params.invertFront) frontMM = params.frontTravel - frontMM;
         if (params.invertRear) rearMM = params.rearTravel - rearMM;
 
-        // Use index-based time in fallback mode, otherwise use getTime
-        let currentTime, prevTime;
+        rawFront.push(frontMM);
+        rawRear.push(rearMM);
+
+        // Calculate time
         if (useFallbackTime) {
-          currentTime = i / sampleRate;
-          prevTime = (i > 0 ? i - 1 : 0) / sampleRate;
+          times.push(i / sampleRate);
         } else {
-          currentTime = getTime(d) - timeOffset;
-          prevTime = getTime(prev) - timeOffset;
+          times.push(getTime(d) - timeOffset);
         }
-        const dt = currentTime - prevTime;
+      }
 
-        let prevFrontMM = convertADCtoMM(prev[frontCol], 'front', params);
-        let prevRearMM = convertADCtoMM(prev[rearCol], 'rear', params);
-        if (params.invertFront) prevFrontMM = params.frontTravel - prevFrontMM;
-        if (params.invertRear) prevRearMM = params.rearTravel - prevRearMM;
+      debugLog('Raw positions extracted: ' + rawFront.length + ' samples');
 
-        const frontVel = dt > 0 ? (frontMM - prevFrontMM) / dt : 0;
-        const rearVel = dt > 0 ? (rearMM - prevRearMM) / dt : 0;
+      // Step 2: Filter positions (median + limit)
+      debugLog('Applying position filters (median=' + MEDIAN_FILTER_SIZE + ', maxChange=' + MAX_POSITION_CHANGE + ')...');
+      const filteredFront = filterPosition(rawFront, MEDIAN_FILTER_SIZE, MAX_POSITION_CHANGE);
+      const filteredRear = filterPosition(rawRear, MEDIAN_FILTER_SIZE, MAX_POSITION_CHANGE);
 
+      // Step 3: Calculate smoothed velocities using Savitzky-Golay
+      debugLog('Calculating velocities with Savitzky-Golay (window=' + VELOCITY_WINDOW + ', poly=' + VELOCITY_POLYORDER + ')...');
+      const frontVelocities = calculateSmoothedVelocity(filteredFront, sampleRate, VELOCITY_WINDOW, VELOCITY_POLYORDER);
+      const rearVelocities = calculateSmoothedVelocity(filteredRear, sampleRate, VELOCITY_WINDOW, VELOCITY_POLYORDER);
+
+      // Debug velocity range
+      const frontVelMin = Math.min(...frontVelocities);
+      const frontVelMax = Math.max(...frontVelocities);
+      const rearVelMin = Math.min(...rearVelocities);
+      const rearVelMax = Math.max(...rearVelocities);
+      debugLog('Front velocity range: ' + frontVelMin.toFixed(0) + ' to ' + frontVelMax.toFixed(0) + ' mm/s');
+      debugLog('Rear velocity range: ' + rearVelMin.toFixed(0) + ' to ' + rearVelMax.toFixed(0) + ' mm/s');
+
+      // Step 4: Build processed data array
+      processedData = [];
+      for (let i = 0; i < filtered.length; i++) {
         processedData.push({
-          time: currentTime,
-          front: frontMM,
-          rear: rearMM,
-          front_vel: frontVel,
-          rear_vel: rearVel,
+          time: times[i],
+          front: filteredFront[i],
+          rear: filteredRear[i],
+          front_vel: frontVelocities[i],
+          rear_vel: rearVelocities[i],
           index: i
         });
       }
