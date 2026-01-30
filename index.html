@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -183,7 +183,7 @@
       <div>
         <label class="file-input">
           <input type="file" id="fileInput" accept=".csv">
-          <div>ðŸ“ Click to select CSV file</div>
+          <div>[FILE] Click to select CSV file</div>
           <div style="font-size:0.875rem;color:var(--text-light);margin-top:8px;">or drag and drop</div>
         </label>
       </div>
@@ -234,7 +234,7 @@
       </div>
     </div>
 
-    <h3>🎛️ Data Filtering</h3>
+    <h3>ðŸŽ›ï¸ Data Filtering</h3>
     <div style="background:#f0f4ff;padding:12px;border-radius:6px;border:1px solid #d0d9f0;">
       <div class="grid grid-3">
         <div>
@@ -301,7 +301,7 @@
       <div style="margin-top:8px;">
         <label class="file-input" style="padding:10px;border-width:1px;">
           <input type="file" id="linkageInput" accept=".csv,.txt" onchange="loadLinkageCSV(event)">
-          <span>ðŸ“Š Upload Linkage CSV to auto-calculate coefficients</span>
+          <span>[CSV] Upload Linkage CSV to auto-calculate coefficients</span>
         </label>
       </div>
       <div id="linkageStatus" class="status info hidden" style="margin-top:8px;"></div>
@@ -1232,8 +1232,8 @@
         debugLog('Average dt: ' + (avgDt * 1000).toFixed(2) + 'ms (' + (1/avgDt).toFixed(0) + ' Hz)');
         
         if (backwardsCount > 0) {
-          debugLog('⚠️ WARNING: Time goes backwards ' + backwardsCount + ' times! Data needs sorting.');
-          showStatus('⚠️ Time data issue detected - ' + backwardsCount + ' backwards jumps. Will auto-fix.', 'warning');
+          debugLog('âš ï¸ WARNING: Time goes backwards ' + backwardsCount + ' times! Data needs sorting.');
+          showStatus('âš ï¸ Time data issue detected - ' + backwardsCount + ' backwards jumps. Will auto-fix.', 'warning');
         }
       }
 
@@ -1242,8 +1242,8 @@
       const statusEl = document.getElementById('filterStatus');
       if (statusEl) {
         statusEl.innerHTML = filterStatus.active ? 
-          `🎛️ <strong>Active Filter:</strong> ${filterStatus.type} | Position: ${filterStatus.posWindow} samples | Velocity: ${filterStatus.velWindow} samples` :
-          `⚠️ <strong>No filtering applied</strong> - using raw data`;
+          `ðŸŽ›ï¸ <strong>Active Filter:</strong> ${filterStatus.type} | Position: ${filterStatus.posWindow} samples | Velocity: ${filterStatus.velWindow} samples` :
+          `âš ï¸ <strong>No filtering applied</strong> - using raw data`;
       }
 
       // Step 2: SORT AND CLEAN DATA FIRST (before velocity calculation!)
@@ -1285,7 +1285,7 @@
         debugLog('Time data cleaned: Removed ' + timeIssues + ' backwards, ' + duplicates + ' duplicates');
         const filterStatusEl = document.getElementById('filterStatus');
         if (filterStatusEl) {
-          filterStatusEl.innerHTML = '<span style="color:#48bb78;">✓ Data cleaned: ' + (timeIssues + duplicates) + ' problematic points removed</span><br>' + filterStatusEl.innerHTML;
+          filterStatusEl.innerHTML = '<span style="color:#48bb78;">âœ“ Data cleaned: ' + (timeIssues + duplicates) + ' problematic points removed</span><br>' + filterStatusEl.innerHTML;
         }
       }
 
