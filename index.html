@@ -152,8 +152,8 @@
     .chart-container { width: 100%; height: 400px; }
 
     .collapsible { cursor: pointer; user-select: none; }
-    .collapsible::before { content: 'â–¶ '; font-size: 0.8em; }
-    .collapsible.open::before { content: 'â–¼ '; }
+    .collapsible::before { content: '> '; font-size: 0.8em; }
+    .collapsible.open::before { content: 'v '; }
     .collapsible-content { display: none; }
     .collapsible-content.open { display: block; }
 
@@ -273,7 +273,7 @@
       <div id="filterStatus" style="margin-top:8px;padding:8px;background:#fff;border-radius:4px;font-size:0.85rem;color:var(--text-light);"></div>
     </div>
 
-    <h3>Rear Linkage: Shock â†’ Wheel Travel</h3>
+    <h3>Rear Linkage: Shock -> Wheel Travel</h3>
     <div style="background:var(--bg);padding:12px;border-radius:6px;">
       <label>Cubic Polynomial Coefficients</label>
       <div class="grid grid-2" style="margin-top:4px;gap:8px;">
@@ -286,17 +286,17 @@
           <input type="number" id="rearB" value="2.8574" step="0.0001">
         </div>
         <div>
-          <small style="color:var(--text-light);">c (xÂ²)</small>
+          <small style="color:var(--text-light);">c (x^2)</small>
           <input type="number" id="rearC" value="0" step="0.000001">
         </div>
         <div>
-          <small style="color:var(--text-light);">d (xÂ³)</small>
+          <small style="color:var(--text-light);">d (x^3)</small>
           <input type="number" id="rearD" value="0" step="0.00000001">
         </div>
       </div>
       <small style="color:var(--text-light);display:block;margin-top:8px;">
-        Conversion: ADC â†’ shock_mm = ADC Ã— (pot_stroke / 4095)<br>
-        Then: wheel_mm = a + bÃ—shock + cÃ—shockÂ² + dÃ—shockÂ³
+        Conversion: ADC -> shock_mm = ADC * (pot_stroke / 4095)<br>
+        Then: wheel_mm = a + b*shock + c*shock^2 + d*shock^3
       </small>
       <div style="margin-top:8px;">
         <label class="file-input" style="padding:10px;border-width:1px;">
@@ -933,13 +933,40 @@
       let win = Math.max(3, Math.floor(windowSize));
       if (win % 2 === 0) win += 1;
 
+      // Debug: analyze time intervals
+      let minDt = Infinity, maxDt = 0, sumDt = 0;
+      let smallDtCount = 0, zeroDtCount = 0;
+      for (let i = 1; i < Math.min(times.length, 1000); i++) {
+        const dt = times[i] - times[i - 1];
+        if (dt <= 0) zeroDtCount++;
+        else if (dt < 0.0001) smallDtCount++; // < 0.1ms
+        minDt = Math.min(minDt, dt);
+        maxDt = Math.max(maxDt, dt);
+        sumDt += dt;
+      }
+      const avgDt = sumDt / (Math.min(times.length, 1000) - 1);
+      debugLog('Time analysis: avgDt=' + (avgDt*1000).toFixed(3) + 'ms, minDt=' + (minDt*1000).toFixed(3) + 'ms, maxDt=' + (maxDt*1000).toFixed(3) + 'ms');
+      debugLog('  Zero/negative dt: ' + zeroDtCount + ', Very small dt (<0.1ms): ' + smallDtCount);
+
       if (filterType === 'none') {
         // Raw velocity from simple differences
         const velocities = new Array(positions.length);
         velocities[0] = 0;
+        let maxVel = 0, maxVelIdx = 0;
         for (let i = 1; i < positions.length; i++) {
           const dt = times[i] - times[i - 1];
-          velocities[i] = dt > 0 ? (positions[i] - positions[i - 1]) / dt : 0;
+          const dp = positions[i] - positions[i - 1];
+          velocities[i] = dt > 0.0001 ? dp / dt : 0; // Require at least 0.1ms
+          if (Math.abs(velocities[i]) > Math.abs(maxVel)) {
+            maxVel = velocities[i];
+            maxVelIdx = i;
+          }
+        }
+        debugLog('Raw velocity: max=' + maxVel.toFixed(0) + ' at idx=' + maxVelIdx);
+        if (maxVelIdx > 0) {
+          const dt = times[maxVelIdx] - times[maxVelIdx-1];
+          const dp = positions[maxVelIdx] - positions[maxVelIdx-1];
+          debugLog('  dt=' + (dt*1000).toFixed(3) + 'ms, dp=' + dp.toFixed(2) + 'mm');
         }
         return velocities;
       } else if (filterType === 'moving_average') {
@@ -948,13 +975,14 @@
         rawVel[0] = 0;
         for (let i = 1; i < positions.length; i++) {
           const dt = times[i] - times[i - 1];
-          rawVel[i] = dt > 0 ? (positions[i] - positions[i - 1]) / dt : 0;
+          rawVel[i] = dt > 0.0001 ? (positions[i] - positions[i - 1]) / dt : 0;
         }
         return movingAverageFilter(rawVel, win);
       } else {
         // Savitzky-Golay derivative - use average sample rate
         const totalTime = times[times.length - 1] - times[0];
         const avgSampleRate = (positions.length - 1) / totalTime;
+        debugLog('SavGol velocity: avgSampleRate=' + avgSampleRate.toFixed(1) + ' Hz, window=' + win);
         return savitzkyGolayFilter(positions, win, 3, 1, avgSampleRate);
       }
     }
@@ -1020,7 +1048,7 @@
         // Step 1: ADC to shock stroke (mm)
         const shockMM = adc * (params.rearPotStroke / 4095);
         // Step 2: Shock stroke to wheel travel via cubic polynomial
-        // wheel_mm = a + b*shock + c*shockÂ² + d*shockÂ³
+        // wheel_mm = a + b*shock + c*shock^2 + d*shock^3
         return params.rearA +
                params.rearB * shockMM +
                params.rearC * shockMM * shockMM +
