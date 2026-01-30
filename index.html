@@ -670,12 +670,43 @@
     function processData(params) {
       // Find column names (handle different formats)
       const sample = rawData[0];
-      const frontCol = sample.hasOwnProperty('front_disp') ? 'front_disp' : 'front';
-      const rearCol = sample.hasOwnProperty('rear_disp') ? 'rear_disp' : 'rear';
-      const timeCol = 'time';
+      const cols = Object.keys(sample);
+      console.log('CSV columns found:', cols);
+
+      // Flexible column detection
+      const findCol = (options) => {
+        for (const opt of options) {
+          if (sample.hasOwnProperty(opt)) return opt;
+        }
+        return null;
+      };
+
+      const frontCol = findCol(['front_disp', 'front', 'Front', 'FRONT', 'front_mm']);
+      const rearCol = findCol(['rear_disp', 'rear', 'Rear', 'REAR', 'rear_mm']);
+      const timeCol = findCol(['time', 'Time', 'TIME', 't', 'timestamp', 'seconds']);
+
+      // Check for missing columns
+      const missing = [];
+      if (!frontCol) missing.push('front_disp or front');
+      if (!rearCol) missing.push('rear_disp or rear');
+      if (!timeCol) missing.push('time');
+
+      if (missing.length > 0) {
+        console.error('Missing columns:', missing, 'Available:', cols);
+        showStatus(`Missing columns: ${missing.join(', ')}. Found: ${cols.slice(0, 5).join(', ')}...`, 'error');
+        processedData = [];
+        return processedData;
+      }
+
+      console.log('Using columns - time:', timeCol, 'front:', frontCol, 'rear:', rearCol);
 
       // Filter by time and convert
-      let filtered = rawData.filter(d => d[timeCol] >= params.trimStart && d[timeCol] <= params.trimEnd);
+      let filtered = rawData.filter(d => {
+        const t = d[timeCol];
+        return t !== undefined && t !== null && !isNaN(t) && t >= params.trimStart && t <= params.trimEnd;
+      });
+
+      console.log('Filtered from', rawData.length, 'to', filtered.length, 'samples');
 
       // Convert and calculate velocities
       processedData = [];
@@ -978,7 +1009,7 @@
       processData(params);
 
       if (processedData.length < 10) {
-        showStatus('Not enough data after filtering', 'error');
+        showStatus(`Not enough data after filtering (${processedData.length} samples). Check time trim settings and console for details.`, 'error');
         return;
       }
 
