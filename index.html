@@ -668,8 +668,17 @@
     }
 
     function processData(params) {
+      console.log('=== processData called ===');
+      console.log('rawData length:', rawData.length);
+
+      if (rawData.length === 0) {
+        console.error('No data loaded!');
+        return [];
+      }
+
       // Find column names (handle different formats)
       const sample = rawData[0];
+      console.log('First row sample:', sample);
       const cols = Object.keys(sample);
       console.log('CSV columns found:', cols);
 
@@ -752,6 +761,9 @@
       });
 
       console.log('Filtered from', rawData.length, 'to', filtered.length, 'samples');
+
+      // FALLBACK: If filtering failed, use all data with index-based time
+      let useFallbackTime = false;
       if (filtered.length < 10 && rawData.length > 10) {
         console.log('Filter issue! First 5 rows analysis:', rawData.slice(0, 5).map((d, i) => {
           const t = getTime(d) - timeOffset;
@@ -767,23 +779,15 @@
           };
         }));
 
-        // FALLBACK: If filtering failed badly, use all data with auto-generated time
-        // Assume 1000Hz sample rate
-        console.log('Using fallback: all rows with auto-generated time (assuming 1000Hz)');
-        filtered = rawData;
-        // Override getTime to use index-based time
-        const sampleRate = 1000; // Hz
-        const fallbackGetTime = (d, idx) => idx / sampleRate;
-        // Create new getTime that uses index
-        for (let i = 0; i < filtered.length; i++) {
-          filtered[i]._autoTime = i / sampleRate;
-        }
-        // Modify getTime for fallback
-        timeOffset = 0;
+        console.log('Using fallback: all rows with index-based time (assuming 1000Hz)');
+        filtered = rawData.slice(); // Make a copy
+        useFallbackTime = true;
       }
 
       // Convert and calculate velocities
       processedData = [];
+      const sampleRate = 1000; // Hz for fallback time
+
       for (let i = 0; i < filtered.length; i++) {
         const d = filtered[i];
         const prev = i > 0 ? filtered[i - 1] : d;
@@ -794,9 +798,15 @@
         if (params.invertFront) frontMM = params.frontTravel - frontMM;
         if (params.invertRear) rearMM = params.rearTravel - rearMM;
 
-        // Use auto-time if available (fallback mode), otherwise use getTime
-        const currentTime = d._autoTime !== undefined ? d._autoTime : (getTime(d) - timeOffset);
-        const prevTime = prev._autoTime !== undefined ? prev._autoTime : (getTime(prev) - timeOffset);
+        // Use index-based time in fallback mode, otherwise use getTime
+        let currentTime, prevTime;
+        if (useFallbackTime) {
+          currentTime = i / sampleRate;
+          prevTime = (i > 0 ? i - 1 : 0) / sampleRate;
+        } else {
+          currentTime = getTime(d) - timeOffset;
+          prevTime = getTime(prev) - timeOffset;
+        }
         const dt = currentTime - prevTime;
 
         let prevFrontMM = convertADCtoMM(prev[frontCol], 'front', params);
