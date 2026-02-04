@@ -1765,21 +1765,28 @@
       const values = data.map(d => d[key]).filter(v => !isNaN(v));
       if (values.length === 0) return null;
 
-      values.sort((a, b) => a - b);
-      const n = values.length;
-      const sum = values.reduce((a, b) => a + b, 0);
+      // Calculate total movement (sum of absolute position changes)
+      let totalMovement = 0;
+      for (let i = 1; i < values.length; i++) {
+        totalMovement += Math.abs(values[i] - values[i - 1]);
+      }
+
+      const sortedValues = [...values].sort((a, b) => a - b);
+      const n = sortedValues.length;
+      const sum = sortedValues.reduce((a, b) => a + b, 0);
       const mean = sum / n;
-      const variance = values.reduce((a, v) => a + (v - mean) ** 2, 0) / n;
+      const variance = sortedValues.reduce((a, v) => a + (v - mean) ** 2, 0) / n;
       const std = Math.sqrt(variance);
       const p95Index = Math.floor(n * 0.95);
 
       return {
-        min: values[0],
-        max: values[n - 1],
+        min: sortedValues[0],
+        max: sortedValues[n - 1],
         mean: mean,
         std: std,
-        p95: values[p95Index],
-        range: values[n - 1] - values[0]
+        p95: sortedValues[p95Index],
+        range: sortedValues[n - 1] - sortedValues[0],
+        totalMovement: totalMovement
       };
     }
 
@@ -1791,14 +1798,16 @@
       const compStats = compression.length > 0 ? {
         mean: compression.reduce((a, b) => a + b, 0) / compression.length,
         max: Math.max(...compression),
-        p95: compression.sort((a, b) => a - b)[Math.floor(compression.length * 0.95)]
-      } : { mean: 0, max: 0, p95: 0 };
+        p95: compression.sort((a, b) => a - b)[Math.floor(compression.length * 0.95)],
+        count: compression.length
+      } : { mean: 0, max: 0, p95: 0, count: 0 };
 
       const rebStats = rebound.length > 0 ? {
         mean: rebound.reduce((a, b) => a + b, 0) / rebound.length,
         max: Math.max(...rebound),
-        p95: rebound.sort((a, b) => a - b)[Math.floor(rebound.length * 0.95)]
-      } : { mean: 0, max: 0, p95: 0 };
+        p95: rebound.sort((a, b) => a - b)[Math.floor(rebound.length * 0.95)],
+        count: rebound.length
+      } : { mean: 0, max: 0, p95: 0, count: 0 };
 
       return { compression: compStats, rebound: rebStats };
     }
@@ -2091,12 +2100,14 @@
           <tr><th colspan="2">${label} Position</th><th colspan="2">${label} Velocity</th></tr>
         </thead>
         <tbody>
-          <tr><td>Min</td><td>${pos.min.toFixed(1)} mm</td><td>Comp Mean</td><td>${vel.compression.mean.toFixed(0)} mm/s</td></tr>
-          <tr><td>Max</td><td>${pos.max.toFixed(1)} mm</td><td>Comp Max</td><td>${vel.compression.max.toFixed(0)} mm/s</td></tr>
-          <tr><td>Mean</td><td>${pos.mean.toFixed(1)} mm</td><td>Comp 95%</td><td>${vel.compression.p95.toFixed(0)} mm/s</td></tr>
-          <tr><td>Std Dev</td><td>${pos.std.toFixed(1)} mm</td><td>Reb Mean</td><td>${vel.rebound.mean.toFixed(0)} mm/s</td></tr>
-          <tr><td>95th %</td><td>${pos.p95.toFixed(1)} mm</td><td>Reb Max</td><td>${vel.rebound.max.toFixed(0)} mm/s</td></tr>
-          <tr><td>Travel Used</td><td>${pos.range.toFixed(1)} mm (${(pos.range/totalTravel*100).toFixed(0)}%)</td><td>Reb 95%</td><td>${vel.rebound.p95.toFixed(0)} mm/s</td></tr>
+          <tr><td>Min</td><td>${pos.min.toFixed(1)} mm</td><td>Comp Count</td><td>${vel.compression.count.toLocaleString()}</td></tr>
+          <tr><td>Mean</td><td>${pos.mean.toFixed(1)} mm</td><td>Comp Mean</td><td>${vel.compression.mean.toFixed(0)} mm/s</td></tr>
+          <tr><td>95th %</td><td>${pos.p95.toFixed(1)} mm</td><td>Comp Max</td><td>${vel.compression.max.toFixed(0)} mm/s</td></tr>
+          <tr><td>Std Dev</td><td>${pos.std.toFixed(1)} mm</td><td>Comp 95%</td><td>${vel.compression.p95.toFixed(0)} mm/s</td></tr>
+          <tr><td>Total Movement</td><td>${(pos.totalMovement / 1000).toFixed(1)} m</td><td>Reb Count</td><td>${vel.rebound.count.toLocaleString()}</td></tr>
+          <tr><td></td><td></td><td>Reb Mean</td><td>${vel.rebound.mean.toFixed(0)} mm/s</td></tr>
+          <tr><td></td><td></td><td>Reb Max</td><td>${vel.rebound.max.toFixed(0)} mm/s</td></tr>
+          <tr><td></td><td></td><td>Reb 95%</td><td>${vel.rebound.p95.toFixed(0)} mm/s</td></tr>
         </tbody>
       `;
 
