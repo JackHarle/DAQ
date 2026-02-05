@@ -620,17 +620,50 @@
       const reader = new FileReader();
       reader.onload = function(event) {
         const text = event.target.result;
-        const lines = text.trim().split('\n');
+        // Handle Windows (\r\n), old Mac (\r), and Unix (\n) line endings
+        const lines = text.trim().replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').filter(l => l.trim().length > 0);
 
         const shockData = [];
         const wheelData = [];
 
-        // Skip header line, parse data
+        if (lines.length < 2) {
+          statusEl.textContent = 'File appears empty or has no data rows';
+          statusEl.className = 'status error';
+          return;
+        }
+
+        // Detect delimiter (semicolon, comma, or tab)
+        const firstLine = lines[0];
+        const delimiter = firstLine.includes(';') ? ';' : (firstLine.includes(',') ? ',' : '\t');
+
+        // Parse header to find column indices - filter out empty parts from trailing delimiters
+        const headers = firstLine.split(delimiter).map(h => h.trim().toLowerCase()).filter(h => h.length > 0);
+        let shockCol = -1, wheelCol = -1;
+
+        debugLog('Linkage CSV headers: [' + headers.join(', ') + ']');
+
+        // Look for shock/compression column
+        shockCol = headers.findIndex(h => h.includes('shock') || h.includes('compression'));
+        // Look for wheel/travel column
+        wheelCol = headers.findIndex(h => h.includes('wheel') || h.includes('travel'));
+
+        // Fallback: assume col 0 = shock, col 1 = wheel if headers not recognized
+        if (shockCol === -1) shockCol = 0;
+        if (wheelCol === -1) wheelCol = 1;
+        // If both found same column, use fallback
+        if (shockCol === wheelCol) { shockCol = 0; wheelCol = 1; }
+
+        debugLog('Linkage CSV: delimiter="' + delimiter + '", shockCol=' + shockCol + ', wheelCol=' + wheelCol);
+
+        // Parse data lines
         for (let i = 1; i < lines.length; i++) {
-          const parts = lines[i].split(/[\t,]/);
-          if (parts.length >= 2) {
-            const shock = parseFloat(parts[0]);
-            const wheel = parseFloat(parts[1]);
+          const lineTrimmed = lines[i].trim();
+          if (lineTrimmed.length === 0) continue;
+
+          const parts = lineTrimmed.split(delimiter).map(p => p.trim());
+          if (parts.length > Math.max(shockCol, wheelCol)) {
+            const shock = parseFloat(parts[shockCol]);
+            const wheel = parseFloat(parts[wheelCol]);
             if (!isNaN(shock) && !isNaN(wheel)) {
               shockData.push(shock);
               wheelData.push(wheel);
@@ -638,8 +671,10 @@
           }
         }
 
+        debugLog('Linkage CSV: parsed ' + shockData.length + ' data points');
+
         if (shockData.length < 4) {
-          statusEl.textContent = 'Need at least 4 data points';
+          statusEl.textContent = 'Need at least 4 data points. Check file format and debug log.';
           statusEl.className = 'status error';
           return;
         }
@@ -2239,6 +2274,68 @@ Generated: ${new Date().toLocaleString()}`;
         });
       }
     }
+
+    // ==================== SETTINGS PERSISTENCE ====================
+    const SETTINGS_KEY = 'suspensionAnalyzerSettings';
+
+    // List of settings to persist
+    const settingsIds = [
+      'frontTravel', 'rearTravel', 'frontPotStroke', 'rearPotStroke',
+      'filterType', 'velocityFilterWindow',
+      'rearA', 'rearB', 'rearC', 'rearD',
+      'invertFront', 'invertRear',
+      'velocityWindow', 'velocityThreshold'
+    ];
+
+    function saveSettings() {
+      const settings = {};
+      settingsIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          if (el.type === 'checkbox') {
+            settings[id] = el.checked;
+          } else {
+            settings[id] = el.value;
+          }
+        }
+      });
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    }
+
+    function loadSettings() {
+      const saved = localStorage.getItem(SETTINGS_KEY);
+      if (!saved) return;
+
+      try {
+        const settings = JSON.parse(saved);
+        settingsIds.forEach(id => {
+          if (settings[id] !== undefined) {
+            const el = document.getElementById(id);
+            if (el) {
+              if (el.type === 'checkbox') {
+                el.checked = settings[id];
+              } else {
+                el.value = settings[id];
+              }
+            }
+          }
+        });
+        console.log('Settings loaded from localStorage');
+      } catch (e) {
+        console.error('Failed to load settings:', e);
+      }
+    }
+
+    // Load settings on page load
+    loadSettings();
+
+    // Auto-save settings when any input changes
+    settingsIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('change', saveSettings);
+      }
+    });
 
     // Register service worker
     if ('serviceWorker' in navigator) {
