@@ -425,6 +425,7 @@
     <div class="card">
       <div class="tabs">
         <div class="tab active" onclick="showTab('charts')">Charts</div>
+        <div class="tab" onclick="showTab('imu')">IMU</div>
         <div class="tab" onclick="showTab('stats')">Statistics</div>
         <div class="tab" onclick="showTab('events')">Events</div>
       </div>
@@ -435,6 +436,35 @@
 
         <h3>Velocity vs Time</h3>
         <div id="velocityChart" class="chart-container"></div>
+      </div>
+
+      <div id="tab-imu" class="tab-content">
+        <div style="display: flex; gap: 20px; margin-bottom: 15px; flex-wrap: wrap;">
+          <div>
+            <label for="imuSelect" style="font-weight: bold;">IMU:</label>
+            <select id="imuSelect" onchange="plotIMUChart()" style="padding: 8px; border-radius: 4px; border: 1px solid var(--border);">
+              <option value="frame">Frame</option>
+              <option value="bar">Bar</option>
+            </select>
+          </div>
+          <div>
+            <label for="imuAxisSelect" style="font-weight: bold;">Axis:</label>
+            <select id="imuAxisSelect" onchange="plotIMUChart()" style="padding: 8px; border-radius: 4px; border: 1px solid var(--border);">
+              <option value="x">X</option>
+              <option value="y">Y</option>
+              <option value="z">Z</option>
+            </select>
+          </div>
+          <div>
+            <label for="imuDataType" style="font-weight: bold;">Data:</label>
+            <select id="imuDataType" onchange="plotIMUChart()" style="padding: 8px; border-radius: 4px; border: 1px solid var(--border);">
+              <option value="acc">Accelerometer</option>
+              <option value="gyro">Gyroscope</option>
+            </select>
+          </div>
+        </div>
+        <h3 id="imuChartTitle">Frame Accelerometer X-Axis</h3>
+        <div id="imuChart" class="chart-container"></div>
       </div>
 
       <div id="tab-stats" class="tab-content">
@@ -1961,6 +1991,8 @@
       // Charts
       plotPositionChart();
       plotVelocityChart();
+      linkCharts();
+      plotIMUChart();
 
       // Statistics tables
       renderStatsTable('frontStatsTable', 'Front', r.stats.front, analysisResults.params.frontTravel);
@@ -2136,6 +2168,177 @@
       Plotly.newPlot('velocityChart', traces, layout, { responsive: true });
     }
 
+    // Link position and velocity charts so zoom/pan is synchronized
+    function linkCharts() {
+      const posChart = document.getElementById('positionChart');
+      const velChart = document.getElementById('velocityChart');
+
+      if (!posChart || !velChart) return;
+
+      let syncing = false; // Prevent infinite loops
+
+      // When position chart is zoomed/panned, update velocity chart
+      posChart.on('plotly_relayout', function(eventData) {
+        if (syncing) return;
+        syncing = true;
+
+        const update = {};
+        if (eventData['xaxis.range[0]'] !== undefined) {
+          update['xaxis.range'] = [eventData['xaxis.range[0]'], eventData['xaxis.range[1]']];
+        }
+        if (eventData['xaxis.autorange']) {
+          update['xaxis.autorange'] = true;
+        }
+
+        if (Object.keys(update).length > 0) {
+          Plotly.relayout('velocityChart', update);
+        }
+        syncing = false;
+      });
+
+      // When velocity chart is zoomed/panned, update position chart
+      velChart.on('plotly_relayout', function(eventData) {
+        if (syncing) return;
+        syncing = true;
+
+        const update = {};
+        if (eventData['xaxis.range[0]'] !== undefined) {
+          update['xaxis.range'] = [eventData['xaxis.range[0]'], eventData['xaxis.range[1]']];
+        }
+        if (eventData['xaxis.autorange']) {
+          update['xaxis.autorange'] = true;
+        }
+
+        if (Object.keys(update).length > 0) {
+          Plotly.relayout('positionChart', update);
+        }
+        syncing = false;
+      });
+
+      debugLog('Charts linked: zoom/pan synchronized');
+    }
+
+    // Plot IMU data chart based on selector values
+    function plotIMUChart() {
+      if (rawData.length === 0) {
+        debugLog('No data loaded for IMU chart');
+        return;
+      }
+
+      const imuType = document.getElementById('imuSelect').value; // 'frame' or 'bar'
+      const axis = document.getElementById('imuAxisSelect').value; // 'x', 'y', or 'z'
+      const dataType = document.getElementById('imuDataType').value; // 'acc' or 'gyro'
+
+      // Build column name based on selections
+      const columnName = `${dataType}_${imuType}_${axis}`;
+      debugLog('Plotting IMU column: ' + columnName);
+
+      // Check if column exists in data
+      if (rawData.length > 0 && rawData[0][columnName] === undefined) {
+        debugLog('IMU column not found: ' + columnName);
+        document.getElementById('imuChartTitle').textContent = `No ${columnName} data available`;
+        Plotly.purge('imuChart');
+        return;
+      }
+
+      // Get time and IMU data
+      const times = rawData.map(d => {
+        const t = d.time || d.Time || d.TIME || d.t || d.seconds;
+        return t !== undefined ? Number(t) : null;
+      }).filter(t => t !== null);
+
+      const imuData = rawData.map(d => {
+        const val = d[columnName];
+        return val !== undefined ? Number(val) : null;
+      }).filter(v => v !== null);
+
+      if (times.length === 0 || imuData.length === 0) {
+        debugLog('No valid IMU data found');
+        return;
+      }
+
+      // Update chart title
+      const imuLabel = imuType.charAt(0).toUpperCase() + imuType.slice(1);
+      const dataLabel = dataType === 'acc' ? 'Accelerometer' : 'Gyroscope';
+      const axisLabel = axis.toUpperCase();
+      const unit = dataType === 'acc' ? 'm/s²' : '°/s';
+      document.getElementById('imuChartTitle').textContent = `${imuLabel} ${dataLabel} ${axisLabel}-Axis`;
+
+      // Use WebGL for large datasets
+      const useWebGL = times.length > 5000;
+      const traceType = useWebGL ? 'scattergl' : 'scatter';
+
+      const trace = {
+        x: times,
+        y: imuData,
+        name: `${imuLabel} ${dataLabel} ${axisLabel}`,
+        type: traceType,
+        mode: 'lines',
+        line: { color: '#805ad5', width: 1.5, simplify: false }
+      };
+
+      const layout = {
+        margin: { t: 30, r: 30, b: 40, l: 60 },
+        xaxis: { title: 'Time (s)' },
+        yaxis: { title: `${dataLabel} (${unit})` },
+        legend: { orientation: 'h', y: 1.1 },
+        hovermode: 'x unified'
+      };
+
+      Plotly.newPlot('imuChart', [trace], layout, { responsive: true });
+
+      // Link IMU chart with position/velocity charts
+      linkIMUChart();
+    }
+
+    // Link IMU chart to sync with position/velocity charts
+    function linkIMUChart() {
+      const posChart = document.getElementById('positionChart');
+      const velChart = document.getElementById('velocityChart');
+      const imuChart = document.getElementById('imuChart');
+
+      if (!posChart || !imuChart) return;
+
+      let syncing = false;
+
+      // Sync IMU chart when position chart changes
+      posChart.on('plotly_relayout', function(eventData) {
+        if (syncing) return;
+        syncing = true;
+        const update = {};
+        if (eventData['xaxis.range[0]'] !== undefined) {
+          update['xaxis.range'] = [eventData['xaxis.range[0]'], eventData['xaxis.range[1]']];
+        }
+        if (eventData['xaxis.autorange']) {
+          update['xaxis.autorange'] = true;
+        }
+        if (Object.keys(update).length > 0) {
+          Plotly.relayout('imuChart', update);
+        }
+        syncing = false;
+      });
+
+      // Sync position/velocity charts when IMU chart changes
+      imuChart.on('plotly_relayout', function(eventData) {
+        if (syncing) return;
+        syncing = true;
+        const update = {};
+        if (eventData['xaxis.range[0]'] !== undefined) {
+          update['xaxis.range'] = [eventData['xaxis.range[0]'], eventData['xaxis.range[1]']];
+        }
+        if (eventData['xaxis.autorange']) {
+          update['xaxis.autorange'] = true;
+        }
+        if (Object.keys(update).length > 0) {
+          Plotly.relayout('positionChart', update);
+          Plotly.relayout('velocityChart', update);
+        }
+        syncing = false;
+      });
+
+      debugLog('IMU chart linked with position/velocity charts');
+    }
+
     function renderStatsTable(tableId, label, stats, totalTravel) {
       const pos = stats.position;
       const vel = stats.velocity;
@@ -2204,6 +2407,8 @@
       if (tabName === 'charts') {
         Plotly.Plots.resize('positionChart');
         Plotly.Plots.resize('velocityChart');
+      } else if (tabName === 'imu') {
+        Plotly.Plots.resize('imuChart');
       }
     }
 
