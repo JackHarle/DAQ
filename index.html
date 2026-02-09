@@ -2095,22 +2095,34 @@
       // Always use regular scatter - WebGL (scattergl) causes issues
       const traceType = 'scatter';
 
+      // Decimate data for display if too large
+      const times = processedData.map(d => d.time);
+      const frontData = processedData.map(d => d.front);
+      const rearData = processedData.map(d => d.rear);
+
+      const decFront = decimateData(times, frontData, MAX_DISPLAY_POINTS);
+      const decRear = decimateData(times, rearData, MAX_DISPLAY_POINTS);
+
+      if (processedData.length > MAX_DISPLAY_POINTS) {
+        debugLog('Position chart decimated: ' + processedData.length + ' -> ' + decFront.times.length + ' points');
+      }
+
       const traces = [
         {
-          x: processedData.map(d => d.time),
-          y: processedData.map(d => d.front),
+          x: decFront.times,
+          y: decFront.values,
           name: 'Front (Filtered)',
           type: traceType,
           mode: 'lines',
-          line: { color: '#3182ce', width: 1.5, simplify: false }
+          line: { color: '#3182ce', width: 1.5 }
         },
         {
-          x: processedData.map(d => d.time),
-          y: processedData.map(d => d.rear),
+          x: decRear.times,
+          y: decRear.values,
           name: 'Rear (Filtered)',
           type: traceType,
           mode: 'lines',
-          line: { color: '#e53e3e', width: 1.5, simplify: false }
+          line: { color: '#e53e3e', width: 1.5 }
         }
       ];
 
@@ -2171,22 +2183,30 @@
       // Always use regular scatter - WebGL (scattergl) causes issues
       const traceType = 'scatter';
 
+      // Decimate data for display if too large
+      const times = processedData.map(d => d.time);
+      const frontVel = processedData.map(d => d.front_vel);
+      const rearVel = processedData.map(d => d.rear_vel);
+
+      const decFrontVel = decimateData(times, frontVel, MAX_DISPLAY_POINTS);
+      const decRearVel = decimateData(times, rearVel, MAX_DISPLAY_POINTS);
+
       const traces = [
         {
-          x: processedData.map(d => d.time),
-          y: processedData.map(d => d.front_vel),
+          x: decFrontVel.times,
+          y: decFrontVel.values,
           name: 'Front Vel (Filtered)',
           type: traceType,
           mode: 'lines',
-          line: { color: '#3182ce', width: 1.5, simplify: false }
+          line: { color: '#3182ce', width: 1.5 }
         },
         {
-          x: processedData.map(d => d.time),
-          y: processedData.map(d => d.rear_vel),
+          x: decRearVel.times,
+          y: decRearVel.values,
           name: 'Rear Vel (Filtered)',
           type: traceType,
           mode: 'lines',
-          line: { color: '#e53e3e', width: 1.5, simplify: false }
+          line: { color: '#e53e3e', width: 1.5 }
         }
       ];
 
@@ -2258,29 +2278,57 @@
       debugLog('Charts linked: zoom/pan synchronized');
     }
 
-    // Mobile-friendly Plotly config
+    // Plotly config - disable problematic buttons that crash with large datasets
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     const plotlyConfig = {
       responsive: true,
-      doubleClick: false,  // Disable double-click reset (causes freezing on mobile)
+      doubleClick: false,  // Disable double-click reset (causes freezing)
       scrollZoom: !isMobile,  // Disable scroll zoom on mobile
       displayModeBar: !isMobile,  // Hide mode bar on mobile to save space
-      modeBarButtonsToRemove: ['lasso2d', 'select2d']
+      modeBarButtonsToRemove: ['lasso2d', 'select2d', 'autoScale2d', 'resetScale2d']
     };
 
-    // Reset zoom on all charts
-    function resetAllCharts() {
-      const charts = ['positionChart', 'velocityChart', 'imuChart'];
-      charts.forEach(chartId => {
-        const chartEl = document.getElementById(chartId);
-        if (chartEl && chartEl.data) {
-          Plotly.relayout(chartId, {
-            'xaxis.autorange': true,
-            'yaxis.autorange': true
-          });
+    // Maximum points to display (decimate larger datasets)
+    const MAX_DISPLAY_POINTS = 5000;
+
+    // Decimate array to max points while preserving peaks
+    function decimateData(times, values, maxPoints) {
+      if (times.length <= maxPoints) {
+        return { times: times, values: values };
+      }
+
+      const step = Math.ceil(times.length / maxPoints);
+      const decTimes = [];
+      const decValues = [];
+
+      for (let i = 0; i < times.length; i += step) {
+        // For each chunk, keep the point with max absolute value (preserves peaks)
+        let maxIdx = i;
+        let maxVal = Math.abs(values[i] || 0);
+        const end = Math.min(i + step, times.length);
+
+        for (let j = i; j < end; j++) {
+          if (Math.abs(values[j]) > maxVal) {
+            maxVal = Math.abs(values[j]);
+            maxIdx = j;
+          }
         }
-      });
-      debugLog('All charts reset to full view');
+
+        decTimes.push(times[maxIdx]);
+        decValues.push(values[maxIdx]);
+      }
+
+      return { times: decTimes, values: decValues };
+    }
+
+    // Reset zoom on all charts by re-plotting
+    function resetAllCharts() {
+      debugLog('Resetting all charts...');
+      plotPositionChart();
+      plotVelocityChart();
+      plotIMUChart();
+      linkCharts();
+      debugLog('All charts reset');
     }
 
     // Plot IMU data chart based on selector values
@@ -2332,13 +2380,20 @@
       // Always use regular scatter - WebGL (scattergl) causes issues
       const traceType = 'scatter';
 
+      // Decimate data for display if too large
+      const decIMU = decimateData(times, imuData, MAX_DISPLAY_POINTS);
+
+      if (times.length > MAX_DISPLAY_POINTS) {
+        debugLog('IMU chart decimated: ' + times.length + ' -> ' + decIMU.times.length + ' points');
+      }
+
       const trace = {
-        x: times,
-        y: imuData,
+        x: decIMU.times,
+        y: decIMU.values,
         name: `${imuLabel} ${dataLabel} ${axisLabel}`,
         type: traceType,
         mode: 'lines',
-        line: { color: '#805ad5', width: 1.5, simplify: false }
+        line: { color: '#805ad5', width: 1.5 }
       };
 
       const layout = {
