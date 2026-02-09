@@ -2289,33 +2289,22 @@
     };
 
     // Maximum points to display (decimate larger datasets)
-    const MAX_DISPLAY_POINTS = 5000;
+    const MAX_DISPLAY_POINTS = 15000;
 
-    // Decimate array to max points while preserving peaks
+    // Decimate array to max points using even intervals (smoother display)
     function decimateData(times, values, maxPoints) {
       if (times.length <= maxPoints) {
         return { times: times, values: values };
       }
 
-      const step = Math.ceil(times.length / maxPoints);
+      const step = times.length / maxPoints;
       const decTimes = [];
       const decValues = [];
 
-      for (let i = 0; i < times.length; i += step) {
-        // For each chunk, keep the point with max absolute value (preserves peaks)
-        let maxIdx = i;
-        let maxVal = Math.abs(values[i] || 0);
-        const end = Math.min(i + step, times.length);
-
-        for (let j = i; j < end; j++) {
-          if (Math.abs(values[j]) > maxVal) {
-            maxVal = Math.abs(values[j]);
-            maxIdx = j;
-          }
-        }
-
-        decTimes.push(times[maxIdx]);
-        decValues.push(values[maxIdx]);
+      for (let i = 0; i < maxPoints; i++) {
+        const idx = Math.floor(i * step);
+        decTimes.push(times[idx]);
+        decValues.push(values[idx]);
       }
 
       return { times: decTimes, values: decValues };
