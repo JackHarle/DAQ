@@ -912,6 +912,35 @@
       return result;
     }
 
+    // Find robust baseline using percentile method
+    // Uses 2nd percentile to ignore brief outlier dips while finding consistent minimum
+    function findRobustBaseline(arr) {
+      if (arr.length === 0) return 0;
+
+      // Sort a copy to find percentiles
+      const sorted = arr.slice().sort((a, b) => a - b);
+
+      // Use 2nd percentile as robust minimum (ignores bottom 2% as outliers)
+      const percentileIndex = Math.floor(sorted.length * 0.02);
+      const robustMin = sorted[Math.max(0, percentileIndex)];
+
+      // Also check if the "minimum zone" is consistent
+      // Look at bottom 5% of values and see if they cluster together
+      const bottom5Percent = sorted.slice(0, Math.max(10, Math.floor(sorted.length * 0.05)));
+      const bottom5Mean = bottom5Percent.reduce((a, b) => a + b, 0) / bottom5Percent.length;
+      const bottom5Std = Math.sqrt(bottom5Percent.reduce((sum, v) => sum + (v - bottom5Mean) ** 2, 0) / bottom5Percent.length);
+
+      // If bottom values are very spread out (high std), use a higher percentile
+      // This handles cases where there are many scattered outliers
+      if (bottom5Std > 10) {
+        // Use 5th percentile instead for noisy data
+        const saferIndex = Math.floor(sorted.length * 0.05);
+        return sorted[Math.max(0, saferIndex)];
+      }
+
+      return robustMin;
+    }
+
     // Median filter for spike removal (sliding window)
     function medianFilter(arr, windowSize) {
       const halfWindow = Math.floor(windowSize / 2);
@@ -1540,6 +1569,17 @@
 
       filteredFront = applyFilterWithGaps(filteredFront, cleanTimes, posFilterFn, posFilterWindow);
       filteredRear = applyFilterWithGaps(filteredRear, cleanTimes, posFilterFn, posFilterWindow);
+
+      // Step 3b: Auto-calibrate baseline using robust percentile method
+      // This finds a consistent minimum, ignoring brief outlier dips
+      const frontBaseline = findRobustBaseline(filteredFront);
+      const rearBaseline = findRobustBaseline(filteredRear);
+      debugLog('Auto-calibration: Front baseline=' + frontBaseline.toFixed(2) + 'mm, Rear baseline=' + rearBaseline.toFixed(2) + 'mm');
+
+      // Shift data so consistent minimum is at 0
+      filteredFront = filteredFront.map(v => v - frontBaseline);
+      filteredRear = filteredRear.map(v => v - rearBaseline);
+      debugLog('Data shifted to zero baseline');
 
       // Step 4: Calculate velocities on CLEAN, SORTED data
       const velFilterWindow = params.velocityFilterWindow || 11;
