@@ -431,6 +431,7 @@
       </div>
 
       <div id="tab-charts" class="tab-content active">
+        <button onclick="resetAllCharts()" style="margin-bottom: 10px; padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer;">Reset Zoom</button>
         <h3>Position vs Time</h3>
         <div id="positionChart" class="chart-container"></div>
 
@@ -463,6 +464,7 @@
             </select>
           </div>
         </div>
+        <button onclick="resetAllCharts()" style="margin-bottom: 10px; padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer;">Reset Zoom</button>
         <h3 id="imuChartTitle">Frame Accelerometer X-Axis</h3>
         <div id="imuChart" class="chart-container"></div>
       </div>
@@ -2050,8 +2052,8 @@
         line: { color: 'red', width: 1, dash: 'dash' }
       });
 
-      // Use scattergl for large datasets - better performance and no decimation
-      const useWebGL = processedData.length > 5000;
+      // Use scattergl for large datasets - but not on mobile (WebGL unreliable)
+      const useWebGL = !isMobile && processedData.length > 5000;
       const traceType = useWebGL ? 'scattergl' : 'scatter';
 
       const traces = [
@@ -2123,12 +2125,12 @@
         hovermode: 'x unified'
       };
 
-      Plotly.newPlot('positionChart', traces, layout, { responsive: true });
+      Plotly.newPlot('positionChart', traces, layout, plotlyConfig);
     }
 
     function plotVelocityChart() {
-      // Use scattergl for large datasets - much better performance
-      const useWebGL = processedData.length > 5000;
+      // Use scattergl for large datasets - but not on mobile (WebGL unreliable)
+      const useWebGL = !isMobile && processedData.length > 5000;
       const traceType = useWebGL ? 'scattergl' : 'scatter';
 
       const traces = [
@@ -2165,7 +2167,7 @@
         hovermode: 'x unified'
       };
 
-      Plotly.newPlot('velocityChart', traces, layout, { responsive: true });
+      Plotly.newPlot('velocityChart', traces, layout, plotlyConfig);
     }
 
     // Link position and velocity charts so zoom/pan is synchronized
@@ -2218,6 +2220,31 @@
       debugLog('Charts linked: zoom/pan synchronized');
     }
 
+    // Mobile-friendly Plotly config
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const plotlyConfig = {
+      responsive: true,
+      doubleClick: false,  // Disable double-click reset (causes freezing on mobile)
+      scrollZoom: !isMobile,  // Disable scroll zoom on mobile
+      displayModeBar: !isMobile,  // Hide mode bar on mobile to save space
+      modeBarButtonsToRemove: ['lasso2d', 'select2d']
+    };
+
+    // Reset zoom on all charts
+    function resetAllCharts() {
+      const charts = ['positionChart', 'velocityChart', 'imuChart'];
+      charts.forEach(chartId => {
+        const chartEl = document.getElementById(chartId);
+        if (chartEl && chartEl.data) {
+          Plotly.relayout(chartId, {
+            'xaxis.autorange': true,
+            'yaxis.autorange': true
+          });
+        }
+      });
+      debugLog('All charts reset to full view');
+    }
+
     // Plot IMU data chart based on selector values
     function plotIMUChart() {
       if (rawData.length === 0) {
@@ -2264,8 +2291,8 @@
       const unit = dataType === 'acc' ? 'm/s²' : '°/s';
       document.getElementById('imuChartTitle').textContent = `${imuLabel} ${dataLabel} ${axisLabel}-Axis`;
 
-      // Use WebGL for large datasets
-      const useWebGL = times.length > 5000;
+      // Use WebGL for large datasets - but not on mobile (WebGL unreliable)
+      const useWebGL = !isMobile && times.length > 5000;
       const traceType = useWebGL ? 'scattergl' : 'scatter';
 
       const trace = {
@@ -2285,7 +2312,7 @@
         hovermode: 'x unified'
       };
 
-      Plotly.newPlot('imuChart', [trace], layout, { responsive: true });
+      Plotly.newPlot('imuChart', [trace], layout, plotlyConfig);
 
       // Link IMU chart with position/velocity charts
       linkIMUChart();
