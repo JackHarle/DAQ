@@ -2092,9 +2092,8 @@
         line: { color: 'red', width: 1, dash: 'dash' }
       });
 
-      // Use scattergl for large datasets - but not on mobile (WebGL unreliable)
-      const useWebGL = !isMobile && processedData.length > 5000;
-      const traceType = useWebGL ? 'scattergl' : 'scatter';
+      // Always use regular scatter - WebGL (scattergl) causes issues
+      const traceType = 'scatter';
 
       const traces = [
         {
@@ -2169,9 +2168,8 @@
     }
 
     function plotVelocityChart() {
-      // Use scattergl for large datasets - but not on mobile (WebGL unreliable)
-      const useWebGL = !isMobile && processedData.length > 5000;
-      const traceType = useWebGL ? 'scattergl' : 'scatter';
+      // Always use regular scatter - WebGL (scattergl) causes issues
+      const traceType = 'scatter';
 
       const traces = [
         {
@@ -2331,9 +2329,8 @@
       const unit = dataType === 'acc' ? 'm/s²' : '°/s';
       document.getElementById('imuChartTitle').textContent = `${imuLabel} ${dataLabel} ${axisLabel}-Axis`;
 
-      // Use WebGL for large datasets - but not on mobile (WebGL unreliable)
-      const useWebGL = !isMobile && times.length > 5000;
-      const traceType = useWebGL ? 'scattergl' : 'scatter';
+      // Always use regular scatter - WebGL (scattergl) causes issues
+      const traceType = 'scatter';
 
       const trace = {
         x: times,
