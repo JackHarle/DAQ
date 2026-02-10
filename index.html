@@ -1413,13 +1413,34 @@
       const rawRear = [];
       const times = [];
 
+      // Track raw ADC values for debugging
+      let frontADCMin = Infinity, frontADCMax = -Infinity;
+      let rearADCMin = Infinity, rearADCMax = -Infinity;
+
       for (let i = 0; i < filtered.length; i++) {
         const d = filtered[i];
-        let frontMM = convertADCtoMM(d[frontCol], 'front', params);
-        let rearMM = convertADCtoMM(d[rearCol], 'rear', params);
 
-        if (params.invertFront) frontMM = params.frontTravel - frontMM;
-        if (params.invertRear) rearMM = params.rearTravel - rearMM;
+        // Track raw ADC range
+        const frontADC = Number(d[frontCol]);
+        const rearADC = Number(d[rearCol]);
+        if (!isNaN(frontADC)) {
+          frontADCMin = Math.min(frontADCMin, frontADC);
+          frontADCMax = Math.max(frontADCMax, frontADC);
+        }
+        if (!isNaN(rearADC)) {
+          rearADCMin = Math.min(rearADCMin, rearADC);
+          rearADCMax = Math.max(rearADCMax, rearADC);
+        }
+
+        // Invert ADC BEFORE conversion (if pot reads backwards)
+        let frontADCVal = Number(d[frontCol]);
+        let rearADCVal = Number(d[rearCol]);
+
+        if (params.invertFront) frontADCVal = 4095 - frontADCVal;
+        if (params.invertRear) rearADCVal = 4095 - rearADCVal;
+
+        let frontMM = convertADCtoMM(frontADCVal, 'front', params);
+        let rearMM = convertADCtoMM(rearADCVal, 'rear', params);
 
         rawFront.push(frontMM);
         rawRear.push(rearMM);
@@ -1433,6 +1454,15 @@
       }
 
       debugLog('Raw positions extracted: ' + rawFront.length + ' samples');
+      debugLog('=== RAW ADC VALUES ===');
+      debugLog('Front ADC range: ' + frontADCMin + ' to ' + frontADCMax + ' (expected 0-4095)');
+      debugLog('Rear ADC range: ' + rearADCMin + ' to ' + rearADCMax + ' (expected 0-4095)');
+
+      // Calculate what pot stroke these ADC values imply
+      const frontPotUsed = (frontADCMax - frontADCMin) / 4095 * params.frontPotStroke;
+      const rearPotUsed = (rearADCMax - rearADCMin) / 4095 * params.rearPotStroke;
+      debugLog('Front pot stroke used: ' + frontPotUsed.toFixed(1) + 'mm of ' + params.frontPotStroke + 'mm');
+      debugLog('Rear pot stroke used: ' + rearPotUsed.toFixed(1) + 'mm of ' + params.rearPotStroke + 'mm');
       
       // Debug: Check time data quality
       if (times.length > 0) {
@@ -2127,11 +2157,14 @@
 
         for (let i = 0; i < Math.min(rawData.length, processedData.length); i++) {
           const d = rawData[i];
-          let frontMM = convertADCtoMM(d.front || d.front_disp || d.Front, 'front', params);
-          let rearMM = convertADCtoMM(d.rear || d.rear_disp || d.Rear, 'rear', params);
+          let frontADC = Number(d.front || d.front_disp || d.Front);
+          let rearADC = Number(d.rear || d.rear_disp || d.Rear);
 
-          if (params.invertFront) frontMM = params.frontTravel - frontMM;
-          if (params.invertRear) rearMM = params.rearTravel - rearMM;
+          if (params.invertFront) frontADC = 4095 - frontADC;
+          if (params.invertRear) rearADC = 4095 - rearADC;
+
+          let frontMM = convertADCtoMM(frontADC, 'front', params);
+          let rearMM = convertADCtoMM(rearADC, 'rear', params);
 
           rawFrontPos.push(frontMM);
           rawRearPos.push(rearMM);
