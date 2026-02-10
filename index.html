@@ -123,6 +123,10 @@
       border-bottom: 1px solid var(--border);
     }
     th { background: var(--bg); font-weight: 600; }
+    tr.clickable:hover, #eventsTable tbody tr:hover {
+      background: var(--primary-light, #e6f0ff);
+      transition: background 0.15s;
+    }
 
     .rating-box {
       text-align: center;
@@ -2476,20 +2480,22 @@
       ].sort((a, b) => a.start_time - b.start_time);
 
       if (allEvents.length === 0) {
-        document.getElementById('eventsTable').innerHTML = '<tr><td colspan="7">No packing events detected</td></tr>';
+        document.getElementById('eventsTable').innerHTML = '<tr><td colspan="8">No packing events detected</td></tr>';
         return;
       }
 
       let html = `
         <thead>
-          <tr><th>#</th><th>Location</th><th>Severity</th><th>Hits</th><th>Duration</th><th>Max Depth</th><th>Phases</th></tr>
+          <tr><th>#</th><th>Time</th><th>Location</th><th>Severity</th><th>Hits</th><th>Duration</th><th>Max Depth</th><th>Phases</th></tr>
         </thead>
         <tbody>
       `;
 
       allEvents.forEach((e, i) => {
-        html += `<tr>
+        const midTime = (e.start_time + e.end_time) / 2;
+        html += `<tr onclick="zoomToEvent(${e.start_time}, ${e.end_time})" style="cursor: pointer;" title="Click to view in chart">
           <td>${i + 1}</td>
+          <td>${e.start_time.toFixed(2)}s</td>
           <td>${e.location}</td>
           <td>${e.severity} (${e.category})</td>
           <td>${e.hit_count}</td>
@@ -2501,6 +2507,33 @@
 
       html += '</tbody>';
       document.getElementById('eventsTable').innerHTML = html;
+    }
+
+    // Zoom charts to show a specific event with ±1.5s context
+    function zoomToEvent(startTime, endTime) {
+      const padding = 1.5; // seconds before and after
+      const zoomStart = startTime - padding;
+      const zoomEnd = endTime + padding;
+
+      // Switch to Charts tab
+      showTab('charts');
+
+      // Zoom all charts to the event time range
+      const update = {
+        'xaxis.range': [zoomStart, zoomEnd],
+        'xaxis.autorange': false
+      };
+
+      Plotly.relayout('positionChart', update);
+      Plotly.relayout('velocityChart', update);
+
+      // Also update IMU chart if it exists
+      const imuChart = document.getElementById('imuChart');
+      if (imuChart && imuChart.data) {
+        Plotly.relayout('imuChart', update);
+      }
+
+      debugLog('Zoomed to event: ' + zoomStart.toFixed(2) + 's to ' + zoomEnd.toFixed(2) + 's');
     }
 
     // ==================== UI HELPERS ====================
