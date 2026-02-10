@@ -2095,30 +2095,22 @@
       // Always use regular scatter - WebGL (scattergl) causes issues
       const traceType = 'scatter';
 
-      // Decimate data for display if too large
       const times = processedData.map(d => d.time);
       const frontData = processedData.map(d => d.front);
       const rearData = processedData.map(d => d.rear);
 
-      const decFront = decimateData(times, frontData, MAX_DISPLAY_POINTS);
-      const decRear = decimateData(times, rearData, MAX_DISPLAY_POINTS);
-
-      if (processedData.length > MAX_DISPLAY_POINTS) {
-        debugLog('Position chart decimated: ' + processedData.length + ' -> ' + decFront.times.length + ' points');
-      }
-
       const traces = [
         {
-          x: decFront.times,
-          y: decFront.values,
+          x: times,
+          y: frontData,
           name: 'Front (Filtered)',
           type: traceType,
           mode: 'lines',
           line: { color: '#3182ce', width: 1.5 }
         },
         {
-          x: decRear.times,
-          y: decRear.values,
+          x: times,
+          y: rearData,
           name: 'Rear (Filtered)',
           type: traceType,
           mode: 'lines',
@@ -2183,26 +2175,22 @@
       // Always use regular scatter - WebGL (scattergl) causes issues
       const traceType = 'scatter';
 
-      // Decimate data for display if too large
       const times = processedData.map(d => d.time);
       const frontVel = processedData.map(d => d.front_vel);
       const rearVel = processedData.map(d => d.rear_vel);
 
-      const decFrontVel = decimateData(times, frontVel, MAX_DISPLAY_POINTS);
-      const decRearVel = decimateData(times, rearVel, MAX_DISPLAY_POINTS);
-
       const traces = [
         {
-          x: decFrontVel.times,
-          y: decFrontVel.values,
+          x: times,
+          y: frontVel,
           name: 'Front Vel (Filtered)',
           type: traceType,
           mode: 'lines',
           line: { color: '#3182ce', width: 1.5 }
         },
         {
-          x: decRearVel.times,
-          y: decRearVel.values,
+          x: times,
+          y: rearVel,
           name: 'Rear Vel (Filtered)',
           type: traceType,
           mode: 'lines',
@@ -2352,16 +2340,9 @@
       // Always use regular scatter - WebGL (scattergl) causes issues
       const traceType = 'scatter';
 
-      // Decimate data for display if too large
-      const decIMU = decimateData(times, imuData, MAX_DISPLAY_POINTS);
-
-      if (times.length > MAX_DISPLAY_POINTS) {
-        debugLog('IMU chart decimated: ' + times.length + ' -> ' + decIMU.times.length + ' points');
-      }
-
       const trace = {
-        x: decIMU.times,
-        y: decIMU.values,
+        x: times,
+        y: imuData,
         name: `${imuLabel} ${dataLabel} ${axisLabel}`,
         type: traceType,
         mode: 'lines',
@@ -2434,6 +2415,7 @@
       const pos = stats.position;
       const vel = stats.velocity;
       const maxTravelPercent = (pos.max / totalTravel * 100).toFixed(1);
+      const dynamicSagPercent = (pos.mean / totalTravel * 100).toFixed(1);
 
       const html = `
         <thead>
@@ -2441,8 +2423,8 @@
         </thead>
         <tbody>
           <tr><td>Max Travel</td><td>${pos.max.toFixed(1)} mm (${maxTravelPercent}%)</td><td>Comp Count</td><td>${vel.compression.count.toLocaleString()}</td></tr>
-          <tr><td>Min</td><td>${pos.min.toFixed(1)} mm</td><td>Comp Mean</td><td>${vel.compression.mean.toFixed(0)} mm/s</td></tr>
-          <tr><td>Mean</td><td>${pos.mean.toFixed(1)} mm</td><td>Comp Max</td><td>${vel.compression.max.toFixed(0)} mm/s</td></tr>
+          <tr><td>Dynamic Sag</td><td>${pos.mean.toFixed(1)} mm (${dynamicSagPercent}%)</td><td>Comp Mean</td><td>${vel.compression.mean.toFixed(0)} mm/s</td></tr>
+          <tr><td>Min</td><td>${pos.min.toFixed(1)} mm</td><td>Comp Max</td><td>${vel.compression.max.toFixed(0)} mm/s</td></tr>
           <tr><td>95th %</td><td>${pos.p95.toFixed(1)} mm</td><td>Comp 95%</td><td>${vel.compression.p95.toFixed(0)} mm/s</td></tr>
           <tr><td>Std Dev</td><td>${pos.std.toFixed(1)} mm</td><td>Reb Count</td><td>${vel.rebound.count.toLocaleString()}</td></tr>
           <tr><td>Total Movement</td><td>${(pos.totalMovement / 1000).toFixed(1)} m</td><td>Reb Mean</td><td>${vel.rebound.mean.toFixed(0)} mm/s</td></tr>
