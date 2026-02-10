@@ -348,6 +348,32 @@
       </div>
     </div>
 
+    <h3 class="collapsible" onclick="toggleCollapsible(this)">Stroke Analysis Settings</h3>
+    <div class="collapsible-content">
+      <div class="grid grid-3">
+        <div>
+          <label>Min Stroke Depth (mm)</label>
+          <input type="number" id="minStrokeDepth" value="5" min="1">
+          <small style="color:#666;">Ignore strokes smaller than this</small>
+        </div>
+        <div>
+          <label>Min Stroke Time (samples)</label>
+          <input type="number" id="minStrokeSamples" value="5" min="1">
+          <small style="color:#666;">At 500Hz: 5 samples = 10ms</small>
+        </div>
+        <div>
+          <label>Bottom-out Threshold (%)</label>
+          <input type="number" id="bottomOutThreshold" value="95" min="80" max="100">
+          <small style="color:#666;">% of travel to count as bottom-out</small>
+        </div>
+        <div>
+          <label>Top-out Threshold (mm)</label>
+          <input type="number" id="topOutThreshold" value="5" min="0">
+          <small style="color:#666;">Distance from 0 to count as top-out</small>
+        </div>
+      </div>
+    </div>
+
     <h3 class="collapsible" onclick="toggleCollapsible(this)">Advanced Packing Detection Settings</h3>
     <div class="collapsible-content">
       <div class="grid grid-3">
@@ -432,6 +458,7 @@
         <div class="tab" onclick="showTab('imu')">IMU</div>
         <div class="tab" onclick="showTab('stats')">Statistics</div>
         <div class="tab" onclick="showTab('events')">Events</div>
+        <div class="tab" onclick="showTab('advanced')">Advanced</div>
       </div>
 
       <div id="tab-charts" class="tab-content active">
@@ -484,6 +511,51 @@
       <div id="tab-events" class="tab-content">
         <h3>Packing Events Detail</h3>
         <table id="eventsTable"></table>
+      </div>
+
+      <div id="tab-advanced" class="tab-content">
+        <h3>Stroke Analysis Histograms</h3>
+        <p style="color: #666; margin-bottom: 20px;">These histograms show the distribution of individual stroke characteristics. Each bar represents a bucket of strokes.</p>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div>
+            <h4>Front Compression - Stroke Depth</h4>
+            <div id="histFrontCompDepth" class="chart-container" style="height: 250px;"></div>
+          </div>
+          <div>
+            <h4>Front Compression - Max Velocity</h4>
+            <div id="histFrontCompVel" class="chart-container" style="height: 250px;"></div>
+          </div>
+          <div>
+            <h4>Front Rebound - Stroke Depth</h4>
+            <div id="histFrontRebDepth" class="chart-container" style="height: 250px;"></div>
+          </div>
+          <div>
+            <h4>Front Rebound - Max Velocity</h4>
+            <div id="histFrontRebVel" class="chart-container" style="height: 250px;"></div>
+          </div>
+        </div>
+
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid var(--border);">
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div>
+            <h4>Rear Compression - Stroke Depth</h4>
+            <div id="histRearCompDepth" class="chart-container" style="height: 250px;"></div>
+          </div>
+          <div>
+            <h4>Rear Compression - Max Velocity</h4>
+            <div id="histRearCompVel" class="chart-container" style="height: 250px;"></div>
+          </div>
+          <div>
+            <h4>Rear Rebound - Stroke Depth</h4>
+            <div id="histRearRebDepth" class="chart-container" style="height: 250px;"></div>
+          </div>
+          <div>
+            <h4>Rear Rebound - Max Velocity</h4>
+            <div id="histRearRebVel" class="chart-container" style="height: 250px;"></div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1240,6 +1312,11 @@
         positionFilterWindow: parseInt(document.getElementById('positionFilterWindow')?.value) || 5,
         velocityFilterWindow: parseInt(document.getElementById('velocityFilterWindow')?.value) || 11,
         showRawData: document.getElementById('showRawData')?.checked || false,
+        // Stroke analysis
+        minStrokeDepth: parseFloat(document.getElementById('minStrokeDepth')?.value) || 5,
+        minStrokeSamples: parseInt(document.getElementById('minStrokeSamples')?.value) || 5,
+        bottomOutThreshold: parseFloat(document.getElementById('bottomOutThreshold')?.value) || 95,
+        topOutThreshold: parseFloat(document.getElementById('topOutThreshold')?.value) || 5,
         // Packing detection
         extensionThreshold: parseFloat(document.getElementById('extensionThreshold').value),
         packedThreshold: parseFloat(document.getElementById('packedThreshold').value),
@@ -1931,36 +2008,153 @@
       };
     }
 
-    function calculateVelocityStats(data, velKey) {
-      const velocities = data.map(d => d[velKey]).filter(v => !isNaN(v));
-      const compression = velocities.filter(v => v > 0);
-      const rebound = velocities.filter(v => v < 0).map(v => Math.abs(v));
+    // Detect individual strokes and calculate per-stroke metrics
+    // A stroke is a compression (vel > 0) or rebound (vel < 0) phase between zero-crossings
+    function detectStrokes(data, posKey, velKey, params, totalTravel) {
+      const strokes = { compression: [], rebound: [] };
+      if (data.length < 3) return strokes;
 
-      // Count peaks (zero-crossings) instead of raw samples
-      let compCount = 0;
-      let rebCount = 0;
-      for (let i = 1; i < velocities.length; i++) {
-        // Compression event: velocity crosses from <=0 to >0
-        if (velocities[i] > 0 && velocities[i - 1] <= 0) compCount++;
-        // Rebound event: velocity crosses from >=0 to <0
-        if (velocities[i] < 0 && velocities[i - 1] >= 0) rebCount++;
+      const minDepth = params?.minStrokeDepth || 5;
+      const minSamples = params?.minStrokeSamples || 5;
+      const bottomOutPct = params?.bottomOutThreshold || 95;
+      const topOutMm = params?.topOutThreshold || 5;
+
+      let strokeStart = null;
+      let strokeType = null; // 'compression' or 'rebound'
+      let maxVelIdx = null;
+      let maxVelAbs = 0;
+
+      for (let i = 1; i < data.length; i++) {
+        const vel = data[i][velKey];
+        const prevVel = data[i - 1][velKey];
+
+        // Detect zero-crossing: start of new stroke
+        const crossingToComp = prevVel <= 0 && vel > 0;
+        const crossingToReb = prevVel >= 0 && vel < 0;
+
+        // If we're in a stroke and hit a zero-crossing, end the current stroke
+        if (strokeStart !== null && (crossingToComp || crossingToReb)) {
+          // Zenith is at index i-1 (where velocity was ~0 before crossing)
+          const zenithIdx = i - 1;
+          const strokeSamples = zenithIdx - strokeStart;
+
+          // Only count if meets minimum time requirement
+          if (strokeSamples >= minSamples) {
+            const stroke = buildStroke(data, strokeStart, zenithIdx, maxVelIdx, posKey, velKey, strokeType, totalTravel, bottomOutPct, topOutMm);
+            // Only count if meets minimum depth requirement
+            if (stroke && stroke.depth >= minDepth) {
+              strokes[strokeType].push(stroke);
+            }
+          }
+          strokeStart = null;
+        }
+
+        // Start new stroke on zero-crossing
+        if (crossingToComp) {
+          strokeStart = i;
+          strokeType = 'compression';
+          maxVelIdx = i;
+          maxVelAbs = Math.abs(vel);
+        } else if (crossingToReb) {
+          strokeStart = i;
+          strokeType = 'rebound';
+          maxVelIdx = i;
+          maxVelAbs = Math.abs(vel);
+        }
+
+        // Track max velocity within current stroke
+        if (strokeStart !== null && Math.abs(vel) > maxVelAbs) {
+          maxVelAbs = Math.abs(vel);
+          maxVelIdx = i;
+        }
       }
 
-      const compStats = compression.length > 0 ? {
-        mean: compression.reduce((a, b) => a + b, 0) / compression.length,
-        max: Math.max(...compression),
-        p95: compression.sort((a, b) => a - b)[Math.floor(compression.length * 0.95)],
-        count: compCount
-      } : { mean: 0, max: 0, p95: 0, count: 0 };
+      return strokes;
+    }
 
-      const rebStats = rebound.length > 0 ? {
-        mean: rebound.reduce((a, b) => a + b, 0) / rebound.length,
-        max: Math.max(...rebound),
-        p95: rebound.sort((a, b) => a - b)[Math.floor(rebound.length * 0.95)],
-        count: rebCount
-      } : { mean: 0, max: 0, p95: 0, count: 0 };
+    // Build a stroke object with all metrics
+    function buildStroke(data, startIdx, zenithIdx, maxVelIdx, posKey, velKey, type, totalTravel, bottomOutPct, topOutMm) {
+      if (startIdx >= zenithIdx || maxVelIdx < startIdx || maxVelIdx > zenithIdx) return null;
 
-      return { compression: compStats, rebound: rebStats };
+      const startPos = data[startIdx][posKey];
+      const zenithPos = data[zenithIdx][posKey];
+      const maxVelPos = data[maxVelIdx][posKey];
+      const maxVel = Math.abs(data[maxVelIdx][velKey]);
+
+      const depth = type === 'compression' ? (zenithPos - startPos) : (startPos - zenithPos);
+
+      // Bottom-out: zenith position reaches X% of total travel (for compression)
+      // Top-out: zenith position is within Y mm of 0 (for rebound)
+      const bottomOutThresholdMm = totalTravel * (bottomOutPct / 100);
+      const bottomedOut = type === 'compression' && zenithPos >= bottomOutThresholdMm;
+      const toppedOut = type === 'rebound' && zenithPos <= topOutMm;
+
+      return {
+        type: type,
+        startTime: data[startIdx].time,
+        zenithTime: data[zenithIdx].time,
+        duration: data[zenithIdx].time - data[startIdx].time,
+        startPos: startPos,
+        zenithPos: zenithPos,
+        depth: depth,
+        maxVelocity: maxVel,
+        maxVelTime: data[maxVelIdx].time,
+        maxVelPos: maxVelPos,
+        // Position within stroke where max velocity occurred (0-100%)
+        maxVelPosPercent: depth > 0 ? ((maxVelPos - startPos) / depth * 100) : 0,
+        // Acceleration zone: start to max velocity
+        accelDuration: data[maxVelIdx].time - data[startIdx].time,
+        // Deceleration zone: max velocity to zenith
+        decelDuration: data[zenithIdx].time - data[maxVelIdx].time,
+        // Bottom-out and top-out flags
+        bottomedOut: bottomedOut,
+        toppedOut: toppedOut
+      };
+    }
+
+    // Calculate aggregate stats from detected strokes
+    function calculateStrokeStats(strokes) {
+      const calcStats = (arr) => {
+        if (arr.length === 0) return { mean: 0, max: 0, p95: 0, count: 0 };
+        const sorted = [...arr].sort((a, b) => a - b);
+        return {
+          mean: arr.reduce((a, b) => a + b, 0) / arr.length,
+          max: Math.max(...arr),
+          p95: sorted[Math.floor(arr.length * 0.95)] || sorted[sorted.length - 1],
+          count: arr.length
+        };
+      };
+
+      const compStrokes = strokes.compression;
+      const rebStrokes = strokes.rebound;
+
+      // Count bottom-outs (compression strokes that hit near max travel)
+      const bottomOutCount = compStrokes.filter(s => s.bottomedOut).length;
+      // Count top-outs (rebound strokes that hit near 0)
+      const topOutCount = rebStrokes.filter(s => s.toppedOut).length;
+
+      return {
+        compression: {
+          ...calcStats(compStrokes.map(s => s.maxVelocity)),
+          depthMean: compStrokes.length > 0 ? compStrokes.reduce((a, s) => a + s.depth, 0) / compStrokes.length : 0,
+          depthMax: compStrokes.length > 0 ? Math.max(...compStrokes.map(s => s.depth)) : 0,
+          bottomOutCount: bottomOutCount
+        },
+        rebound: {
+          ...calcStats(rebStrokes.map(s => s.maxVelocity)),
+          depthMean: rebStrokes.length > 0 ? rebStrokes.reduce((a, s) => a + s.depth, 0) / rebStrokes.length : 0,
+          depthMax: rebStrokes.length > 0 ? Math.max(...rebStrokes.map(s => s.depth)) : 0,
+          topOutCount: topOutCount
+        },
+        allStrokes: { compression: compStrokes, rebound: rebStrokes }
+      };
+    }
+
+    // Legacy function for compatibility - now uses stroke-based analysis
+    function calculateVelocityStats(data, velKey, posKey, params, totalTravel) {
+      const strokes = detectStrokes(data, posKey, velKey, params, totalTravel);
+      const stats = calculateStrokeStats(strokes);
+      return stats;
     }
 
     // ==================== MAIN ANALYSIS ====================
@@ -1997,8 +2191,15 @@
       // Calculate statistics
       const frontPosStats = calculateStats(processedData, 'front');
       const rearPosStats = calculateStats(processedData, 'rear');
-      const frontVelStats = calculateVelocityStats(processedData, 'front_vel');
-      const rearVelStats = calculateVelocityStats(processedData, 'rear_vel');
+      const frontVelStats = calculateVelocityStats(processedData, 'front_vel', 'front', params, params.frontTravel);
+      const rearVelStats = calculateVelocityStats(processedData, 'rear_vel', 'rear', params, params.rearTravel);
+
+      // Log stroke detection results
+      debugLog('=== STROKE DETECTION ===');
+      debugLog('Front: ' + frontVelStats.compression.count + ' comp strokes (' + frontVelStats.compression.bottomOutCount + ' bottom-outs), ' +
+               frontVelStats.rebound.count + ' reb strokes (' + frontVelStats.rebound.topOutCount + ' top-outs)');
+      debugLog('Rear: ' + rearVelStats.compression.count + ' comp strokes (' + rearVelStats.compression.bottomOutCount + ' bottom-outs), ' +
+               rearVelStats.rebound.count + ' reb strokes (' + rearVelStats.rebound.topOutCount + ' top-outs)');
 
       // Store results
       analysisResults = {
@@ -2076,6 +2277,9 @@
 
       // Events table
       renderEventsTable();
+
+      // Advanced tab histograms
+      renderStrokeHistograms();
     }
 
     function plotPositionChart() {
@@ -2456,17 +2660,44 @@
 
       const html = `
         <thead>
-          <tr><th colspan="2">${label} Position</th><th colspan="2">${label} Velocity</th></tr>
+          <tr><th colspan="2">${label} Position</th><th colspan="2">${label} Compression</th><th colspan="2">${label} Rebound</th></tr>
         </thead>
         <tbody>
-          <tr><td>Max Travel</td><td>${pos.max.toFixed(1)} mm (${maxTravelPercent}%)</td><td>Comp Count</td><td>${vel.compression.count.toLocaleString()}</td></tr>
-          <tr><td>Dynamic Sag</td><td>${pos.mean.toFixed(1)} mm (${dynamicSagPercent}%)</td><td>Comp Mean</td><td>${vel.compression.mean.toFixed(0)} mm/s</td></tr>
-          <tr><td>Min</td><td>${pos.min.toFixed(1)} mm</td><td>Comp Max</td><td>${vel.compression.max.toFixed(0)} mm/s</td></tr>
-          <tr><td>95th %</td><td>${pos.p95.toFixed(1)} mm</td><td>Comp 95%</td><td>${vel.compression.p95.toFixed(0)} mm/s</td></tr>
-          <tr><td>Std Dev</td><td>${pos.std.toFixed(1)} mm</td><td>Reb Count</td><td>${vel.rebound.count.toLocaleString()}</td></tr>
-          <tr><td>Total Movement</td><td>${(pos.totalMovement / 1000).toFixed(1)} m</td><td>Reb Mean</td><td>${vel.rebound.mean.toFixed(0)} mm/s</td></tr>
-          <tr><td></td><td></td><td>Reb Max</td><td>${vel.rebound.max.toFixed(0)} mm/s</td></tr>
-          <tr><td></td><td></td><td>Reb 95%</td><td>${vel.rebound.p95.toFixed(0)} mm/s</td></tr>
+          <tr>
+            <td>Max Travel</td><td>${pos.max.toFixed(1)} mm (${maxTravelPercent}%)</td>
+            <td>Stroke Count</td><td>${vel.compression.count}</td>
+            <td>Stroke Count</td><td>${vel.rebound.count}</td>
+          </tr>
+          <tr>
+            <td>Dynamic Sag</td><td>${pos.mean.toFixed(1)} mm (${dynamicSagPercent}%)</td>
+            <td>Avg Depth</td><td>${vel.compression.depthMean?.toFixed(1) || 0} mm</td>
+            <td>Avg Depth</td><td>${vel.rebound.depthMean?.toFixed(1) || 0} mm</td>
+          </tr>
+          <tr>
+            <td>95th %</td><td>${pos.p95.toFixed(1)} mm</td>
+            <td>Max Depth</td><td>${vel.compression.depthMax?.toFixed(1) || 0} mm</td>
+            <td>Max Depth</td><td>${vel.rebound.depthMax?.toFixed(1) || 0} mm</td>
+          </tr>
+          <tr>
+            <td>Std Dev</td><td>${pos.std.toFixed(1)} mm</td>
+            <td>Avg Max Vel</td><td>${vel.compression.mean.toFixed(0)} mm/s</td>
+            <td>Avg Max Vel</td><td>${vel.rebound.mean.toFixed(0)} mm/s</td>
+          </tr>
+          <tr>
+            <td>Total Movement</td><td>${(pos.totalMovement / 1000).toFixed(1)} m</td>
+            <td>Peak Vel</td><td>${vel.compression.max.toFixed(0)} mm/s</td>
+            <td>Peak Vel</td><td>${vel.rebound.max.toFixed(0)} mm/s</td>
+          </tr>
+          <tr>
+            <td></td><td></td>
+            <td>95th % Vel</td><td>${vel.compression.p95.toFixed(0)} mm/s</td>
+            <td>95th % Vel</td><td>${vel.rebound.p95.toFixed(0)} mm/s</td>
+          </tr>
+          <tr>
+            <td></td><td></td>
+            <td>Bottom-outs</td><td>${vel.compression.bottomOutCount || 0}</td>
+            <td>Top-outs</td><td>${vel.rebound.topOutCount || 0}</td>
+          </tr>
         </tbody>
       `;
 
@@ -2549,7 +2780,76 @@
         Plotly.Plots.resize('velocityChart');
       } else if (tabName === 'imu') {
         Plotly.Plots.resize('imuChart');
+      } else if (tabName === 'advanced') {
+        // Resize all histogram charts
+        ['histFrontCompDepth', 'histFrontCompVel', 'histFrontRebDepth', 'histFrontRebVel',
+         'histRearCompDepth', 'histRearCompVel', 'histRearRebDepth', 'histRearRebVel'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el && el.data) Plotly.Plots.resize(id);
+        });
       }
+    }
+
+    // Render stroke histograms for the Advanced tab
+    function renderStrokeHistograms() {
+      if (!analysisResults || !analysisResults.stats) return;
+
+      const frontVel = analysisResults.stats.front.velocity;
+      const rearVel = analysisResults.stats.rear.velocity;
+
+      // Helper to create a histogram
+      function plotHistogram(elementId, data, xLabel, color) {
+        if (!data || data.length === 0) {
+          document.getElementById(elementId).innerHTML = '<p style="text-align:center;color:#999;padding:20px;">No data</p>';
+          return;
+        }
+
+        const trace = {
+          x: data,
+          type: 'histogram',
+          marker: { color: color },
+          nbinsx: Math.min(20, Math.max(5, Math.ceil(data.length / 5)))
+        };
+
+        const layout = {
+          margin: { t: 10, r: 20, b: 40, l: 50 },
+          xaxis: { title: xLabel },
+          yaxis: { title: 'Count' },
+          bargap: 0.05
+        };
+
+        Plotly.newPlot(elementId, [trace], layout, { responsive: true, displayModeBar: false });
+      }
+
+      // Front Compression
+      if (frontVel.allStrokes?.compression) {
+        const compStrokes = frontVel.allStrokes.compression;
+        plotHistogram('histFrontCompDepth', compStrokes.map(s => s.depth), 'Stroke Depth (mm)', '#3182ce');
+        plotHistogram('histFrontCompVel', compStrokes.map(s => s.maxVelocity), 'Max Velocity (mm/s)', '#3182ce');
+      }
+
+      // Front Rebound
+      if (frontVel.allStrokes?.rebound) {
+        const rebStrokes = frontVel.allStrokes.rebound;
+        plotHistogram('histFrontRebDepth', rebStrokes.map(s => s.depth), 'Stroke Depth (mm)', '#805ad5');
+        plotHistogram('histFrontRebVel', rebStrokes.map(s => s.maxVelocity), 'Max Velocity (mm/s)', '#805ad5');
+      }
+
+      // Rear Compression
+      if (rearVel.allStrokes?.compression) {
+        const compStrokes = rearVel.allStrokes.compression;
+        plotHistogram('histRearCompDepth', compStrokes.map(s => s.depth), 'Stroke Depth (mm)', '#e53e3e');
+        plotHistogram('histRearCompVel', compStrokes.map(s => s.maxVelocity), 'Max Velocity (mm/s)', '#e53e3e');
+      }
+
+      // Rear Rebound
+      if (rearVel.allStrokes?.rebound) {
+        const rebStrokes = rearVel.allStrokes.rebound;
+        plotHistogram('histRearRebDepth', rebStrokes.map(s => s.depth), 'Stroke Depth (mm)', '#dd6b20');
+        plotHistogram('histRearRebVel', rebStrokes.map(s => s.maxVelocity), 'Max Velocity (mm/s)', '#dd6b20');
+      }
+
+      debugLog('Stroke histograms rendered');
     }
 
     function toggleCollapsible(el) {
