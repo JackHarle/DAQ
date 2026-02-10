@@ -2288,26 +2288,9 @@
       modeBarButtonsToRemove: ['lasso2d', 'select2d', 'autoScale2d', 'resetScale2d']
     };
 
-    // Maximum points to display (decimate larger datasets)
-    const MAX_DISPLAY_POINTS = 15000;
-
-    // Decimate array to max points using even intervals (smoother display)
-    function decimateData(times, values, maxPoints) {
-      if (times.length <= maxPoints) {
-        return { times: times, values: values };
-      }
-
-      const step = times.length / maxPoints;
-      const decTimes = [];
-      const decValues = [];
-
-      for (let i = 0; i < maxPoints; i++) {
-        const idx = Math.floor(i * step);
-        decTimes.push(times[idx]);
-        decValues.push(values[idx]);
-      }
-
-      return { times: decTimes, values: decValues };
+    // Pass through all data (no decimation)
+    function decimateData(times, values) {
+      return { times: times, values: values };
     }
 
     // Reset zoom on all charts by re-plotting
@@ -2450,18 +2433,19 @@
     function renderStatsTable(tableId, label, stats, totalTravel) {
       const pos = stats.position;
       const vel = stats.velocity;
+      const maxTravelPercent = (pos.max / totalTravel * 100).toFixed(1);
 
       const html = `
         <thead>
           <tr><th colspan="2">${label} Position</th><th colspan="2">${label} Velocity</th></tr>
         </thead>
         <tbody>
-          <tr><td>Min</td><td>${pos.min.toFixed(1)} mm</td><td>Comp Count</td><td>${vel.compression.count.toLocaleString()}</td></tr>
-          <tr><td>Mean</td><td>${pos.mean.toFixed(1)} mm</td><td>Comp Mean</td><td>${vel.compression.mean.toFixed(0)} mm/s</td></tr>
-          <tr><td>95th %</td><td>${pos.p95.toFixed(1)} mm</td><td>Comp Max</td><td>${vel.compression.max.toFixed(0)} mm/s</td></tr>
-          <tr><td>Std Dev</td><td>${pos.std.toFixed(1)} mm</td><td>Comp 95%</td><td>${vel.compression.p95.toFixed(0)} mm/s</td></tr>
-          <tr><td>Total Movement</td><td>${(pos.totalMovement / 1000).toFixed(1)} m</td><td>Reb Count</td><td>${vel.rebound.count.toLocaleString()}</td></tr>
-          <tr><td></td><td></td><td>Reb Mean</td><td>${vel.rebound.mean.toFixed(0)} mm/s</td></tr>
+          <tr><td>Max Travel</td><td>${pos.max.toFixed(1)} mm (${maxTravelPercent}%)</td><td>Comp Count</td><td>${vel.compression.count.toLocaleString()}</td></tr>
+          <tr><td>Min</td><td>${pos.min.toFixed(1)} mm</td><td>Comp Mean</td><td>${vel.compression.mean.toFixed(0)} mm/s</td></tr>
+          <tr><td>Mean</td><td>${pos.mean.toFixed(1)} mm</td><td>Comp Max</td><td>${vel.compression.max.toFixed(0)} mm/s</td></tr>
+          <tr><td>95th %</td><td>${pos.p95.toFixed(1)} mm</td><td>Comp 95%</td><td>${vel.compression.p95.toFixed(0)} mm/s</td></tr>
+          <tr><td>Std Dev</td><td>${pos.std.toFixed(1)} mm</td><td>Reb Count</td><td>${vel.rebound.count.toLocaleString()}</td></tr>
+          <tr><td>Total Movement</td><td>${(pos.totalMovement / 1000).toFixed(1)} m</td><td>Reb Mean</td><td>${vel.rebound.mean.toFixed(0)} mm/s</td></tr>
           <tr><td></td><td></td><td>Reb Max</td><td>${vel.rebound.max.toFixed(0)} mm/s</td></tr>
           <tr><td></td><td></td><td>Reb 95%</td><td>${vel.rebound.p95.toFixed(0)} mm/s</td></tr>
         </tbody>
