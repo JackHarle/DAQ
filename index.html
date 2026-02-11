@@ -515,9 +515,9 @@
       </div>
 
       <div id="tab-balance" class="tab-content">
-        <h3>Front vs Rear Suspension Balance</h3>
+        <h3>Stroke Depth vs Speed Balance</h3>
         <p style="color: #666; margin-bottom: 15px;">
-          Correlation between front and rear stroke velocities. Points closer to the regression line indicate balanced suspension behavior.
+          Shows the relationship between stroke depth and velocity for front (blue) and rear (red) suspension. Trend lines help identify speed characteristics at different stroke depths.
         </p>
 
         <!-- Stroke Type Filter Controls -->
@@ -3054,7 +3054,7 @@
       return { slope, intercept, rSquared, equation };
     }
 
-    // Render the balance scatter plot showing front vs rear stroke velocities
+    // Render the balance scatter plot showing stroke depth vs velocity for front and rear
     function renderBalanceChart() {
       if (!analysisResults || !analysisResults.stats) return;
 
@@ -3070,28 +3070,23 @@
       }
 
       // Gather strokes based on filter
-      let frontCompStrokes = [];
-      let rearCompStrokes = [];
-      let frontRebStrokes = [];
-      let rearRebStrokes = [];
+      let frontStrokes = [];
+      let rearStrokes = [];
 
-      if (selectedType === 'both' || selectedType === 'compression') {
-        frontCompStrokes = frontVel.allStrokes.compression || [];
-        rearCompStrokes = rearVel.allStrokes.compression || [];
+      if (selectedType === 'both') {
+        frontStrokes = [...(frontVel.allStrokes.compression || []), ...(frontVel.allStrokes.rebound || [])];
+        rearStrokes = [...(rearVel.allStrokes.compression || []), ...(rearVel.allStrokes.rebound || [])];
+      } else if (selectedType === 'compression') {
+        frontStrokes = frontVel.allStrokes.compression || [];
+        rearStrokes = rearVel.allStrokes.compression || [];
+      } else if (selectedType === 'rebound') {
+        frontStrokes = frontVel.allStrokes.rebound || [];
+        rearStrokes = rearVel.allStrokes.rebound || [];
       }
 
-      if (selectedType === 'both' || selectedType === 'rebound') {
-        frontRebStrokes = frontVel.allStrokes.rebound || [];
-        rearRebStrokes = rearVel.allStrokes.rebound || [];
-      }
-
-      // Match strokes
-      const compMatches = matchStrokes(frontCompStrokes, rearCompStrokes, 0.15);
-      const rebMatches = matchStrokes(frontRebStrokes, rearRebStrokes, 0.15);
-
-      if (compMatches.length === 0 && rebMatches.length === 0) {
+      if (frontStrokes.length === 0 && rearStrokes.length === 0) {
         document.getElementById('balanceChart').innerHTML =
-          '<p style="text-align:center;color:#999;padding:40px;">No matched strokes found</p>';
+          '<p style="text-align:center;color:#999;padding:40px;">No strokes found</p>';
         document.getElementById('regressionEquation').textContent = '';
         document.getElementById('rSquared').textContent = '';
         document.getElementById('matchedStrokeCount').textContent = '';
@@ -3100,83 +3095,98 @@
 
       const traces = [];
 
-      // Compression scatter (blue)
-      if (compMatches.length > 0) {
+      // Front strokes scatter (blue)
+      if (frontStrokes.length > 0) {
+        const frontDepths = frontStrokes.map(s => s.depth);
+        const frontVelocities = frontStrokes.map(s => s.maxVelocity);
+
         traces.push({
-          x: compMatches.map(m => m.front.maxVelocity),
-          y: compMatches.map(m => m.rear.maxVelocity),
-          name: 'Compression',
+          x: frontDepths,
+          y: frontVelocities,
+          name: 'Front',
           type: 'scatter',
           mode: 'markers',
-          marker: { color: '#3182ce', size: 6, opacity: 0.6 },
-          hovertemplate: 'Front: %{x:.0f} mm/s<br>Rear: %{y:.0f} mm/s<extra></extra>'
+          marker: { color: '#3182ce', size: 6, opacity: 0.5 },
+          hovertemplate: 'Depth: %{x:.1f} mm<br>Velocity: %{y:.0f} mm/s<extra></extra>'
         });
+
+        // Front regression line
+        const frontRegression = calculateLinearRegression(frontDepths, frontVelocities);
+        if (frontRegression) {
+          const xMin = Math.min(...frontDepths);
+          const xMax = Math.max(...frontDepths);
+          const xRange = [0, xMax * 1.05];
+
+          traces.push({
+            x: xRange,
+            y: xRange.map(x => frontRegression.slope * x + frontRegression.intercept),
+            name: 'Front Trend',
+            type: 'scatter',
+            mode: 'lines',
+            line: { color: '#3182ce', width: 2, dash: 'dash' },
+            hoverinfo: 'skip'
+          });
+
+          // Update stats
+          document.getElementById('regressionEquation').textContent = `Front: ${frontRegression.equation}, R² = ${frontRegression.rSquared.toFixed(3)}`;
+        }
       }
 
-      // Rebound scatter (purple)
-      if (rebMatches.length > 0) {
+      // Rear strokes scatter (red/orange)
+      if (rearStrokes.length > 0) {
+        const rearDepths = rearStrokes.map(s => s.depth);
+        const rearVelocities = rearStrokes.map(s => s.maxVelocity);
+
         traces.push({
-          x: rebMatches.map(m => m.front.maxVelocity),
-          y: rebMatches.map(m => m.rear.maxVelocity),
-          name: 'Rebound',
+          x: rearDepths,
+          y: rearVelocities,
+          name: 'Rear',
           type: 'scatter',
           mode: 'markers',
-          marker: { color: '#805ad5', size: 6, opacity: 0.6 },
-          hovertemplate: 'Front: %{x:.0f} mm/s<br>Rear: %{y:.0f} mm/s<extra></extra>'
+          marker: { color: '#e53e3e', size: 6, opacity: 0.5 },
+          hovertemplate: 'Depth: %{x:.1f} mm<br>Velocity: %{y:.0f} mm/s<extra></extra>'
         });
+
+        // Rear regression line
+        const rearRegression = calculateLinearRegression(rearDepths, rearVelocities);
+        if (rearRegression) {
+          const xMin = Math.min(...rearDepths);
+          const xMax = Math.max(...rearDepths);
+          const xRange = [0, xMax * 1.05];
+
+          traces.push({
+            x: xRange,
+            y: xRange.map(x => rearRegression.slope * x + rearRegression.intercept),
+            name: 'Rear Trend',
+            type: 'scatter',
+            mode: 'lines',
+            line: { color: '#e53e3e', width: 2, dash: 'dash' },
+            hoverinfo: 'skip'
+          });
+
+          // Update stats (append rear to front)
+          const currentEq = document.getElementById('regressionEquation').textContent;
+          if (currentEq) {
+            document.getElementById('rSquared').textContent = `Rear: ${rearRegression.equation}, R² = ${rearRegression.rSquared.toFixed(3)}`;
+          } else {
+            document.getElementById('regressionEquation').textContent = `Rear: ${rearRegression.equation}, R² = ${rearRegression.rSquared.toFixed(3)}`;
+          }
+        }
       }
 
-      // Calculate regression
-      const allMatches = [...compMatches, ...rebMatches];
-      const xData = allMatches.map(m => m.front.maxVelocity);
-      const yData = allMatches.map(m => m.rear.maxVelocity);
-      const regression = calculateLinearRegression(xData, yData);
-
-      if (regression) {
-        // Regression line (red dashed)
-        const xMin = Math.min(...xData);
-        const xMax = Math.max(...xData);
-        const xRange = [xMin * 0.95, xMax * 1.05];
-
-        traces.push({
-          x: xRange,
-          y: xRange.map(x => regression.slope * x + regression.intercept),
-          name: 'Best Fit',
-          type: 'scatter',
-          mode: 'lines',
-          line: { color: '#e53e3e', width: 2, dash: 'dash' },
-          hoverinfo: 'skip'
-        });
-
-        // Ideal 1:1 line (gray dotted)
-        const maxVal = Math.max(xMax, Math.max(...yData));
-        traces.push({
-          x: [0, maxVal],
-          y: [0, maxVal],
-          name: 'Ideal (1:1)',
-          type: 'scatter',
-          mode: 'lines',
-          line: { color: '#999', width: 1, dash: 'dot' },
-          hoverinfo: 'skip'
-        });
-
-        // Update stats
-        document.getElementById('regressionEquation').textContent = `Equation: ${regression.equation}`;
-        document.getElementById('rSquared').textContent = `R² = ${regression.rSquared.toFixed(3)}`;
-        document.getElementById('matchedStrokeCount').textContent = `Matched Strokes: ${allMatches.length}`;
-      }
+      document.getElementById('matchedStrokeCount').textContent = `Front: ${frontStrokes.length} strokes, Rear: ${rearStrokes.length} strokes`;
 
       const layout = {
         margin: { t: 30, r: 30, b: 60, l: 60 },
-        xaxis: { title: 'Front Max Velocity (mm/s)', zeroline: false },
-        yaxis: { title: 'Rear Max Velocity (mm/s)', zeroline: false },
+        xaxis: { title: 'Stroke Depth (mm)', zeroline: false },
+        yaxis: { title: 'Max Velocity (mm/s)', zeroline: false },
         legend: { orientation: 'h', y: -0.15, x: 0.5, xanchor: 'center' },
         hovermode: 'closest'
       };
 
       Plotly.newPlot('balanceChart', traces, layout, { responsive: true, displayModeBar: false });
 
-      debugLog(`Balance chart rendered: ${compMatches.length} compression, ${rebMatches.length} rebound matches`);
+      debugLog(`Balance chart rendered: ${frontStrokes.length} front, ${rearStrokes.length} rear strokes`);
     }
 
     function toggleCollapsible(el) {
