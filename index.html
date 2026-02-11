@@ -534,6 +534,35 @@
           </label>
         </div>
 
+        <!-- Speed Filter Controls -->
+        <div style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center;">
+          <label style="font-weight: bold;">Speed Filter:</label>
+          <label style="cursor: pointer;">
+            <input type="radio" name="speedFilter" value="both" checked onchange="renderBalanceChart()"> Both
+          </label>
+          <label style="cursor: pointer;">
+            <input type="radio" name="speedFilter" value="low" onchange="renderBalanceChart()"> Low Speed
+          </label>
+          <label style="cursor: pointer;">
+            <input type="radio" name="speedFilter" value="high" onchange="renderBalanceChart()"> High Speed
+          </label>
+        </div>
+
+        <!-- Speed Threshold Inputs -->
+        <div style="display: flex; gap: 20px; margin-bottom: 20px; align-items: center;">
+          <div>
+            <label style="font-weight: bold;">Front Threshold (mm/s):</label>
+            <input type="number" id="frontSpeedThreshold" value="1000" min="0" step="100"
+                   onchange="renderBalanceChart()" style="width: 100px; margin-left: 8px;">
+          </div>
+          <div>
+            <label style="font-weight: bold;">Rear Shock Threshold (mm/s):</label>
+            <input type="number" id="rearShockSpeedThreshold" value="350" min="0" step="50"
+                   onchange="renderBalanceChart()" style="width: 100px; margin-left: 8px;">
+            <small style="color:#666; display: block; margin-left: 130px;">Shock/pot speed, not wheel speed</small>
+          </div>
+        </div>
+
         <!-- Regression Stats Display -->
         <div id="balanceStats" style="margin-bottom: 15px; padding: 12px; background: var(--bg); border-radius: 4px; font-size: 0.9rem;">
           <span id="regressionEquation" style="margin-right: 20px;"></span>
@@ -2088,7 +2117,7 @@
 
           // Only count if meets minimum time requirement
           if (strokeSamples >= minSamples) {
-            const stroke = buildStroke(data, strokeStart, zenithIdx, maxVelIdx, posKey, velKey, strokeType, totalTravel, bottomOutPct, topOutMm);
+            const stroke = buildStroke(data, strokeStart, zenithIdx, maxVelIdx, posKey, velKey, strokeType, totalTravel, bottomOutPct, topOutMm, params);
             // Only count if meets minimum depth requirement
             if (stroke && stroke.depth >= minDepth) {
               strokes[strokeType].push(stroke);
@@ -2121,7 +2150,7 @@
     }
 
     // Build a stroke object with all metrics
-    function buildStroke(data, startIdx, zenithIdx, maxVelIdx, posKey, velKey, type, totalTravel, bottomOutPct, topOutMm) {
+    function buildStroke(data, startIdx, zenithIdx, maxVelIdx, posKey, velKey, type, totalTravel, bottomOutPct, topOutMm, params) {
       if (startIdx >= zenithIdx || maxVelIdx < startIdx || maxVelIdx > zenithIdx) return null;
 
       const startPos = data[startIdx][posKey];
@@ -2137,6 +2166,15 @@
       const bottomedOut = type === 'compression' && zenithPos >= bottomOutThresholdMm;
       const toppedOut = type === 'rebound' && zenithPos <= topOutMm;
 
+      // For rear strokes, calculate shock velocity (pot speed before linkage conversion)
+      let shockVelocity = null;
+      if (posKey === 'rearMM' && params) {
+        // Reverse the linkage conversion: wheel position → shock position
+        const shockPosAtMaxVel = reverseLinkageConversion(maxVelPos, params);
+        // Convert wheel velocity to shock velocity using linkage derivative
+        shockVelocity = wheelVelToShockVel(maxVel, shockPosAtMaxVel, params);
+      }
+
       return {
         type: type,
         startTime: data[startIdx].time,
@@ -2146,6 +2184,7 @@
         zenithPos: zenithPos,
         depth: depth,
         maxVelocity: maxVel,
+        shockVelocity: shockVelocity,  // null for front, shock vel for rear
         maxVelTime: data[maxVelIdx].time,
         maxVelPos: maxVelPos,
         // Position within stroke where max velocity occurred (0-100%)
@@ -3054,6 +3093,55 @@
       return { slope, intercept, rSquared, equation };
     }
 
+    // Reverse linkage conversion: wheel position → shock position
+    // Solves: wheel = a + b*shock + c*shock² + d*shock³ for shock
+    function reverseLinkageConversion(wheelPos, params) {
+      const a = params.rearA;
+      const b = params.rearB;
+      const c = params.rearC;
+      const d = params.rearD;
+
+      // For linear linkage (c=0, d=0): shock = (wheel - a) / b
+      if (c === 0 && d === 0) {
+        return (wheelPos - a) / b;
+      }
+
+      // For non-linear linkage, use iterative Newton-Raphson method
+      // Initial guess: linear approximation
+      let shock = (wheelPos - a) / b;
+
+      // Newton-Raphson iterations (typically converges in 3-5 iterations)
+      for (let i = 0; i < 10; i++) {
+        const f = a + b*shock + c*shock*shock + d*shock*shock*shock - wheelPos;
+        const fPrime = b + 2*c*shock + 3*d*shock*shock;
+
+        if (Math.abs(fPrime) < 1e-10) break; // Avoid division by zero
+
+        const delta = f / fPrime;
+        shock = shock - delta;
+
+        if (Math.abs(delta) < 1e-6) break; // Converged
+      }
+
+      return shock;
+    }
+
+    // Calculate linkage ratio at a given shock position
+    // Returns d(wheel)/d(shock) based on polynomial coefficients
+    function getLinkageRatio(shockPos, params) {
+      // linkage_ratio = b + 2c*shock + 3d*shock²
+      return params.rearB +
+             2 * params.rearC * shockPos +
+             3 * params.rearD * shockPos * shockPos;
+    }
+
+    // Convert wheel velocity to shock velocity
+    function wheelVelToShockVel(wheelVel, shockPos, params) {
+      const linkageRatio = getLinkageRatio(shockPos, params);
+      if (linkageRatio === 0) return wheelVel; // Avoid division by zero
+      return wheelVel / linkageRatio;
+    }
+
     // Render the balance scatter plot showing stroke depth vs velocity for front and rear
     function renderBalanceChart() {
       if (!analysisResults || !analysisResults.stats) return;
@@ -3082,6 +3170,19 @@
       } else if (selectedType === 'rebound') {
         frontStrokes = frontVel.allStrokes.rebound || [];
         rearStrokes = rearVel.allStrokes.rebound || [];
+      }
+
+      // Apply speed filtering
+      const speedFilter = document.querySelector('input[name="speedFilter"]:checked')?.value || 'both';
+      const frontThreshold = Number(document.getElementById('frontSpeedThreshold')?.value) || 1000;
+      const rearShockThreshold = Number(document.getElementById('rearShockSpeedThreshold')?.value) || 350;
+
+      if (speedFilter === 'low') {
+        frontStrokes = frontStrokes.filter(s => s.maxVelocity < frontThreshold);
+        rearStrokes = rearStrokes.filter(s => (s.shockVelocity || s.maxVelocity) < rearShockThreshold);
+      } else if (speedFilter === 'high') {
+        frontStrokes = frontStrokes.filter(s => s.maxVelocity >= frontThreshold);
+        rearStrokes = rearStrokes.filter(s => (s.shockVelocity || s.maxVelocity) >= rearShockThreshold);
       }
 
       if (frontStrokes.length === 0 && rearStrokes.length === 0) {
@@ -3174,7 +3275,7 @@
         }
       }
 
-      document.getElementById('matchedStrokeCount').textContent = `Front: ${frontStrokes.length} strokes, Rear: ${rearStrokes.length} strokes`;
+      document.getElementById('matchedStrokeCount').textContent = `Front: ${frontStrokes.length} strokes (${speedFilter}, ${frontThreshold} mm/s wheel), Rear: ${rearStrokes.length} strokes (${speedFilter}, ${rearShockThreshold} mm/s shock)`;
 
       const layout = {
         margin: { t: 30, r: 30, b: 60, l: 60 },
