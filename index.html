@@ -458,6 +458,7 @@
         <div class="tab" onclick="showTab('imu')">IMU</div>
         <div class="tab" onclick="showTab('stats')">Statistics</div>
         <div class="tab" onclick="showTab('events')">Events</div>
+        <div class="tab" onclick="showTab('balance')">Balance</div>
         <div class="tab" onclick="showTab('advanced')">Advanced</div>
       </div>
 
@@ -513,7 +514,54 @@
         <table id="eventsTable"></table>
       </div>
 
+      <div id="tab-balance" class="tab-content">
+        <h3>Front vs Rear Suspension Balance</h3>
+        <p style="color: #666; margin-bottom: 15px;">
+          Correlation between front and rear stroke velocities. Points closer to the regression line indicate balanced suspension behavior.
+        </p>
+
+        <!-- Stroke Type Filter Controls -->
+        <div style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center;">
+          <label style="font-weight: bold;">Show Strokes:</label>
+          <label style="cursor: pointer;">
+            <input type="radio" name="strokeType" value="both" checked onchange="renderBalanceChart()"> Both
+          </label>
+          <label style="cursor: pointer;">
+            <input type="radio" name="strokeType" value="compression" onchange="renderBalanceChart()"> Compression Only
+          </label>
+          <label style="cursor: pointer;">
+            <input type="radio" name="strokeType" value="rebound" onchange="renderBalanceChart()"> Rebound Only
+          </label>
+        </div>
+
+        <!-- Regression Stats Display -->
+        <div id="balanceStats" style="margin-bottom: 15px; padding: 12px; background: var(--bg); border-radius: 4px; font-size: 0.9rem;">
+          <span id="regressionEquation" style="margin-right: 20px;"></span>
+          <span id="rSquared" style="margin-right: 20px;"></span>
+          <span id="matchedStrokeCount"></span>
+        </div>
+
+        <!-- Chart Container -->
+        <div id="balanceChart" class="chart-container" style="height: 500px;"></div>
+      </div>
+
       <div id="tab-advanced" class="tab-content">
+        <h3>Axle Position Histogram</h3>
+        <p style="color: #666; margin-bottom: 20px;">Shows where your suspension spends its time across the full travel range. Each bar represents time spent in that position range.</p>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+          <div>
+            <h4>Front Axle Position</h4>
+            <div id="histFrontPosition" class="chart-container" style="height: 300px;"></div>
+          </div>
+          <div>
+            <h4>Rear Axle Position</h4>
+            <div id="histRearPosition" class="chart-container" style="height: 300px;"></div>
+          </div>
+        </div>
+
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid var(--border);">
+
         <h3>Stroke Analysis Histograms</h3>
         <p style="color: #666; margin-bottom: 20px;">These histograms show the distribution of individual stroke characteristics. Each bar represents a bucket of strokes.</p>
 
@@ -2279,7 +2327,11 @@
       renderEventsTable();
 
       // Advanced tab histograms
+      renderPositionHistograms();
       renderStrokeHistograms();
+
+      // Balance tab
+      renderBalanceChart();
     }
 
     function plotPositionChart() {
@@ -2670,26 +2722,21 @@
           </tr>
           <tr>
             <td>Dynamic Sag</td><td>${pos.mean.toFixed(1)} mm (${dynamicSagPercent}%)</td>
-            <td>Avg Depth</td><td>${vel.compression.depthMean?.toFixed(1) || 0} mm</td>
-            <td>Avg Depth</td><td>${vel.rebound.depthMean?.toFixed(1) || 0} mm</td>
+            <td>Avg Stroke</td><td>${vel.compression.depthMean?.toFixed(1) || 0} mm</td>
+            <td>Avg Stroke</td><td>${vel.rebound.depthMean?.toFixed(1) || 0} mm</td>
           </tr>
           <tr>
             <td>95th %</td><td>${pos.p95.toFixed(1)} mm</td>
-            <td>Max Depth</td><td>${vel.compression.depthMax?.toFixed(1) || 0} mm</td>
-            <td>Max Depth</td><td>${vel.rebound.depthMax?.toFixed(1) || 0} mm</td>
-          </tr>
-          <tr>
-            <td>Std Dev</td><td>${pos.std.toFixed(1)} mm</td>
             <td>Avg Max Vel</td><td>${vel.compression.mean.toFixed(0)} mm/s</td>
             <td>Avg Max Vel</td><td>${vel.rebound.mean.toFixed(0)} mm/s</td>
           </tr>
           <tr>
-            <td>Total Movement</td><td>${(pos.totalMovement / 1000).toFixed(1)} m</td>
+            <td>Std Dev</td><td>${pos.std.toFixed(1)} mm</td>
             <td>Peak Vel</td><td>${vel.compression.max.toFixed(0)} mm/s</td>
             <td>Peak Vel</td><td>${vel.rebound.max.toFixed(0)} mm/s</td>
           </tr>
           <tr>
-            <td></td><td></td>
+            <td>Total Movement</td><td>${(pos.totalMovement / 1000).toFixed(1)} m</td>
             <td>95th % Vel</td><td>${vel.compression.p95.toFixed(0)} mm/s</td>
             <td>95th % Vel</td><td>${vel.rebound.p95.toFixed(0)} mm/s</td>
           </tr>
@@ -2783,10 +2830,14 @@
       } else if (tabName === 'advanced') {
         // Resize all histogram charts
         ['histFrontCompDepth', 'histFrontCompVel', 'histFrontRebDepth', 'histFrontRebVel',
-         'histRearCompDepth', 'histRearCompVel', 'histRearRebDepth', 'histRearRebVel'].forEach(id => {
+         'histRearCompDepth', 'histRearCompVel', 'histRearRebDepth', 'histRearRebVel',
+         'histFrontPosition', 'histRearPosition'].forEach(id => {
           const el = document.getElementById(id);
           if (el && el.data) Plotly.Plots.resize(id);
         });
+      } else if (tabName === 'balance') {
+        const el = document.getElementById('balanceChart');
+        if (el && el.data) Plotly.Plots.resize('balanceChart');
       }
     }
 
@@ -2850,6 +2901,282 @@
       }
 
       debugLog('Stroke histograms rendered');
+    }
+
+    // Render position histograms for the Advanced tab
+    function renderPositionHistograms() {
+      if (!processedData || processedData.length === 0) return;
+
+      const params = getParams();
+      const frontPositions = processedData.map(d => d.frontMM);
+      const rearPositions = processedData.map(d => d.rearMM);
+
+      // Create position histogram with custom bins showing mm and %
+      function plotPositionHistogram(elementId, positions, totalTravel, color, label) {
+        if (!positions || positions.length === 0) {
+          document.getElementById(elementId).innerHTML = '<p style="text-align:center;color:#999;padding:20px;">No data</p>';
+          return;
+        }
+
+        // Create 20 bins across the travel range
+        const numBins = 20;
+        const binSize = totalTravel / numBins;
+        const bins = [];
+        const counts = new Array(numBins).fill(0);
+
+        // Count samples in each bin
+        positions.forEach(pos => {
+          const binIndex = Math.min(Math.floor(pos / binSize), numBins - 1);
+          counts[binIndex]++;
+        });
+
+        // Create bin labels with mm and %
+        for (let i = 0; i < numBins; i++) {
+          const binStart = i * binSize;
+          const binEnd = (i + 1) * binSize;
+          const binCenter = (binStart + binEnd) / 2;
+          const percent = (binCenter / totalTravel * 100).toFixed(0);
+          bins.push({
+            x: binCenter,
+            y: counts[i],
+            label: `${binCenter.toFixed(0)} mm (${percent}%)`
+          });
+        }
+
+        const trace = {
+          x: bins.map(b => b.x),
+          y: bins.map(b => b.y),
+          type: 'bar',
+          marker: { color: color },
+          hovertemplate: '%{text}<br>Count: %{y}<extra></extra>',
+          text: bins.map(b => b.label)
+        };
+
+        const layout = {
+          margin: { t: 10, r: 20, b: 50, l: 60 },
+          xaxis: {
+            title: 'Position (mm)',
+            range: [0, totalTravel]
+          },
+          yaxis: { title: 'Sample Count' },
+          bargap: 0.05,
+          hovermode: 'closest'
+        };
+
+        Plotly.newPlot(elementId, [trace], layout, { responsive: true, displayModeBar: false });
+      }
+
+      plotPositionHistogram('histFrontPosition', frontPositions, params.frontTravel, '#3182ce', 'Front');
+      plotPositionHistogram('histRearPosition', rearPositions, params.rearTravel, '#e53e3e', 'Rear');
+
+      debugLog('Position histograms rendered');
+    }
+
+    // Match front and rear strokes by timestamp proximity
+    function matchStrokes(frontStrokes, rearStrokes, maxTimeDelta = 0.15) {
+      if (!frontStrokes || !rearStrokes || frontStrokes.length === 0 || rearStrokes.length === 0) {
+        return [];
+      }
+
+      const matches = [];
+      const usedRearIndices = new Set();
+
+      for (const frontStroke of frontStrokes) {
+        let bestMatch = null;
+        let bestTimeDiff = maxTimeDelta;
+        let bestRearIdx = -1;
+
+        for (let i = 0; i < rearStrokes.length; i++) {
+          if (usedRearIndices.has(i)) continue;
+
+          const rearStroke = rearStrokes[i];
+          const timeDiff = Math.abs(frontStroke.maxVelTime - rearStroke.maxVelTime);
+
+          if (timeDiff < bestTimeDiff) {
+            bestTimeDiff = timeDiff;
+            bestMatch = rearStroke;
+            bestRearIdx = i;
+          }
+        }
+
+        if (bestMatch) {
+          matches.push({ front: frontStroke, rear: bestMatch, timeDiff: bestTimeDiff });
+          usedRearIndices.add(bestRearIdx);
+        }
+      }
+
+      debugLog(`Matched ${matches.length} stroke pairs from ${frontStrokes.length} front and ${rearStrokes.length} rear strokes`);
+      return matches;
+    }
+
+    // Calculate linear regression for scatter data
+    function calculateLinearRegression(xData, yData) {
+      if (!xData || !yData || xData.length === 0 || xData.length !== yData.length) {
+        return null;
+      }
+
+      const n = xData.length;
+      const xMean = xData.reduce((sum, x) => sum + x, 0) / n;
+      const yMean = yData.reduce((sum, y) => sum + y, 0) / n;
+
+      let covariance = 0;
+      let xVariance = 0;
+
+      for (let i = 0; i < n; i++) {
+        const xDiff = xData[i] - xMean;
+        const yDiff = yData[i] - yMean;
+        covariance += xDiff * yDiff;
+        xVariance += xDiff * xDiff;
+      }
+
+      if (xVariance === 0) return null;
+
+      const slope = covariance / xVariance;
+      const intercept = yMean - slope * xMean;
+
+      // Calculate R-squared
+      let ssRes = 0;
+      let ssTot = 0;
+
+      for (let i = 0; i < n; i++) {
+        const yPred = slope * xData[i] + intercept;
+        ssRes += Math.pow(yData[i] - yPred, 2);
+        ssTot += Math.pow(yData[i] - yMean, 2);
+      }
+
+      const rSquared = ssTot === 0 ? 1 : 1 - (ssRes / ssTot);
+
+      const slopeStr = slope.toFixed(3);
+      const interceptStr = Math.abs(intercept).toFixed(1);
+      const sign = intercept >= 0 ? '+' : '-';
+      const equation = `y = ${slopeStr}x ${sign} ${interceptStr}`;
+
+      return { slope, intercept, rSquared, equation };
+    }
+
+    // Render the balance scatter plot showing front vs rear stroke velocities
+    function renderBalanceChart() {
+      if (!analysisResults || !analysisResults.stats) return;
+
+      const selectedType = document.querySelector('input[name="strokeType"]:checked')?.value || 'both';
+
+      const frontVel = analysisResults.stats.front.velocity;
+      const rearVel = analysisResults.stats.rear.velocity;
+
+      if (!frontVel.allStrokes || !rearVel.allStrokes) {
+        document.getElementById('balanceChart').innerHTML =
+          '<p style="text-align:center;color:#999;padding:40px;">No stroke data available</p>';
+        return;
+      }
+
+      // Gather strokes based on filter
+      let frontCompStrokes = [];
+      let rearCompStrokes = [];
+      let frontRebStrokes = [];
+      let rearRebStrokes = [];
+
+      if (selectedType === 'both' || selectedType === 'compression') {
+        frontCompStrokes = frontVel.allStrokes.compression || [];
+        rearCompStrokes = rearVel.allStrokes.compression || [];
+      }
+
+      if (selectedType === 'both' || selectedType === 'rebound') {
+        frontRebStrokes = frontVel.allStrokes.rebound || [];
+        rearRebStrokes = rearVel.allStrokes.rebound || [];
+      }
+
+      // Match strokes
+      const compMatches = matchStrokes(frontCompStrokes, rearCompStrokes, 0.15);
+      const rebMatches = matchStrokes(frontRebStrokes, rearRebStrokes, 0.15);
+
+      if (compMatches.length === 0 && rebMatches.length === 0) {
+        document.getElementById('balanceChart').innerHTML =
+          '<p style="text-align:center;color:#999;padding:40px;">No matched strokes found</p>';
+        document.getElementById('regressionEquation').textContent = '';
+        document.getElementById('rSquared').textContent = '';
+        document.getElementById('matchedStrokeCount').textContent = '';
+        return;
+      }
+
+      const traces = [];
+
+      // Compression scatter (blue)
+      if (compMatches.length > 0) {
+        traces.push({
+          x: compMatches.map(m => m.front.maxVelocity),
+          y: compMatches.map(m => m.rear.maxVelocity),
+          name: 'Compression',
+          type: 'scatter',
+          mode: 'markers',
+          marker: { color: '#3182ce', size: 6, opacity: 0.6 },
+          hovertemplate: 'Front: %{x:.0f} mm/s<br>Rear: %{y:.0f} mm/s<extra></extra>'
+        });
+      }
+
+      // Rebound scatter (purple)
+      if (rebMatches.length > 0) {
+        traces.push({
+          x: rebMatches.map(m => m.front.maxVelocity),
+          y: rebMatches.map(m => m.rear.maxVelocity),
+          name: 'Rebound',
+          type: 'scatter',
+          mode: 'markers',
+          marker: { color: '#805ad5', size: 6, opacity: 0.6 },
+          hovertemplate: 'Front: %{x:.0f} mm/s<br>Rear: %{y:.0f} mm/s<extra></extra>'
+        });
+      }
+
+      // Calculate regression
+      const allMatches = [...compMatches, ...rebMatches];
+      const xData = allMatches.map(m => m.front.maxVelocity);
+      const yData = allMatches.map(m => m.rear.maxVelocity);
+      const regression = calculateLinearRegression(xData, yData);
+
+      if (regression) {
+        // Regression line (red dashed)
+        const xMin = Math.min(...xData);
+        const xMax = Math.max(...xData);
+        const xRange = [xMin * 0.95, xMax * 1.05];
+
+        traces.push({
+          x: xRange,
+          y: xRange.map(x => regression.slope * x + regression.intercept),
+          name: 'Best Fit',
+          type: 'scatter',
+          mode: 'lines',
+          line: { color: '#e53e3e', width: 2, dash: 'dash' },
+          hoverinfo: 'skip'
+        });
+
+        // Ideal 1:1 line (gray dotted)
+        const maxVal = Math.max(xMax, Math.max(...yData));
+        traces.push({
+          x: [0, maxVal],
+          y: [0, maxVal],
+          name: 'Ideal (1:1)',
+          type: 'scatter',
+          mode: 'lines',
+          line: { color: '#999', width: 1, dash: 'dot' },
+          hoverinfo: 'skip'
+        });
+
+        // Update stats
+        document.getElementById('regressionEquation').textContent = `Equation: ${regression.equation}`;
+        document.getElementById('rSquared').textContent = `R² = ${regression.rSquared.toFixed(3)}`;
+        document.getElementById('matchedStrokeCount').textContent = `Matched Strokes: ${allMatches.length}`;
+      }
+
+      const layout = {
+        margin: { t: 30, r: 30, b: 60, l: 60 },
+        xaxis: { title: 'Front Max Velocity (mm/s)', zeroline: false },
+        yaxis: { title: 'Rear Max Velocity (mm/s)', zeroline: false },
+        legend: { orientation: 'h', y: -0.15, x: 0.5, xanchor: 'center' },
+        hovermode: 'closest'
+      };
+
+      Plotly.newPlot('balanceChart', traces, layout, { responsive: true, displayModeBar: false });
+
+      debugLog(`Balance chart rendered: ${compMatches.length} compression, ${rebMatches.length} rebound matches`);
     }
 
     function toggleCollapsible(el) {
