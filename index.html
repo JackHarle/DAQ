@@ -211,7 +211,7 @@ ol.losses .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 <body>
 <header>
   <div class="top">
-    <h1>Suspension Analyzer <span class="appver" id="appVer" title="Analyzer version">v2026.11.01</span></h1>
+    <h1>Suspension Analyzer <span class="appver" id="appVer" title="Analyzer version">v2026.11.01b</span></h1>
     <span class="chip" id="linkChip"><span class="dot" id="linkDot"></span><span id="linkText">No logger</span></span>
   </div>
   <nav class="tabs" role="tablist">
@@ -4749,7 +4749,9 @@ if (!window.Plotly) (function () {
   // and when a "Ride ready" notification arrives: summary first (quick look),
   // then the full ride, unpacked here. Rides get the same library key as rides
   // fetched straight from the logger, so nothing is imported twice.
-  const CL = { get url() { return String(LS.get('cloudUrl', '') || '').replace(/\/+$/, ''); }, get key() { return LS.get('cloudKey', ''); } };
+  // Built-in cloud: used until something else is saved in Setup (saving a blank address turns it off).
+  const CLOUD_DEFAULT = { url: 'https://shokiq.vesselbicycles.workers.dev', key: 'zEUbXEGcbSXV3afV-aeTxqE9M8FfCTCY' };
+  const CL = { get url() { return String(LS.get('cloudUrl', CLOUD_DEFAULT.url) || '').replace(/\/+$/, ''); }, get key() { return LS.get('cloudKey', CLOUD_DEFAULT.key); } };
   let cloudBusy = false, cloudRetry = null;
   const cloudOn = () => !!(CL.url && CL.key);
   function cfetch(path, opts) {
@@ -4849,6 +4851,7 @@ if (!window.Plotly) (function () {
   function b64uBytes(s) { s = s.replace(/-/g, '+').replace(/_/g, '/'); const b = atob(s + '==='.slice((s.length + 3) % 4)); return Uint8Array.from(b, c => c.charCodeAt(0)); }
   function cloudSetupInit() {
     if (!$('cloudUrl')) return;
+    if (LS.get('cloudUrl', null) == null) idbCfg({ url: CL.url, key: CL.key });   // built-in cloud: notifications need it too
     $('cloudUrl').value = CL.url; $('cloudKey').value = CL.key;
     $('btnCloudSave').addEventListener('click', () => {
       const u = $('cloudUrl').value.trim().replace(/\/+$/, ''), k = $('cloudKey').value.trim();
