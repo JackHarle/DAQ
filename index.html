@@ -206,16 +206,49 @@ ol.losses .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 .appver{font-size:12px;font-weight:500;color:var(--muted);margin-left:6px;letter-spacing:0}
 .tilenote{margin-top:6px;padding:8px 10px;border-radius:8px;background:var(--chip);border:1px solid var(--ring);font-size:13px;color:var(--ink2)}
 @media(max-width:560px){.wide{display:none}table.sectors{font-size:13px}table.sectors th,table.sectors td{padding-left:5px;padding-right:5px}}
+
+/* ---- Trails */
+.trmap{width:100%;height:52vh;min-height:300px;max-height:620px;border-radius:10px;overflow:hidden;margin-top:8px;background:var(--surface);border:1px solid var(--ring);position:relative;z-index:0;isolation:isolate}
+.trmap.nomap{height:60px}
+nav.tabs button.dotted::after{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--crit);margin-left:5px;vertical-align:2px}
+.trailhead{display:flex;align-items:center;gap:6px;font-size:15px;color:var(--ink)}
+.clickrow{cursor:pointer}.clickrow:hover{background:var(--chip)}
+.besttime{text-align:right}.besttime .v{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}.besttime .l{font-size:12px;color:var(--muted)}
+.gateic{display:grid!important;place-items:center;border-radius:50%;font:700 12px system-ui,sans-serif;color:#fff;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.5)}
+.gateic.start{background:#0ca30c}.gateic.end{background:#d03b3b}.gateic.split{background:#2a78d6;font-size:9px}
+.gateic.inl{display:inline-grid!important;width:20px;height:20px;vertical-align:-4px;border-width:1px}
+.featlist{display:grid;gap:6px}
+.featrow{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--ring);border-radius:10px;background:var(--surface);cursor:pointer}
+.featrow.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.featrow .fl{font-weight:600;font-size:14px}
+.featrow .meta{font-size:12px;color:var(--muted)}
+.scorebar{width:60px;height:8px;border-radius:4px;background:var(--grid);overflow:hidden;flex:0 0 auto}.scorebar span{display:block;height:100%;background:var(--accent)}
+ol.steps{margin:8px 0 10px;padding-left:20px;font-size:14px;color:var(--ink2)}ol.steps li{margin:2px 0}
+.chips{gap:6px}
+.gatesum{display:grid;gap:4px;margin-top:10px;font-size:14px}
+table.board td,table.board th{white-space:nowrap}
+td.better{color:var(--goodText);font-weight:600}td.worse{color:var(--crit);font-weight:600}
+.ridechips{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.pill.btnpill{border:0;cursor:pointer;font:700 11px system-ui,sans-serif}
+.newslist{margin:6px 0 8px;padding-left:18px}.newslist li{margin:2px 0}
+dialog.dlg{border:1px solid var(--ring);border-radius:14px;background:var(--card);color:var(--ink);padding:16px;width:min(560px,94vw);max-height:90vh;overflow:auto}
+dialog.dlg::backdrop{background:rgba(0,0,0,.45)}
+dialog.dlg h2{margin:0 0 4px;font-size:17px}
+.setupgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.setupgrid .wide2{grid-column:1/-1}
+@media(max-width:520px){.setupgrid{grid-template-columns:1fr 1fr}}
+.leaflet-container{font:12px system-ui,sans-serif}
 </style>
 </head>
 <body>
 <header>
   <div class="top">
-    <h1>Suspension Analyzer <span class="appver" id="appVer" title="Analyzer version">v2026.11.01b</span></h1>
+    <h1>Suspension Analyzer <span class="appver" id="appVer" title="Analyzer version">v2026.11.02</span></h1>
     <span class="chip" id="linkChip"><span class="dot" id="linkDot"></span><span id="linkText">No logger</span></span>
   </div>
   <nav class="tabs" role="tablist">
     <button data-view="rides" class="on" role="tab">Rides</button>
+    <button data-view="trails" role="tab">Trails</button>
     <button data-view="analyze" role="tab">Analyze</button>
     <button data-view="compare" role="tab">Compare</button>
     <button data-view="setup" role="tab">Setup</button>
@@ -267,6 +300,39 @@ ol.losses .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
         &#128193; Open CSV files from this device (or drop them here)
       </label>
     </div>
+  </section>
+
+  <!-- ============================== TRAILS ============================== -->
+  <section class="view" id="view-trails">
+    <div id="trNews" class="banner hidden"></div>
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <h2 style="margin:0" id="trMapTitle">Trails</h2>
+        <div class="seg" id="trBase"><button data-base="sat" aria-pressed="true">Satellite</button><button data-base="topo" aria-pressed="false">Topo</button><button data-base="trails" aria-pressed="false">Trail map</button></div>
+      </div>
+      <div id="trMap" class="trmap"></div>
+      <div class="row" style="margin-top:8px">
+        <label class="row" style="gap:6px;min-height:36px"><input type="checkbox" id="trShowRides"> Show my rides</label>
+        <button class="btn small" id="trLocate">Where am I</button>
+        <button class="btn small" id="trSaveArea" title="Keeps the map tiles of what you see now (zoom 12–17) on this device">Save this area for offline</button>
+      </div>
+      <div id="trMapMsg" class="msg"></div>
+    </div>
+    <div id="trHome">
+      <div class="card">
+        <div class="row" style="justify-content:space-between"><h2 style="margin:0">Segments</h2><button class="btn primary small" id="trNewBtn">New segment</button></div>
+        <div id="trStatus" class="msg" role="status"></div>
+        <div id="trList"></div>
+      </div>
+      <div class="card">
+        <details><summary>Riders</summary>
+          <div class="muted" style="margin:4px 0 8px">Each logger is one rider (its name on the logger’s WiFi page). Give them names for the leaderboards; shared through your cloud.</div>
+          <div class="grid2" id="trRiders"></div>
+        </details>
+      </div>
+    </div>
+    <div id="trNew" class="card hidden"></div>
+    <div id="trSeg" class="hidden"></div>
   </section>
 
   <!-- ============================== ANALYZE ============================== -->
@@ -446,6 +512,7 @@ ol.losses .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 
   <!-- ============================== COMPARE ============================== -->
   <section class="view" id="view-compare">
+    <div id="cmpWinNote" class="banner hidden"></div>
     <div class="card">
       <div class="grid2">
         <div><label class="f" for="cmpA"><span class="tag a">A</span> Reference ride</label><select id="cmpA"></select></div>
@@ -4385,6 +4452,1453 @@ if (!window.Plotly) (function () {
 })(window);
 </script>
 <script>
+/* ---- segments.js ---- */
+/* Segments: Strava-style timed stretches of trail, timed by the suspension.
+ * Pure functions (no DOM), browser (window.SEG) and Node (module.exports).
+ *
+ * A segment is made from one run: its start and end gates sit on sharp,
+ * distinctive features (a jump landing, a drop, a big hit) that the logger
+ * sees on every run. Each gate keeps a 3 s snippet of the sensors (pots,
+ * shaft speeds, frame accelerometer); its GPS position and the GPS line
+ * between the gates are kept too when the run had GPS.
+ *
+ * Finding runs in a ride:
+ *   1. GPS: the ride crosses the start gate line, follows the segment's line
+ *      (≥ 60% of it within 30 m), and crosses the end gate line.
+ *   2. No GPS (or none near the segment): the segment's 10 Hz sensor shape is
+ *      chained along the ride in 6 s chunks, each allowed a ±30% pace change.
+ *   3. Each gate time is then refined by matching its snippet (100 Hz, a few
+ *      pace factors) around the rough time: about ±10–30 ms when the feature
+ *      is sharp, against ±0.5–1 s for a GPS line.
+ * Splits (intermediate features) are timed the same way, giving sector times.
+ *
+ * Clock: seconds from the ride file's first row (the clock of SA.analyze's
+ * r.time, Analyze's trim boxes and ALIGN.gpsFixes(parsed, parsed.time[0])).
+ */
+(function (root) {
+  'use strict';
+  const isNode = typeof module !== 'undefined' && module.exports;
+  const SAm = () => root.SA || (isNode ? require('./analysis.js') : null);
+  const ALm = () => root.ALIGN || (isNode ? require('./align.js') : null);
+  const CMm = () => root.CMP || (isNode ? require('./compare.js') : null);
+
+  const FSC = 10;                         // coarse (matching) rate
+  const FSF = 100;                        // fine (gate) rate
+  const SNIP = 1.5;                       // gate snippet half-length, s
+  const TAUS = [0.77, 0.87, 1, 1.15, 1.3];         // pace factors for coarse matching (ride time / segment time)
+  const FINE_TAUS = [0.86, 0.93, 1, 1.075, 1.16];  // pace factors at a gate
+  const CHUNK = 6, STEP = 4;              // coarse chain: 6 s chunks every 4 s
+  const MLAT = 110540;
+  const mlon = lat => 111320 * Math.cos(lat * Math.PI / 180);
+  const VERSION = 1;
+
+  // ------------------------------------------------------------ small helpers
+  function lowerIndex(t, x) { let lo = 0, hi = t.length; while (lo < hi) { const m = (lo + hi) >> 1; if (t[m] < x) lo = m + 1; else hi = m; } return lo; }
+  function quantile(arr, q) { const v = []; for (const x of arr) if (isFinite(x)) v.push(x); if (!v.length) return NaN; v.sort((a, b) => a - b); return v[Math.min(v.length - 1, Math.max(0, Math.floor(q * (v.length - 1))))]; }
+  function interpArr(a, x) {              // a sampled at integer positions; NaN outside
+    if (!(x >= 0) || x > a.length - 1) return NaN;
+    const k = Math.floor(x), f = x - k;
+    return k + 1 < a.length ? a[k] + (a[k + 1] - a[k]) * f : a[k];
+  }
+  const round = (x, d) => { const m = Math.pow(10, d); return Math.round(x * m) / m; };
+  const toArr = (a, d) => Array.from(a, x => isFinite(x) ? round(x, d) : 0);
+  // mean of y in bins [t0 + i/fs, t0 + (i+1)/fs); empty bins take the previous value
+  function bins(t, y, t0, fs, n, fn) {
+    const s = new Float64Array(n), c = new Uint32Array(n);
+    const a = Math.max(0, lowerIndex(t, t0)), tEnd = t0 + n / fs;
+    for (let i = a; i < t.length && t[i] < tEnd; i++) {
+      const k = Math.floor((t[i] - t0) * fs); if (k < 0 || k >= n) continue;
+      const v = fn ? fn(y[i]) : y[i]; if (!isFinite(v)) continue;
+      s[k] += v; c[k]++;
+    }
+    const out = new Float32Array(n); let last = NaN;
+    for (let k = 0; k < n; k++) { if (c[k]) last = s[k] / c[k]; out[k] = last; }
+    let firstVal = NaN; for (let k = 0; k < n && !isFinite(firstVal); k++) firstVal = out[k];
+    for (let k = 0; k < n && !isFinite(out[k]); k++) out[k] = isFinite(firstVal) ? firstVal : 0;
+    return out;
+  }
+  function smooth3(a, times) { let x = a; for (let r = 0; r < times; r++) { const o = new Float32Array(x.length); for (let i = 0; i < x.length; i++) o[i] = 0.25 * x[Math.max(0, i - 1)] + 0.5 * x[i] + 0.25 * x[Math.min(x.length - 1, i + 1)]; x = o; } return x; }
+  function robustZ(a, mask) {
+    const v = []; for (let i = 0; i < a.length; i += 2) if (!mask || mask[i]) v.push(a[i]);
+    const med = quantile(v, 0.5), mad = quantile(v.map(x => Math.abs(x - med)), 0.5) * 1.4826 || quantile(v.map(x => Math.abs(x - med)), 0.9) || 1;
+    const o = new Float32Array(a.length); for (let i = 0; i < a.length; i++) o[i] = Math.asinh((a[i] - med) / (mad || 1));
+    return o;
+  }
+  // Pearson of x (fixed: mean xm, centred xc, norm xn) against y values
+  function pearsonFixed(xc, xn, ys) {
+    const n = xc.length; let sy = 0, syy = 0, sxy = 0;
+    for (let k = 0; k < n; k++) { const y = ys[k]; sy += y; syy += y * y; sxy += xc[k] * y; }
+    const vy = syy - sy * sy / n;
+    if (!(vy > 1e-9) || !(xn > 1e-9)) return 0;
+    return sxy / (xn * Math.sqrt(vy));
+  }
+  function centre(a) { let s = 0; for (const x of a) s += x; const m = s / a.length; const c = new Float64Array(a.length); let q = 0; for (let i = 0; i < a.length; i++) { c[i] = a[i] - m; q += c[i] * c[i]; } return { c, n: Math.sqrt(q) }; }
+
+  // ------------------------------------------------------------ ride context
+  // ctx: everything the matcher needs about one ride. r: SA.analyze(parsed, p) of the whole ride.
+  function makeCtx(parsed, p, r) {
+    const SA = SAm(), CMP = CMm(), ALIGN = ALm();
+    r = r || SA.analyze(parsed, p);
+    const tp = new Float64Array(parsed.rows); for (let i = 0; i < parsed.rows; i++) tp[i] = parsed.time[i] - parsed.time[0];
+    let imu = null;
+    try { const ch = CMP.imuChannel(parsed, ['fax', 'fay', 'faz'], r.rate, 20); if (ch) imu = ch.acc; } catch (e) { imu = null; }
+    let fixes = [];
+    try { fixes = ALIGN.gpsFixes(parsed, parsed.time[0]) || []; } catch (e) { fixes = []; }
+    return { parsed, p, r, tp, imu, fixes, dur: tp[tp.length - 1], travel: { F: p.frontTravel || 150, R: p.rearTravel || 150 } };
+  }
+
+  // ------------------------------------------------------------ digest (10 Hz shape + GPS), storable
+  function digest(ctx) {
+    const r = ctx.r, n = Math.max(2, Math.ceil(ctx.dur * FSC) + 1);
+    const F = smooth3(bins(r.time, r.front, 0, FSC, n), 2), R = smooth3(bins(r.time, r.rear, 0, FSC, n), 2);
+    const av = new Float64Array(r.rows); for (let i = 0; i < r.rows; i++) av[i] = Math.abs(r.frontVel[i]) + Math.abs(r.rearVel[i]);
+    const actRaw = bins(r.time, av, 0, FSC, n);
+    const V = smooth3(Float32Array.from(actRaw, x => Math.log1p(x / 50)), 1);
+    let A = null;
+    if (ctx.imu) { const d = bins(ctx.tp, ctx.imu, 0, FSC, n, x => (x - 1) * (x - 1)); A = smooth3(Float32Array.from(d, x => Math.log1p(Math.sqrt(Math.max(0, x)) * 10)), 1); }
+    const thr = Math.max(25, 0.3 * (quantile(actRaw, 0.9) || 0));
+    const mask = new Uint8Array(n); for (let i = 0; i < n; i++) mask[i] = actRaw[i] > thr ? 1 : 0;
+    const ch = { F: robustZ(F, mask), R: robustZ(R, mask), V: robustZ(V, mask) };
+    if (A) ch.A = robustZ(A, mask);
+    // GPS: fixes as [t, lat, lon, kmh] (≥ 0.2 s apart), bounding box
+    const g = []; let lat0 = Infinity, lat1 = -Infinity, lon0 = Infinity, lon1 = -Infinity;
+    for (const f of ctx.fixes) { if (g.length && f.t - g[g.length - 1][0] < 0.19) continue; g.push([round(f.t, 2), f.lat, f.lon, round(isFinite(f.v) ? f.v : NaN, 1)]); lat0 = Math.min(lat0, f.lat); lat1 = Math.max(lat1, f.lat); lon0 = Math.min(lon0, f.lon); lon1 = Math.max(lon1, f.lon); }
+    return { v: VERSION, fs: FSC, n, dur: ctx.dur, ch, act: actRaw, thr, gps: g, bbox: g.length >= 5 ? [lat0, lon0, lat1, lon1] : null, hasImu: !!A };
+  }
+
+  // Descents (≥ 20 s, gaps < 12 s bridged), longest and busiest first: candidates for a segment's span.
+  // With GPS: moving at ≥ 12 km/h (climbs and lift lines are slower); without: busy suspension.
+  function runs(dig) {
+    const nS = Math.max(1, Math.floor(dig.n / FSC)), on = new Uint8Array(nS), act = new Float64Array(nS);
+    for (let s = 0; s < nS; s++) { let a = 0; for (let k = s * FSC; k < (s + 1) * FSC && k < dig.n; k++) a += dig.act[k]; act[s] = a / FSC; }
+    const kmh = new Float64Array(nS).fill(NaN);
+    if (dig.gps.length >= 10 && gpsCoverage(dig) > 0.3) {
+      const tr = trackOf(dig.gps, 0, dig.dur, 1);
+      let k = 0;
+      for (let s = 0; s < nS; s++) {
+        while (k < dig.gps.length - 1 && dig.gps[k + 1][0] <= s + 0.5) k++;
+        const f = dig.gps[k], g = dig.gps[Math.min(dig.gps.length - 1, k + 1)];
+        if (Math.abs(f[0] - (s + 0.5)) > 3) continue;
+        kmh[s] = isFinite(f[3]) ? f[3] : NaN;
+        if (!isFinite(kmh[s]) && g !== f) kmh[s] = Math.hypot((g[2] - f[2]) * mlon(f[1]), (g[1] - f[1]) * MLAT) / Math.max(0.1, g[0] - f[0]) * 3.6;
+      }
+      void tr;
+    }
+    const p95 = quantile(act, 0.95) || 1;
+    for (let s = 0; s < nS; s++) {
+      let v = NaN, c = 0, sum = 0; for (let q = Math.max(0, s - 2); q <= Math.min(nS - 1, s + 2); q++) if (isFinite(kmh[q])) { sum += kmh[q]; c++; }
+      if (c) v = sum / c;
+      on[s] = isFinite(v) ? (v >= 12 ? 1 : 0) : (act[s] >= 0.25 * p95 ? 1 : 0);
+    }
+    const out = []; let i = 0;
+    while (i < nS) {
+      if (!on[i]) { i++; continue; }
+      let j = i, quiet = 0, end = i;
+      while (j < nS) { if (on[j]) { quiet = 0; end = j; } else if (++quiet > 12) break; j++; }
+      const t0 = i, t1 = end + 1;
+      if (t1 - t0 >= 20) { let s = 0; for (let k = i; k <= end; k++) s += act[k]; out.push({ t0, t1, act: s / (end - i + 1) }); }
+      i = j + 1;
+    }
+    // GPS speed per run (descents are fast and busy)
+    for (const R of out) {
+      const v = dig.gps.filter(f => f[0] >= R.t0 && f[0] <= R.t1 && isFinite(f[3])).map(f => f[3]);
+      R.kmh = v.length ? quantile(v, 0.5) : NaN;
+      R.score = (R.t1 - R.t0) * R.act * (isFinite(R.kmh) ? Math.min(2, Math.max(0.3, R.kmh / 15)) : 1);
+    }
+    return out.sort((a, b) => b.score - a.score);
+  }
+
+  // ------------------------------------------------------------ fine (100 Hz) sensor window
+  function fineWin(ctx, t0, t1) {
+    const r = ctx.r; t0 = Math.max(0, t0); t1 = Math.min(ctx.dur, t1);
+    const n = Math.max(2, Math.round((t1 - t0) * FSF));
+    const ch = { F: bins(r.time, r.front, t0, FSF, n), R: bins(r.time, r.rear, t0, FSF, n), FV: bins(r.time, r.frontVel, t0, FSF, n), RV: bins(r.time, r.rearVel, t0, FSF, n) };
+    if (ctx.imu) ch.A = bins(ctx.tp, ctx.imu, t0, FSF, n);
+    return { t0: t0 + 0.5 / FSF, fs: FSF, n, ch };     // sample k is the bin centre t0 + (k + 0.5)/fs
+  }
+  const W_CH = { F: 1, R: 1, FV: 1.5, RV: 1.5, A: 1 };
+  function snippetOf(win, tc) {
+    const half = Math.round(SNIP * FSF), c = (tc - win.t0) * FSF, out = { fs: FSF, half, ch: {} };
+    for (const k in win.ch) { const a = new Array(2 * half + 1); for (let q = -half; q <= half; q++) { const v = interpArr(win.ch[k], c + q); a[q + half] = isFinite(v) ? round(v, k === 'A' ? 3 : 1) : 0; } out.ch[k] = a; }
+    return out;
+  }
+  // Match a snippet around tGuess (±H s): best time of its centre, score (mean Pearson), pace, margin over the next-best spot
+  function refine(snip, ctx, tGuess, H, win) {
+    win = win || fineWin(ctx, tGuess - H - SNIP * 1.3 - 0.5, tGuess + H + SNIP * 1.3 + 0.5);
+    const keys = Object.keys(snip.ch).filter(k => win.ch[k]);
+    if (!keys.length) return { t: tGuess, ncc: 0, margin: 0 };
+    const half = snip.half, prep = keys.map(k => Object.assign(centre(snip.ch[k]), { k, w: W_CH[k] || 1 }));
+    const wsum = prep.reduce((s, q) => s + q.w, 0);
+    const ys = new Float64Array(2 * half + 1);
+    const score = (tc, tau) => {
+      const c = (tc - win.t0) * FSF; let s = 0;
+      for (const q of prep) {
+        const a = win.ch[q.k];
+        for (let j = -half; j <= half; j++) { const v = interpArr(a, c + j * tau); if (!isFinite(v)) return -1; ys[j + half] = v; }
+        s += q.w * pearsonFixed(q.c, q.n, ys);
+      }
+      return s / wsum;
+    };
+    let best = -2, bt = tGuess, btau = 1;
+    const grid = [];
+    for (let tc = tGuess - H; tc <= tGuess + H + 1e-9; tc += 0.02) {
+      let b = -2, bta = 1;
+      for (const tau of FINE_TAUS) { const s = score(tc, tau); if (s > b) { b = s; bta = tau; } }
+      grid.push([tc, b]);
+      if (b > best) { best = b; bt = tc; btau = bta; }
+    }
+    // finer: ±30 ms, pace ±0.04
+    let fb = best, ft = bt, ftau = btau;
+    for (let tau = btau - 0.04; tau <= btau + 0.0401; tau += 0.02) for (let tc = bt - 0.03; tc <= bt + 0.0301; tc += 0.005) { const s = score(tc, tau); if (s > fb) { fb = s; ft = tc; ftau = tau; } }
+    const sm = score(ft - 0.005, ftau), sp = score(ft + 0.005, ftau), den = sm - 2 * fb + sp;
+    if (den < 0) ft += Math.max(-0.005, Math.min(0.005, 0.5 * 0.005 * (sm - sp) / den));
+    let other = -1; for (const [tc, s] of grid) if (Math.abs(tc - bt) > 0.4 && s > other) other = s;
+    return { t: ft, ncc: fb, tau: ftau, margin: fb - other };
+  }
+
+  // ------------------------------------------------------------ features (gate candidates)
+  // Sharp, distinctive moments between t0 and t1: jump and drop landings, big hits, compressions.
+  function features(ctx, t0, t1, opt) {
+    opt = opt || {};
+    const win = fineWin(ctx, t0 - 22, t1 + 22), n = win.n, C = win.ch, TF = ctx.travel.F, TR = ctx.travel.R;
+    const k0 = Math.max(0, Math.round((t0 - win.t0) * FSF)), k1 = Math.min(n - 1, Math.round((t1 - win.t0) * FSF));
+    const comp = new Float32Array(n); for (let k = 0; k < n; k++) comp[k] = Math.max(C.FV[k], C.RV[k]);
+    const seg = Array.from(comp.subarray(k0, k1 + 1));
+    const p99 = quantile(seg, 0.99) || 1, thr = Math.max(150, quantile(seg, 0.95) || 0);
+    const fp = k => C.F[k] / TF * 100, rp = k => C.R[k] / TR * 100;
+    const sagF = quantile(Array.from(C.F.subarray(k0, k1 + 1), x => x / TF * 100), 0.5) || 20;
+    const sagR = quantile(Array.from(C.R.subarray(k0, k1 + 1), x => x / TR * 100), 0.5) || 25;
+    const airF = Math.max(3, 0.35 * sagF), airR = Math.max(3, 0.35 * sagR);
+    const cands = [];
+    const NB = Math.round(0.35 * FSF);
+    for (let k = k0 + 1; k < k1; k++) {
+      if (comp[k] < thr) continue;
+      let peak = true; for (let q = Math.max(k0, k - NB); q <= Math.min(k1, k + NB); q++) if (comp[q] > comp[k] || (comp[q] === comp[k] && q < k)) { peak = false; break; }
+      if (!peak) continue;
+      // in the air just before? (both ends extended, frame accel ~0 g when there is an IMU)
+      let air = 0, aEnd = -1;
+      for (let q = k - 1; q >= Math.max(0, k - 1.6 * FSF); q--) {
+        // with a frame IMU: weightless (free fall reads ~0 g); without: both ends extended
+        const up = C.A ? C.A[q] < 0.45 && rp(q) < Math.max(airR, 0.6 * sagR) : fp(q) < airF && rp(q) < airR;
+        if (up) { if (aEnd < 0) aEnd = q; air++; } else if (aEnd >= 0) break; else if (k - q > 0.35 * FSF) break;
+      }
+      const airS = air / FSF;
+      let dF = 0, dR = 0; for (let q = Math.max(0, k - 10); q <= Math.min(n - 1, k + 40); q++) { dF = Math.max(dF, fp(q)); dR = Math.max(dR, rp(q)); }
+      const type = airS >= 0.3 ? 'jump' : airS >= 0.12 ? 'drop' : 'hit';
+      cands.push({ k, t: win.t0 + k / FSF, type, air: airS, depthF: dF, depthR: dR, sharp: Math.min(1.5, comp[k] / p99) });
+    }
+    // deep, slow compressions (g-outs): both ends past the 90th percentile for ≥ 0.35 s
+    const qF = quantile(Array.from(C.F.subarray(k0, k1 + 1)), 0.9), qR = quantile(Array.from(C.R.subarray(k0, k1 + 1)), 0.9);
+    for (let k = k0; k <= k1;) {
+      if (C.F[k] > qF && C.R[k] > qR) { let j = k; while (j <= k1 && C.F[j] > qF * 0.9 && C.R[j] > qR * 0.9) j++; if (j - k >= 0.35 * FSF && !cands.some(c => Math.abs(c.k - k) < 0.5 * FSF)) { let dF = 0, dR = 0; for (let q = k; q < j; q++) { dF = Math.max(dF, fp(q)); dR = Math.max(dR, rp(q)); } cands.push({ k, t: win.t0 + k / FSF, type: 'compression', air: 0, depthF: dF, depthR: dR, sharp: 0.4, long: (j - k) / FSF }); } k = j + 1; } else k++;
+    }
+    for (const c of cands) c.base = 0.45 * c.sharp / 1.5 + 0.35 * Math.min(1, Math.max(c.depthF, c.depthR) / 100) + (c.type === 'jump' ? 0.25 : c.type === 'drop' ? 0.15 : 0);
+    cands.sort((a, b) => b.base - a.base);
+    const top = cands.slice(0, opt.max || 24);
+    // distinct from everything within ±20 s (self-match of its snippet), and how sharply it locks on
+    for (const c of top) {
+      const sn = snippetOf(win, c.t);
+      const lo = Math.max(win.t0 + SNIP + 0.1, c.t - 20), hi = Math.min(win.t0 + (n - 1) / FSF - SNIP - 0.1, c.t + 20);
+      const keys = Object.keys(sn.ch), prep = keys.map(k => Object.assign(centre(sn.ch[k]), { k, w: W_CH[k] || 1 })), wsum = prep.reduce((s, q) => s + q.w, 0);
+      const half = sn.half, ys = new Float64Array(2 * half + 1);
+      const sc = tc => { const cc = (tc - win.t0) * FSF; let s = 0; for (const q of prep) { const a = win.ch[q.k]; for (let j = -half; j <= half; j++) ys[j + half] = interpArr(a, cc + j) || 0; s += q.w * pearsonFixed(q.c, q.n, ys); } return s / wsum; };
+      let other = 0;
+      for (let tc = lo; tc <= hi; tc += 0.03) if (Math.abs(tc - c.t) > 0.6) other = Math.max(other, sc(tc));
+      let hw = 0.2; for (let dt = 0.005; dt <= 0.2; dt += 0.005) if (sc(c.t + dt) < 0.9 || sc(c.t - dt) < 0.9) { hw = dt; break; }
+      c.uniq = Math.max(0, 1 - Math.max(0, other));
+      c.precisionMs = Math.max(5, Math.round(hw * 1000 * 0.35));
+      c.score = Math.round(100 * Math.min(1, c.base) * (0.3 + 0.7 * c.uniq));
+      c.snippet = sn;
+      c.label = label(c);
+    }
+    return top.sort((a, b) => b.score - a.score);
+  }
+  function label(c) {
+    const pc = x => x >= 98 ? '100% (bottom-out)' : Math.round(x) + '%';
+    const end = c.depthR >= c.depthF ? 'rear ' + pc(c.depthR) : 'front ' + pc(c.depthF);
+    if (c.type === 'jump') return 'Jump landing · ' + c.air.toFixed(2) + ' s air · ' + end;
+    if (c.type === 'drop') return 'Drop · ' + c.air.toFixed(2) + ' s air · ' + end;
+    if (c.type === 'compression') return 'Compression · ' + (c.long || 0).toFixed(1) + ' s deep · front ' + pc(c.depthF) + ' / rear ' + pc(c.depthR);
+    return 'Big hit · front ' + pc(c.depthF) + ' / rear ' + pc(c.depthR);
+  }
+  // Best feature near a rough time: [t - before, t + after], strongest first with a mild pull to the rough time
+  function pickNear(feats, t, before, after) {
+    let best = null, bs = -1;
+    for (const f of feats) { if (f.t < t - before || f.t > t + after) continue; const s = f.score * (1 - 0.02 * Math.abs(f.t - t)); if (s > bs) { bs = s; best = f; } }
+    return best;
+  }
+  function suggest(ctx, roughStart, roughEnd) {
+    const feats = features(ctx, roughStart - 10, roughEnd + 10, { max: 40 });
+    const reach = Math.max(15, 0.25 * (roughEnd - roughStart));
+    const start = pickNear(feats.filter(f => f.score >= 20), roughStart, 6, reach) || pickNear(feats, roughStart, 6, reach);
+    const end = pickNear(feats.filter(f => f.score >= 20 && (!start || f.t > start.t + 10)), roughEnd, reach, 6) || pickNear(feats.filter(f => !start || f.t > start.t + 10), roughEnd, reach, 6);
+    const splits = [];
+    if (start && end) {
+      const span = end.t - start.t, nSplit = Math.max(0, Math.min(4, Math.floor(span / 25)));
+      for (let q = 1; q <= nSplit; q++) {
+        const at = start.t + span * q / (nSplit + 1), w = span / (nSplit + 1) / 2.5;
+        const f = pickNear(feats.filter(x => x.t > start.t + 5 && x.t < end.t - 5 && x.score >= 25 && !splits.some(s => Math.abs(s.t - x.t) < 8)), at, w, w);
+        if (f) splits.push(f);
+      }
+    }
+    return { feats, start, end, splits: splits.sort((a, b) => a.t - b.t) };
+  }
+
+  // ------------------------------------------------------------ GPS helpers
+  function trackOf(gps, t0, t1, step) {          // positions every `step` s (linear between fixes ≤ 5 s apart)
+    step = step || 0.2;
+    const out = []; if (!gps || gps.length < 2) return out;
+    let k = 0;
+    const a = Math.max(t0 == null ? gps[0][0] : t0, gps[0][0]), b = Math.min(t1 == null ? gps[gps.length - 1][0] : t1, gps[gps.length - 1][0]);
+    for (let t = a; t <= b + 1e-9; t += step) {
+      while (k < gps.length - 2 && gps[k + 1][0] < t) k++;
+      const A = gps[k], B = gps[k + 1], span = B[0] - A[0];
+      if (!(span > 0) || span > 5) { out.push([t, NaN, NaN]); continue; }
+      const f = Math.min(1, Math.max(0, (t - A[0]) / span));
+      out.push([t, A[1] + (B[1] - A[1]) * f, A[2] + (B[2] - A[2]) * f]);
+    }
+    return out;
+  }
+  function posAt(gps, t) { const tr = trackOf(gps, t, t, 1); return tr.length && isFinite(tr[0][1]) ? { lat: tr[0][1], lon: tr[0][2] } : null; }
+  // The segment's line: points every ~4 m from 40 m before the start gate to 40 m after the end, in metres around lat0/lon0; d = distance from the start gate
+  function makePath(gps, ts, te) {
+    const tr = trackOf(gps, ts - 25, te + 25, 0.2).filter(q => isFinite(q[1]));
+    if (tr.length < 20) return null;
+    const pS = posAt(gps, ts), pE = posAt(gps, te); if (!pS || !pE) return null;
+    const lat0 = pS.lat, lon0 = pS.lon, ML = mlon(lat0);
+    const xy = q => [(q[2] - lon0) * ML, (q[1] - lat0) * MLAT];
+    const pts = []; let d = 0, prev = null, dS = null, dE = null;
+    for (const q of tr) {
+      const [x, y] = xy(q);
+      if (prev) { const s = Math.hypot(x - prev[0], y - prev[1]); if (s < 4) { if (dS == null && q[0] >= ts) dS = d + s; if (dE == null && q[0] >= te) dE = d + s; continue; } d += s; }
+      pts.push([round(x, 1), round(y, 1), round(d, 1), q[0]]); prev = [x, y];
+      if (dS == null && q[0] >= ts) dS = d; if (dE == null && q[0] >= te) dE = d;
+    }
+    if (dS == null || dE == null || dE - dS < 20) return null;
+    const P = pts.map(p => [p[0], p[1], round(p[2] - dS, 1)]).filter(p => p[2] >= -40 && p[2] <= dE - dS + 40);
+    return { lat0, lon0, pts: P, length: round(dE - dS, 1) };
+  }
+  function pathIndex(path) {
+    const cell = 25, grid = new Map(), ML = mlon(path.lat0);
+    path.pts.forEach((p, i) => { const key = Math.floor(p[0] / cell) + ',' + Math.floor(p[1] / cell); if (!grid.has(key)) grid.set(key, []); grid.get(key).push(i); });
+    return {
+      ML,
+      // nearest point on the line: lateral distance (m) and distance along (d)
+      near(x, y) {
+        const cx = Math.floor(x / cell), cy = Math.floor(y / cell); let bi = -1, bd = Infinity;
+        for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) { const L = grid.get((cx + a) + ',' + (cy + b)); if (!L) continue; for (const i of L) { const p = path.pts[i], dd = (p[0] - x) ** 2 + (p[1] - y) ** 2; if (dd < bd) { bd = dd; bi = i; } } }
+        if (bi < 0) return { dist: Infinity, d: NaN };
+        let best = { dist: Math.sqrt(bd), d: path.pts[bi][2] };
+        for (const j of [bi - 1, bi]) {
+          if (j < 0 || j + 1 >= path.pts.length) continue;
+          const A = path.pts[j], B = path.pts[j + 1], vx = B[0] - A[0], vy = B[1] - A[1], L2 = vx * vx + vy * vy; if (!(L2 > 0)) continue;
+          const f = Math.max(0, Math.min(1, ((x - A[0]) * vx + (y - A[1]) * vy) / L2)), px = A[0] + vx * f, py = A[1] + vy * f, dd = Math.hypot(px - x, py - y);
+          if (dd < best.dist) best = { dist: dd, d: A[2] + (B[2] - A[2]) * f };
+        }
+        return best;
+      }
+    };
+  }
+  // Passes along the segment's line: [{tS, tE, coverage}]
+  function gpsPasses(seg, dig) {
+    const path = seg.path; if (!path || !dig.gps || dig.gps.length < 5) return [];
+    const L = path.length, idx = pathIndex(path), ML = idx.ML;
+    const tr = trackOf(dig.gps, null, null, 0.2);
+    const S = tr.map(q => { if (!isFinite(q[1])) return { t: q[0], on: false, d: NaN }; const x = (q[2] - path.lon0) * ML, y = (q[1] - path.lat0) * MLAT, n = idx.near(x, y); return { t: q[0], on: n.dist < 30, d: n.d, dist: n.dist, x, y }; });
+    // direction of the line at the start gate (switchbacks: the way in can pass close to the trail below)
+    const p0 = path.pts.reduce((b, p) => Math.abs(p[2]) < Math.abs(b[2]) ? p : b, path.pts[0]);
+    const p1 = path.pts.reduce((b, p) => Math.abs(p[2] - 12) < Math.abs(b[2] - 12) ? p : b, path.pts[0]);
+    const hx = p1[0] - p0[0], hy = p1[1] - p0[1], hn = Math.hypot(hx, hy) || 1;
+    const along = k => { const a = S[Math.max(0, k - 5)], b = S[Math.min(S.length - 1, k + 5)]; if (!isFinite(a.x) || !isFinite(b.x)) return 0; const mx = b.x - a.x, my = b.y - a.y, mn = Math.hypot(mx, my); return mn < 1 ? 1 : (mx * hx + my * hy) / (mn * hn); };
+    const out = [], binsN = Math.max(1, Math.ceil(L / 10)), maxDur = Math.max(60, 3 * seg.ref.dur);
+    for (let k = 0; k < S.length - 1; k++) {
+      const a = S[k], b = S[k + 1];
+      if (!(a.on && b.on && a.d < 0 && b.d >= 0 && a.d > -40 && b.d < 40 && b.d - a.d < 25)) continue;
+      if (along(k) < 0.2) continue;                                        // crossing the wrong way (or a switchback)
+      // must then follow the line forward (d ≥ 20 m within 60 s, on the line)
+      let fwd = false; for (let q = k + 1; q < S.length && S[q].t - a.t < 60; q++) { if (!S[q].on) continue; if (S[q].d >= 20 && S[q].d < 80) { fwd = true; break; } if (S[q].d < -45) break; }
+      if (!fwd) continue;
+      const tS = a.t + (b.t - a.t) * (0 - a.d) / (b.d - a.d);
+      const cov = new Uint8Array(binsN); let tE = NaN, j = k + 1, offFor = 0, tLeave = NaN;
+      for (; j < S.length - 1; j++) {
+        const p = S[j], q = S[j + 1];
+        if (p.t - tS > maxDur + (isFinite(tLeave) ? tLeave - tS : 0)) break;
+        if (!isFinite(tLeave) && p.on && p.d >= 12) tLeave = p.t;        // riders often wait at a start: the gate is crossed when they roll off
+        if (p.on && p.d >= 0 && p.d <= L) cov[Math.min(binsN - 1, Math.floor(p.d / 10))] = 1;
+        if (!p.on) { offFor += q.t - p.t; if (offFor > 60) break; } else offFor = 0;
+        if (p.on && q.on && p.d < L && q.d >= L && q.d - p.d < 60) { tE = p.t + (q.t - p.t) * (L - p.d) / (q.d - p.d); break; }
+      }
+      if (isFinite(tE)) {
+        let c = 0; for (const v of cov) c += v;
+        const coverage = c / binsN;
+        if (coverage >= 0.6 && tE - tS > 0.4 * seg.ref.dur) out.push({ tS, tE, coverage, method: 'gps', tLeave: isFinite(tLeave) ? tLeave : tS });
+        k = j;
+      }
+    }
+    return out;
+  }
+  // Time at which the ride reaches distance dd along the line, between tA and tB (GPS), or NaN
+  function gpsTimeAt(seg, dig, dd, tA, tB) {
+    const path = seg.path; if (!path) return NaN;
+    const idx = pathIndex(path), tr = trackOf(dig.gps, tA, tB, 0.2); let prev = null;
+    for (const q of tr) {
+      if (!isFinite(q[1])) { prev = null; continue; }
+      const n = idx.near((q[2] - path.lon0) * idx.ML, (q[1] - path.lat0) * MLAT);
+      const cur = { t: q[0], d: n.d, on: n.dist < 30 };
+      if (prev && prev.on && cur.on && prev.d < dd && cur.d >= dd) return prev.t + (cur.t - prev.t) * (dd - prev.d) / (cur.d - prev.d);
+      prev = cur;
+    }
+    return NaN;
+  }
+
+  // ------------------------------------------------------------ coarse sensor chain
+  function scaled(dig, keys, tau) {            // ride channels resampled so one sample = tau/fs of ride time
+    const m = Math.floor((dig.n - 1) / tau), out = {};
+    for (const k of keys) { const a = dig.ch[k], o = new Float32Array(m); for (let j = 0; j < m; j++) o[j] = interpArr(a, j * tau); out[k] = o; }
+    return { tau, m, ch: out };
+  }
+  function chunkPrep(seg, keys, o) {          // reference chunk at offset o (s)
+    const W = CHUNK * FSC, i0 = Math.round(o * FSC);
+    return keys.map(k => { const a = seg.coarse.ch[k].slice(i0, i0 + W); return Object.assign(centre(a), { k }); });
+  }
+  function chunkScore(prep, sc, j) {
+    const W = CHUNK * FSC; if (j < 0 || j + W > sc.m) return -1;
+    let s = 0;
+    for (const q of prep) { const a = sc.ch[q.k]; s += pearsonFixed(q.c, q.n, a.subarray(j, j + W)); }
+    return s / prep.length;
+  }
+  function chainFrom(seg, dig, scs, keys, T0, tau0, offsets) {
+    const anchors = [[0, T0]], scores = [];
+    let T = T0, tau = tau0, oPrev = 0;
+    for (let q = 0; q < offsets.length; q++) {
+      const o = offsets[q], prep = chunkPrep(seg, keys, o);
+      const exp = T + (o - oPrev) * tau, w = q === 0 ? 0.6 : Math.max(1.5, 0.2 * (o - oPrev));
+      let best = -2, bT = exp, bTau = tau;
+      for (const sc of scs) {
+        if (q > 0 && Math.abs(sc.tau - tau) > 0.3) continue;
+        const j0 = Math.floor((exp - w) * FSC / sc.tau), j1 = Math.ceil((exp + w) * FSC / sc.tau);
+        for (let j = j0; j <= j1; j++) { const s = chunkScore(prep, sc, j); if (s > best) { best = s; bT = j * sc.tau / FSC; bTau = sc.tau; } }
+      }
+      scores.push(best);
+      anchors.push([o, bT]);
+      T = bT; tau = bTau; oPrev = o;
+    }
+    const Lr = seg.ref.dur, lastO = offsets[offsets.length - 1];
+    const tE = T + (Lr - lastO) * tau;
+    anchors.push([Lr, tE]);
+    const mean = scores.reduce((s, x) => s + x, 0) / Math.max(1, scores.length);
+    const good = scores.filter(x => x >= 0.35).length / Math.max(1, scores.length);
+    return { tS: anchors[1][1] - 0, tE, mean, good, anchors: anchors.slice(1), scores };
+  }
+  function chunkOffsets(seg) {
+    const Lr = seg.ref.dur, offs = [];
+    for (let o = 0; o + CHUNK <= Lr - 0.05; o += STEP) offs.push(round(o, 2));
+    if (!offs.length || offs[offs.length - 1] < Lr - CHUNK - 0.5) offs.push(round(Math.max(0, Lr - CHUNK), 2));
+    return offs;
+  }
+  function sensorPasses(seg, dig, opt) {
+    opt = opt || {};
+    const keys = Object.keys(seg.coarse.ch).filter(k => dig.ch[k]);
+    if (!keys.length || seg.ref.dur < CHUNK + 1) return [];
+    const scs = TAUS.map(tau => scaled(dig, keys, tau));
+    const offs = chunkOffsets(seg);
+    // start candidates: the first chunk anywhere (or within opt.window), at each pace
+    const prep0 = chunkPrep(seg, keys, 0), cands = [];
+    for (const sc of scs) {
+      const jA = opt.window ? Math.max(0, Math.floor(opt.window[0] * FSC / sc.tau)) : 0, jB = opt.window ? Math.min(sc.m, Math.ceil(opt.window[1] * FSC / sc.tau)) : sc.m;
+      let prev = -2, prev2 = -2;
+      for (let j = jA; j < jB; j++) {
+        const s = chunkScore(prep0, sc, j);
+        if (prev > 0.45 && prev >= s && prev > prev2) cands.push({ T: (j - 1) * sc.tau / FSC, tau: sc.tau, s: prev });
+        prev2 = prev; prev = s;
+      }
+    }
+    cands.sort((a, b) => b.s - a.s);
+    const picked = [];
+    for (const c of cands) { if (picked.some(p => Math.abs(p.T - c.T) < 5)) continue; picked.push(c); if (picked.length >= 12) break; }
+    const out = [];
+    for (const c of picked) {
+      const ch = chainFrom(seg, dig, scs, keys, c.T, c.tau, offs);
+      if (ch.mean >= (opt.minMean || 0.5) && ch.good >= 0.75) out.push(Object.assign(ch, { method: 'sensor' }));
+    }
+    // keep the best of overlapping passes
+    out.sort((a, b) => b.mean - a.mean);
+    const keep = [];
+    for (const p of out) if (!keep.some(k => p.tS < k.tE && p.tE > k.tS)) keep.push(p);
+    return keep.sort((a, b) => a.tS - b.tS);
+  }
+  // How well the ride between two times matches the segment (chained chunks, pace free)
+  function verify(seg, dig, tS, tE) {
+    const keys = Object.keys(seg.coarse.ch).filter(k => dig.ch[k]);
+    if (!keys.length) return { mean: 0, good: 0 };
+    const tau = (tE - tS) / seg.ref.dur, scs = TAUS.concat([tau]).map(t => scaled(dig, keys, t));
+    return chainFrom(seg, dig, scs, keys, tS, tau, chunkOffsets(seg));
+  }
+
+  // ------------------------------------------------------------ making a segment
+  // ref: { ctx, dig, rideKey, rideName, rider, recordedAt }, gates chosen (feature objects with .t, .snippet, .label, .type, .precisionMs)
+  function makeSegment(ref, o) {
+    const ctx = ref.ctx, dig = ref.dig, ts = o.start.t, te = o.end.t;
+    if (!(te - ts >= CHUNK + 2)) throw new Error('The end gate must be at least ' + (CHUNK + 2) + ' s after the start gate.');
+    const win = fineWin(ctx, ts - 3, te + 3);
+    const gate = (f, kind) => {
+      const p = posAt(dig.gps, f.t);
+      return { kind, t: round(f.t, 3), type: f.type, label: f.label, precisionMs: f.precisionMs, score: f.score, lat: p ? p.lat : null, lon: p ? p.lon : null, d: null, snip: f.snippet || snippetOf(win, f.t) };
+    };
+    const i0 = Math.round(ts * FSC), i1 = Math.round(te * FSC) + CHUNK * FSC;   // a little past the end so the last chunk fits
+    const coarse = { fs: FSC, ch: {} };
+    for (const k in dig.ch) coarse.ch[k] = toArr(dig.ch[k].slice(i0, Math.min(dig.n, i1)), 3);
+    const path = makePath(dig.gps, ts, te);
+    const now = Date.now();
+    const seg = {
+      id: o.id || ('s' + now.toString(36) + Math.floor(Math.random() * 1e6).toString(36)), v: VERSION,
+      name: o.name || 'Segment', trail: o.trail || '', notes: o.notes || '', by: ref.rider || '', created: now, updated: now,
+      ref: { rideKey: ref.rideKey, rideName: ref.rideName, rider: ref.rider, recordedAt: ref.recordedAt || null, t0: round(ts, 3), t1: round(te, 3), dur: round(te - ts, 3) },
+      gates: [gate(o.start, 'start'), gate(o.end, 'end')],
+      splits: (o.splits || []).filter(f => f.t > ts + 2 && f.t < te - 2).sort((a, b) => a.t - b.t).map(f => gate(f, 'split')),
+      path, length: path ? path.length : null, coarse, hasImu: !!dig.hasImu
+    };
+    if (path) {
+      const idx = pathIndex(path), ML = idx.ML;
+      for (const g of seg.gates.concat(seg.splits)) if (g.lat != null) g.d = round(idx.near((g.lon - path.lon0) * ML, (g.lat - path.lat0) * MLAT).d, 1);
+      seg.gates[0].d = 0; seg.gates[1].d = path.length;
+    }
+    seg.sig = signature(seg);
+    return seg;
+  }
+  // What a segment's matches depend on (gates, splits, shape): efforts are redone when it changes
+  function signature(seg) {
+    const s = JSON.stringify([seg.ref.t0, seg.ref.t1, seg.ref.rideKey, seg.splits.map(x => x.t), seg.gates.map(g => g.t), !!seg.path, VERSION]);
+    let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return (h >>> 0).toString(36);
+  }
+
+  // ------------------------------------------------------------ finding and timing runs
+  // Returns efforts: [{ t0, t1, time, splits:[t...], method, conf:{start,end}, coverage }]
+  // ctx may be a function returning it: it is only needed (parsed CSV + analysis) when the digest finds a candidate.
+  function matchRide(seg, ctxOrFn, dig, opt) {
+    opt = opt || {};
+    let ctxC = null; const getCtx = () => ctxC || (ctxC = typeof ctxOrFn === 'function' ? ctxOrFn() : ctxOrFn);
+    // GPS far from the segment: a different place, no need to look at the sensors
+    const near = segNear(seg, dig);
+    if (near === false) return [];
+    let passes = seg.path && dig.gps.length >= 5 ? gpsPasses(seg, dig) : [];
+    const gpsCovers = seg.path && dig.gps.length >= 5 && near === true && gpsCoverage(dig) > 0.8;
+    // sensors: when there's no GPS pass (no GPS, dropouts, or GPS in the trees), look where the GPS doesn't exclude
+    if (!passes.length || !gpsCovers) {
+      const sp = sensorPasses(seg, dig);
+      for (const p of sp) if (!passes.some(q => p.tS < q.tE && p.tE > q.tS)) passes.push(p);
+    }
+    const out = [];
+    if (!passes.length) return out;
+    const ctx = getCtx();
+    for (const P of passes) {
+      const H = P.method === 'gps' ? 2.5 : 2.0;
+      const win = fineWin(ctx, P.tS - H - 3, P.tE + H + 3);
+      // start: anywhere from reaching the gate to rolling away from it (GPS); end: around the crossing
+      const sMid = P.tLeave != null ? (P.tS + P.tLeave) / 2 : P.tS, sH = P.tLeave != null ? (P.tLeave - P.tS) / 2 + H : H;
+      const rs = refine(seg.gates[0].snip, ctx, sMid, sH, win), re = refine(seg.gates[1].snip, ctx, P.tE, H, win);
+      const okS = rs.ncc >= 0.55 && rs.margin > 0.02, okE = re.ncc >= 0.55 && re.margin > 0.02;
+      let tS = okS ? rs.t : P.tS, tE = okE ? re.t : P.tE;
+      if (!(tE - tS > 0.4 * seg.ref.dur && tE - tS < 3 * seg.ref.dur)) continue;
+      const ver = verify(seg, dig, tS, tE);
+      if (P.method === 'sensor' && !(okS && okE)) continue;            // sensor-only needs both gates found
+      if (P.method === 'sensor' && ver.mean < 0.45) continue;
+      if (P.method === 'gps' && !(okS || okE) && ver.mean < 0.25 && P.coverage < 0.85) continue;
+      // splits
+      const splits = seg.splits.map(sp => {
+        let guess = NaN;
+        if (P.method === 'gps' && sp.d != null) guess = gpsTimeAt(seg, dig, sp.d, tS - 5, tE + 5);
+        if (!isFinite(guess)) guess = mapRefTime(ver.anchors, sp.t - seg.ref.t0, tS, tE, seg.ref.dur);
+        const rr = refine(sp.snip, ctx, guess, 1.8, win);
+        return rr.ncc >= 0.55 && rr.margin > 0.02 && rr.t > tS && rr.t < tE ? round(rr.t, 3) : null;
+      });
+      const method = okS && okE ? (P.method === 'gps' ? 'gps+sensor' : 'sensor') : P.method === 'gps' ? (okS || okE ? 'gps+sensor partly' : 'gps') : 'sensor';
+      out.push({ t0: round(tS, 3), t1: round(tE, 3), time: round(tE - tS, 3), splits, method,
+                 conf: { start: round(rs.ncc, 2), end: round(re.ncc, 2), shape: round(ver.mean, 2) }, okS, okE,
+                 coverage: P.coverage != null ? round(P.coverage, 2) : null,
+                 precisionMs: okS && okE ? Math.round(Math.hypot(seg.gates[0].precisionMs || 20, seg.gates[1].precisionMs || 20)) : 700 });
+    }
+    // overlapping results: keep the most confident
+    out.sort((a, b) => (b.conf.start + b.conf.end + b.conf.shape) - (a.conf.start + a.conf.end + a.conf.shape));
+    const keep = []; for (const e of out) if (!keep.some(k => e.t0 < k.t1 && e.t1 > k.t0)) keep.push(e);
+    return keep.sort((a, b) => a.t0 - b.t0);
+  }
+  function mapRefTime(anchors, o, tS, tE, Lr) {
+    if (anchors && anchors.length >= 2) { for (let i = 1; i < anchors.length; i++) if (anchors[i][0] >= o) { const [a0, b0] = anchors[i - 1], [a1, b1] = anchors[i]; return a1 > a0 ? b0 + (b1 - b0) * (o - a0) / (a1 - a0) : b0; } }
+    return tS + (tE - tS) * o / Lr;
+  }
+  function gpsCoverage(dig) { if (!dig.gps.length) return 0; let gaps = 0; for (let i = 1; i < dig.gps.length; i++) { const dt = dig.gps[i][0] - dig.gps[i - 1][0]; if (dt > 3) gaps += dt; } return 1 - gaps / Math.max(1, dig.dur); }
+  // true: the ride's GPS passes within 300 m of the segment; false: has GPS but never near; null: can't tell (no GPS / no line)
+  function segNear(seg, dig) {
+    if (!dig.bbox || !seg.path) return null;
+    const g = seg.gates[0]; if (g.lat == null) return null;
+    const ML = mlon(g.lat);
+    for (const f of dig.gps) if (Math.hypot((f[2] - g.lon) * ML, (f[1] - g.lat) * MLAT) < 300 + seg.path.length) return true;
+    return gpsCoverage(dig) > 0.5 ? false : null;
+  }
+
+  // ------------------------------------------------------------ numbers for one run
+  function effortStats(parsed, p, e, seg) {
+    const SA = SAm();
+    const a = SA.analyze(parsed, Object.assign({}, p, { trimStart: e.t0, trimEnd: e.t1 }));
+    const F = a.stats.front, R = a.stats.rear, TF = p.frontTravel, TR = p.rearTravel;
+    const ALIGN = ALm();
+    let vmax = NaN; try { const fx = ALIGN.gpsFixes(parsed, parsed.time[0]).filter(f => f.t >= e.t0 && f.t <= e.t1 && isFinite(f.v)); if (fx.length) vmax = Math.max(...fx.map(f => f.v)); } catch (err) {}
+    return {
+      travelF: round(F.position.max / TF * 100, 1), travelR: round(R.position.max / TR * 100, 1),
+      sagF: round(F.position.mean / TF * 100, 1), sagR: round(R.position.mean / TR * 100, 1),
+      p95F: round(F.position.p95 / TF * 100, 1), p95R: round(R.position.p95 / TR * 100, 1),
+      bottomF: F.strokes.compression.bottomOutCount, bottomR: R.strokes.compression.bottomOutCount,
+      compF: round(F.velocity.compression.p95, 0), compR: round(R.velocity.compression.p95, 0),
+      rebF: round(F.velocity.rebound.p95, 0), rebR: round(R.velocity.rebound.p95, 0),
+      compMaxF: round(F.velocity.compression.max, 0), compMaxR: round(R.velocity.compression.max, 0),
+      impactsF: a.impacts.front.length, impactsR: a.impacts.rear.length,
+      packing: a.packingIndex, packingF: a.frontPackingIndex, packingR: a.rearPackingIndex,
+      kmh: seg && seg.length ? round(seg.length / e.time * 3.6, 1) : null, kmhMax: isFinite(vmax) ? round(vmax, 1) : null
+    };
+  }
+
+  const SEG = { VERSION, FSC, FSF, makeCtx, digest, runs, fineWin, refine, features, suggest, makeSegment, signature, matchRide, gpsPasses, sensorPasses,
+                verify, effortStats, trackOf, posAt, makePath, pathIndex, segNear, gpsCoverage, snippetOf, quantile, mlon, MLAT };
+  if (isNode) module.exports = SEG; else root.SEG = SEG;
+})(typeof window !== 'undefined' ? window : this);
+</script>
+<script>
+/* ---- trails.js ---- */
+/* Trails tab: segments on a map, found and timed in every ride automatically.
+ *   - Map (Leaflet): satellite / topo / trail map, your segments and rides; tiles kept for offline use.
+ *   - New segment: pick a ride, the stretch you rode; the analyzer suggests start and end gates
+ *     on sharp features (jump landings, drops, big hits) and splits in between.
+ *   - Every ride (now and future) is checked for every segment in the background (segments.js).
+ *   - Segment page: leaderboard, history, splits and ideal time, setups compared, each run's
+ *     suspension numbers next to the best, and one tap to the Statistics page or Compare.
+ *   - Setups (pressures, clicks, tyres) per ride, carried over from the rider's previous ride.
+ *   - Shared through your cloud (segments, setups, rider names) when the cloud is set up.
+ * Storage: IndexedDB "sa-trails" (segments, efforts, digests, scans, setups, kv).
+ */
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  let A = null;                          // the app's API (window.SA_APP)
+  let ready = false;
+
+  // ======================================================= storage
+  const DBN = 'sa-trails', STORES = { segments: 'id', efforts: 'id', digests: 'key', scans: 'id', setups: 'rideKey', kv: 'k' };
+  let dbp = null, mem = null;
+  function db() {
+    if (mem) return Promise.resolve(null);
+    if (!dbp) dbp = new Promise((res, rej) => {
+      let req; try { req = indexedDB.open(DBN, 1); } catch (e) { rej(e); return; }
+      req.onupgradeneeded = () => {
+        const d = req.result;
+        for (const s in STORES) if (!d.objectStoreNames.contains(s)) {
+          const os = d.createObjectStore(s, { keyPath: STORES[s] });
+          if (s === 'efforts') { os.createIndex('seg', 'segId'); os.createIndex('ride', 'rideKey'); }
+        }
+      };
+      req.onsuccess = () => res(req.result); req.onerror = () => rej(req.error);
+    }).catch(e => { console.warn('Trails storage unavailable, memory only:', e); mem = {}; for (const s in STORES) mem[s] = new Map(); return null; });
+    return dbp;
+  }
+  const rq = r => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+  const DB = {
+    all(s) { return db().then(d => d ? rq(d.transaction(s).objectStore(s).getAll()) : [...mem[s].values()]); },
+    get(s, k) { return db().then(d => d ? rq(d.transaction(s).objectStore(s).get(k)) : mem[s].get(k)); },
+    put(s, o) { return db().then(d => d ? rq(d.transaction(s, 'readwrite').objectStore(s).put(o)) : mem[s].set(o[STORES[s]], o)); },
+    del(s, k) { return db().then(d => d ? rq(d.transaction(s, 'readwrite').objectStore(s).delete(k)) : mem[s].delete(k)); },
+    byIndex(s, ix, k) { return db().then(d => d ? rq(d.transaction(s).objectStore(s).index(ix).getAll(k)) : [...mem[s].values()].filter(o => o[ix === 'seg' ? 'segId' : 'rideKey'] === k)); }
+  };
+
+  // ======================================================= state
+  let segs = [];                         // live (not deleted) segments
+  let allSegs = [];                      // including deleted (tombstones, for sync)
+  let efforts = [];                      // all efforts
+  let setups = {};                       // rideKey -> setup record
+  let riders = {};                       // rider id -> { name, updated }
+  let rides = [];
+  let view = 'home', curSeg = null, curEffort = null, boardMode = 'best';
+  const fmt = (x, d) => A.fmt(x, d);
+  const el = (...a) => A.el(...a);
+
+  // ======================================================= helpers
+  function riderOf(r) { const m = /^logger:([^:]+):/.exec(r && r.key || ''); return m ? m[1] : 'me'; }
+  function riderName(id) { return (riders[id] && riders[id].name) || (id === 'me' ? 'Me (files)' : id); }
+  const whenOf = r => r ? (r.recordedAt || r.importedAt || 0) : 0;
+  const rideByKey = k => rides.find(r => r.key === k);
+  function pkey() { const p = A.params(); return JSON.stringify(['frontTravel', 'rearTravel', 'frontPotStroke', 'rearPotStroke', 'invertFront', 'invertRear', 'rearA', 'rearB', 'rearC', 'rearD', 'velocityFilterWindow', 'filterType'].map(k => p[k])); }
+  function fmtT(s) { if (!isFinite(s)) return '–'; const neg = s < 0; s = Math.abs(s); const m = Math.floor(s / 60), r = s - m * 60; return (neg ? '−' : '') + m + ':' + (r < 10 ? '0' : '') + r.toFixed(2); }
+  const fmtGap = g => !isFinite(g) ? '–' : Math.abs(g) < 0.005 ? '±0.00' : (g > 0 ? '+' : '−') + Math.abs(g).toFixed(2);
+  const fmtDate = ms => { try { return new Date(ms).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }); } catch (e) { return ''; } };
+  const esc = s => String(s == null ? '' : s);
+  const timing = e => e && e.okS && e.okE ? '±' + Math.max(10, e.precisionMs || 20) + ' ms' : '±0.7 s (GPS)';
+  function busy(on, text) { const s = $('trStatus'); if (s) A.msg('trStatus', text || '', on ? '' : 'ok'); }
+  const nextFrame = () => new Promise(r => setTimeout(r, 0));
+  const PALETTE = ['#2a78d6', '#eb6834', '#0ca30c', '#9b59b6', '#d03b3b', '#c9a227', '#17a2b8', '#6c757d'];
+  const TRAIL_COLORS = {};
+  function trailColor(name) { if (!TRAIL_COLORS[name]) TRAIL_COLORS[name] = PALETTE[Object.keys(TRAIL_COLORS).length % PALETTE.length]; return TRAIL_COLORS[name]; }
+
+  // ======================================================= setups
+  const SETUP_FIELDS = [
+    ['name', 'Setup name', 'text', 'e.g. Race, Soft fork'],
+    ['forkPsi', 'Fork psi', 'number'], ['forkTokens', 'Fork tokens', 'number'], ['forkHSC', 'Fork HSC', 'number'], ['forkLSC', 'Fork LSC', 'number'], ['forkHSR', 'Fork HSR', 'number'], ['forkLSR', 'Fork LSR', 'number'],
+    ['shockPsi', 'Shock psi / spring', 'text'], ['shockTokens', 'Shock tokens', 'number'], ['shockHSC', 'Shock HSC', 'number'], ['shockLSC', 'Shock LSC', 'number'], ['shockHSR', 'Shock HSR', 'number'], ['shockLSR', 'Shock LSR', 'number'],
+    ['tyreF', 'Front tyre psi', 'number'], ['tyreR', 'Rear tyre psi', 'number'], ['notes', 'Notes', 'text', 'tyres, inserts, bike…']
+  ];
+  // The setup a ride was ridden with: its own, or carried over from the rider's previous ride that has one
+  function setupFor(r) {
+    if (!r) return null;
+    if (setups[r.key] && !setups[r.key].deleted) return { s: setups[r.key].fields, carried: null };
+    const me = riderOf(r), t = whenOf(r);
+    let best = null;
+    for (const o of rides) if (o.key !== r.key && riderOf(o) === me && whenOf(o) < t && setups[o.key] && !setups[o.key].deleted && (!best || whenOf(o) > whenOf(best))) best = o;
+    return best ? { s: setups[best.key].fields, carried: best } : null;
+  }
+  function setupLabel(s) {
+    if (!s) return 'No setup';
+    if (s.name) return s.name;
+    const p = [];
+    if (s.forkPsi) p.push('F ' + s.forkPsi + (s.forkTokens ? '/' + s.forkTokens + 't' : ''));
+    if (s.shockPsi) p.push('R ' + s.shockPsi + (s.shockTokens ? '/' + s.shockTokens + 't' : ''));
+    if (s.tyreF || s.tyreR) p.push('tyres ' + (s.tyreF || '–') + '/' + (s.tyreR || '–'));
+    return p.join(' · ') || 'Setup';
+  }
+  function editSetup(r) {
+    if (!ready) return;
+    const cur = setupFor(r), f = Object.assign({}, cur ? cur.s : {});
+    let dlg = $('setupDlg');
+    if (!dlg) { dlg = el('dialog', { id: 'setupDlg', class: 'dlg' }); document.body.append(dlg); }
+    dlg.textContent = '';
+    const inputs = {};
+    const grid = el('div', { class: 'setupgrid' });
+    for (const [k, lab, type, ph] of SETUP_FIELDS) {
+      const i = el('input', { type, step: type === 'number' ? 'any' : null, inputmode: type === 'number' ? 'decimal' : null, placeholder: ph || '', value: f[k] != null ? f[k] : '' });
+      inputs[k] = i;
+      grid.append(el('div', { class: k === 'name' || k === 'notes' ? 'wide2' : '' }, el('label', { class: 'f' }, lab), i));
+    }
+    dlg.append(el('h2', null, 'Setup · ' + r.name),
+      el('div', { class: 'muted' }, cur && cur.carried ? 'Carried over from ' + cur.carried.name + ' (' + fmtDate(whenOf(cur.carried)) + '). Change what changed and save.' : cur ? 'Saved for this ride.' : 'New: later rides by ' + riderName(riderOf(r)) + ' carry it over until you change it.'),
+      grid,
+      el('div', { class: 'row', style: 'margin-top:12px;justify-content:flex-end' },
+        el('button', { class: 'btn', onclick: () => dlg.close() }, 'Cancel'),
+        setups[r.key] ? el('button', { class: 'btn danger', onclick: () => { saveSetup(r, null).then(() => dlg.close()); } }, 'Clear') : null,
+        el('button', { class: 'btn primary', onclick: () => {
+          const o = {}; for (const k in inputs) { const v = inputs[k].value.trim(); if (v !== '') o[k] = inputs[k].type === 'number' ? +v : v; }
+          saveSetup(r, o).then(() => dlg.close());
+        } }, 'Save')));
+    if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
+  }
+  function saveSetup(r, fields) {
+    const rec = { rideKey: r.key, rider: riderOf(r), fields: fields || {}, deleted: !fields, updated: Date.now() };
+    setups[r.key] = rec;
+    return DB.put('setups', rec).then(() => { A.refreshLibrary(); rerender(); syncSoon(); });
+  }
+
+  // ======================================================= ride processing (digests, scans, efforts)
+  const ctxCache = new Map();
+  function ctxFor(r) {
+    if (ctxCache.has(r.key)) return Promise.resolve(ctxCache.get(r.key));
+    return A.getParsed(r.id).then(parsed => {
+      const ctx = SEG.makeCtx(parsed, A.params());
+      ctxCache.set(r.key, ctx); while (ctxCache.size > 2) ctxCache.delete(ctxCache.keys().next().value);
+      return ctx;
+    });
+  }
+  function digestFor(r) {
+    const pk = pkey();
+    return DB.get('digests', r.key).then(rec => {
+      if (rec && rec.pkey === pk && rec.dig && rec.dig.v === SEG.VERSION) return rec.dig;
+      return ctxFor(r).then(ctx => { const dig = SEG.digest(ctx); return DB.put('digests', { key: r.key, pkey: pk, dig }).then(() => dig); });
+    });
+  }
+  let scanning = false, rescan = false;
+  function scanSoon() { clearTimeout(scanSoon.t); scanSoon.t = setTimeout(scanAll, 400); }
+  async function scanAll() {
+    if (!ready) return;
+    if (scanning) { rescan = true; return; }
+    scanning = true;
+    try {
+      do {
+        rescan = false;
+        const live = segs.slice(), pk = pkey();
+        if (!live.length) break;
+        const scans = new Map((await DB.all('scans')).map(s => [s.id, s]));
+        const todo = [];
+        for (const r of rides.slice().sort((a, b) => whenOf(b) - whenOf(a))) {
+          const need = live.filter(s => { const sc = scans.get(s.id + '|' + r.key); return !sc || sc.sig !== s.sig + pk; });
+          if (need.length) todo.push([r, need]);
+        }
+        let found = 0, i = 0;
+        for (const [r, need] of todo) {
+          i++;
+          busy(true, 'Checking rides for your segments: ' + i + ' of ' + todo.length + ' (' + r.name + ')…');
+          await nextFrame();
+          try {
+            const dig = await digestFor(r);
+            let ctx = null;
+            for (const s of need) {
+              let list = [];
+              if (SEG.segNear(s, dig) !== false) {
+                if (!ctx) ctx = await ctxFor(r);
+                list = SEG.matchRide(s, ctx, dig);
+              }
+              const old = (await DB.byIndex('efforts', 'ride', r.key)).filter(e => e.segId === s.id);
+              for (const o of old) await DB.del('efforts', o.id);
+              for (const e of list) {
+                let stats = null; try { stats = SEG.effortStats(ctx.parsed, A.params(), e, s); } catch (err) { console.warn(err); }
+                const rec = Object.assign({}, e, { id: s.id + '|' + r.key + '|' + Math.round(e.t0 * 10), segId: s.id, rideKey: r.key, rideId: r.id, rideName: r.name, rider: riderOf(r), when: whenOf(r), stats });
+                await DB.put('efforts', rec); found++;
+              }
+              await DB.put('scans', { id: s.id + '|' + r.key, sig: s.sig + pk, n: list.length, at: Date.now() });
+            }
+          } catch (err) { console.warn('Trails: could not check ' + r.name, err); await DB.put('scans', { id: need[0].id + '|' + r.key, sig: 'err', at: Date.now() }); }
+          if (i % 3 === 0 || i === todo.length) { await loadEfforts(); rerender(true); }
+        }
+        await loadEfforts();
+        if (todo.length) busy(false, 'Checked ' + A.plural(todo.length, 'ride') + ': ' + A.plural(found, 'run') + ' found.');
+        news();
+      } while (rescan);
+    } finally { scanning = false; rerender(); }
+  }
+  function loadEfforts() { return DB.all('efforts').then(list => { const live = new Set(segs.map(s => s.id)), have = new Set(rides.map(r => r.key)); efforts = list.filter(e => live.has(e.segId) && have.has(e.rideKey)); }); }
+  function loadAll() {
+    return Promise.all([DB.all('segments'), DB.all('setups'), DB.get('kv', 'riders')]).then(([S, U, R]) => {
+      allSegs = S; segs = S.filter(s => !s.deleted).sort((a, b) => (a.trail || '').localeCompare(b.trail || '') || a.name.localeCompare(b.name));
+      setups = {}; for (const u of U) setups[u.rideKey] = u;
+      riders = (R && R.v) || {};
+      return loadEfforts();
+    });
+  }
+
+  // ======================================================= news (new runs since the last visit)
+  function news() {
+    let seen; try { seen = new Set(JSON.parse(localStorage.getItem('sa.trSeen') || '[]')); } catch (e) { seen = new Set(); }
+    const fresh = efforts.filter(e => !seen.has(e.id) && Date.now() - (e.when || 0) < 14 * 864e5);
+    const tab = document.querySelector('nav.tabs button[data-view="trails"]');
+    if (tab) tab.classList.toggle('dotted', fresh.length > 0);
+    const N = $('trNews'); if (!N) return;
+    if (!fresh.length) { N.classList.add('hidden'); return; }
+    N.textContent = ''; N.classList.remove('hidden');
+    N.append(el('b', null, 'New runs'));
+    const ul = el('ul', { class: 'newslist' });
+    for (const e of fresh.slice(0, 6)) {
+      const s = segs.find(x => x.id === e.segId); if (!s) continue;
+      const mine = efforts.filter(x => x.segId === s.id && x.rider === e.rider && x.id !== e.id && x.when <= e.when);
+      const prev = mine.length ? Math.min(...mine.map(x => x.time)) : NaN;
+      const tag = !mine.length ? 'first run' : e.time < prev - 0.05 ? 'new best by ' + (prev - e.time).toFixed(2) + ' s' : (e.time - prev).toFixed(2) + ' s off ' + riderName(e.rider) + '’s best';
+      ul.append(el('li', null, el('a', { href: '#', onclick: ev => { ev.preventDefault(); openSeg(s.id, e.id); } }, s.name), ' · ' + fmtT(e.time) + ' · ' + riderName(e.rider) + ' · ' + e.rideName + ' — ' + tag));
+    }
+    N.append(ul, el('button', { class: 'btn small', onclick: () => { for (const e of efforts) seen.add(e.id); try { localStorage.setItem('sa.trSeen', JSON.stringify([...seen].slice(-5000))); } catch (err) {} news(); } }, 'Mark seen'));
+  }
+
+  // ======================================================= map
+  let L = null, map = null, base = null, layers = {}, mapTap = null, leafletP = null, mapP = null;
+  const BASES = {
+    sat: { url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', o: { maxNativeZoom: 19, maxZoom: 21, attribution: 'Imagery © Esri, Maxar, Earthstar Geographics' } },
+    topo: { url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', o: { subdomains: 'abc', maxNativeZoom: 17, maxZoom: 21, attribution: '© OpenStreetMap contributors, SRTM · © OpenTopoMap (CC-BY-SA)' } },
+    trails: { url: 'https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', o: { subdomains: 'abc', maxNativeZoom: 20, maxZoom: 21, attribution: '© OpenStreetMap contributors · CyclOSM' } }
+  };
+  function loadLeaflet() {
+    if (window.L) return Promise.resolve(window.L);
+    if (leafletP) return leafletP;
+    const css = (href) => new Promise(res => { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = href; l.onload = () => res(true); l.onerror = () => res(false); document.head.append(l); });
+    const js = (src) => new Promise(res => { const s = document.createElement('script'); s.src = src; s.onload = () => res(!!window.L); s.onerror = () => res(false); document.head.append(s); });
+    leafletP = (async () => {
+      const ok = await css('https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css') || await css('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
+      void ok;
+      if (!(await js('https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js')) && !(await js('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'))) throw new Error('The map library could not load (no internet?).');
+      return window.L;
+    })();
+    leafletP.catch(() => { leafletP = null; });
+    return leafletP;
+  }
+  function ensureMap() {
+    if (map) return Promise.resolve(map);
+    if (mapP) return mapP;
+    return (mapP = loadLeaflet().then(Lx => {
+      L = Lx;
+      map = L.map('trMap', { zoomControl: true, preferCanvas: true, tap: true });
+      const v = A.LS.get('trView', null);
+      if (v && v.c) map.setView(v.c, v.z); else map.setView([49.3, -123.0], 12);
+      map.on('moveend', () => A.LS.set('trView', { c: map.getCenter(), z: map.getZoom() }));
+      setBase(A.LS.get('trBase', 'sat'));
+      layers.home = L.layerGroup().addTo(map); layers.rides = L.layerGroup(); layers.seg = L.layerGroup().addTo(map); layers.newSeg = L.layerGroup().addTo(map);
+      if ($('trShowRides').checked) layers.rides.addTo(map);
+      map.on('click', e => { if (mapTap) mapTap(e.latlng); });
+      setTimeout(() => map.invalidateSize(), 50);
+      $('trMap').classList.remove('nomap'); A.msg('trMapMsg', '');
+      return map;
+    }).catch(e => { mapP = null; A.msg('trMapMsg', e.message + ' Segments and times still work.', 'err'); $('trMap').classList.add('nomap'); throw e; }));
+  }
+  function setBase(k) {
+    if (!BASES[k]) k = 'sat';
+    A.LS.set('trBase', k);
+    document.querySelectorAll('#trBase button').forEach(b => b.setAttribute('aria-pressed', b.dataset.base === k ? 'true' : 'false'));
+    if (!map) return;
+    if (base) map.removeLayer(base);
+    base = L.tileLayer(BASES[k].url, Object.assign({ crossOrigin: false, detectRetina: false }, BASES[k].o)).addTo(map);
+    base.bringToBack();
+  }
+  function lineOf(seg) { if (!seg.path) return null; const ML = SEG.mlon(seg.path.lat0); return seg.path.pts.filter(p => p[2] >= -1 && p[2] <= seg.path.length + 1).map(p => [seg.path.lat0 + p[1] / SEG.MLAT, seg.path.lon0 + p[0] / ML]); }
+  function gateIcon(kind) { return L.divIcon({ className: 'gateic ' + kind, html: kind === 'start' ? 'S' : kind === 'end' ? 'E' : '•', iconSize: kind === 'split' ? [14, 14] : [22, 22] }); }
+  function drawHome(fit) {
+    if (!map) return;
+    layers.home.clearLayers(); layers.seg.clearLayers(); layers.newSeg.clearLayers();
+    const all = [];
+    for (const s of segs) {
+      const ln = lineOf(s); if (!ln) continue;
+      const c = trailColor(s.trail || s.name);
+      const pl = L.polyline(ln, { color: c, weight: 6, opacity: 0.9 }).addTo(layers.home);
+      pl.bindTooltip(s.name + (s.trail ? ' · ' + s.trail : ''), { sticky: true });
+      pl.on('click', () => openSeg(s.id));
+      L.marker(ln[0], { icon: gateIcon('start') }).addTo(layers.home).on('click', () => openSeg(s.id));
+      all.push(...ln);
+    }
+    if (fit && all.length) map.fitBounds(L.latLngBounds(all).pad(0.15), { maxZoom: 17 });
+  }
+  async function drawRides() {
+    if (!map) return;
+    layers.rides.clearLayers();
+    if (!$('trShowRides').checked) { map.removeLayer(layers.rides); return; }
+    layers.rides.addTo(map);
+    for (const r of rides.slice(0, 40)) {
+      const rec = await DB.get('digests', r.key); if (!rec || !rec.dig || !rec.dig.gps.length) continue;
+      const g = rec.dig.gps, pts = []; let last = -9;
+      for (const f of g) if (f[0] - last >= 1) { pts.push([f[1], f[2]]); last = f[0]; }
+      L.polyline(pts, { color: '#ffffff', weight: 2, opacity: 0.55, dashArray: '4 4' }).bindTooltip(r.name, { sticky: true }).addTo(layers.rides);
+    }
+  }
+  // speed-coloured line of one run (from its ride's GPS)
+  async function drawEffortTrack(e) {
+    if (!map) return;
+    const rec = await DB.get('digests', e.rideKey); if (!rec || !rec.dig) return;
+    const g = rec.dig.gps.filter(f => f[0] >= e.t0 - 1 && f[0] <= e.t1 + 1);
+    if (g.length < 3) return;
+    const v = g.map(f => f[3]).filter(isFinite), lo = SEG.quantile(v, 0.05) || 0, hi = SEG.quantile(v, 0.95) || 1;
+    for (let i = 1; i < g.length; i++) {
+      const x = Math.max(0, Math.min(1, ((g[i][3] + g[i - 1][3]) / 2 - lo) / Math.max(1, hi - lo)));
+      L.polyline([[g[i - 1][1], g[i - 1][2]], [g[i][1], g[i][2]]], { color: `hsl(${(1 - x) * 230},85%,52%)`, weight: 5, opacity: 0.95 }).addTo(layers.seg);
+    }
+    A.msg('trMapMsg', 'Run line coloured by GPS speed: blue ' + Math.round(lo) + ' km/h → red ' + Math.round(hi) + ' km/h.');
+  }
+  function drawSegOnMap(s, fit) {
+    if (!map) return;
+    layers.home.clearLayers(); layers.seg.clearLayers(); layers.newSeg.clearLayers();
+    const ln = lineOf(s);
+    if (ln) {
+      L.polyline(ln, { color: '#000', weight: 9, opacity: 0.35 }).addTo(layers.seg);
+      L.polyline(ln, { color: trailColor(s.trail || s.name), weight: 5 }).addTo(layers.seg);
+      if (fit) map.fitBounds(L.latLngBounds(ln).pad(0.2), { maxZoom: 18 });
+    } else A.msg('trMapMsg', 'This segment was made from a ride without GPS, so it has no line on the map. Its runs are found by the sensors.');
+    for (const g of s.gates.concat(s.splits)) if (g.lat != null) L.marker([g.lat, g.lon], { icon: gateIcon(g.kind) }).bindTooltip((g.kind === 'start' ? 'Start: ' : g.kind === 'end' ? 'End: ' : 'Split: ') + g.label).addTo(layers.seg);
+  }
+
+  // offline: fetch the tiles of an area (the service worker keeps them)
+  function tileUrl(tpl, z, x, y) { return tpl.replace('{s}', 'abc'[(x + y) % 3]).replace('{z}', z).replace('{x}', x).replace('{y}', y); }
+  async function saveArea(bounds) {
+    if (!navigator.serviceWorker || !navigator.serviceWorker.controller) { A.msg('trMapMsg', 'Saving maps needs the website version of the analyzer (it keeps a copy on this device). Map tiles you look at are still kept.', 'err'); return; }
+    const k = A.LS.get('trBase', 'sat'), tpl = BASES[k].url, maxZ = Math.min(17, BASES[k].o.maxNativeZoom);
+    const tx = (lon, z) => Math.floor((lon + 180) / 360 * Math.pow(2, z));
+    const ty = (lat, z) => { const r = lat * Math.PI / 180; return Math.floor((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * Math.pow(2, z)); };
+    const urls = [];
+    for (let z = 12; z <= maxZ; z++) {
+      const x0 = tx(bounds.getWest(), z), x1 = tx(bounds.getEast(), z), y0 = ty(bounds.getNorth(), z), y1 = ty(bounds.getSouth(), z);
+      for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) urls.push(tileUrl(tpl, z, x, y));
+      if (urls.length > 900) break;
+    }
+    if (urls.length > 900) { A.msg('trMapMsg', 'That area is too big to save (' + urls.length + '+ tiles). Zoom in to the trails you ride and try again.', 'err'); return; }
+    let done = 0, bad = 0;
+    const worker = async () => { while (urls.length) { const u = urls.shift(); try { await fetch(u, { mode: 'no-cors' }); } catch (e) { bad++; } done++; if (done % 10 === 0) A.msg('trMapMsg', 'Saving map for offline: ' + done + ' tiles…'); } };
+    await Promise.all([worker(), worker(), worker(), worker()]);
+    A.msg('trMapMsg', 'Saved ' + (done - bad) + ' map tiles (' + ({ sat: 'satellite', topo: 'topo', trails: 'trail map' })[k] + ', zoom 12–' + maxZ + ') for use with no signal.' + (bad ? ' ' + bad + ' failed.' : ''), 'ok');
+  }
+
+  // ======================================================= home: list of segments
+  function renderHome() {
+    view = 'home'; curSeg = null; curEffort = null; mapTap = null;
+    $('trHome').classList.remove('hidden'); $('trNew').classList.add('hidden'); $('trSeg').classList.add('hidden');
+    $('trMapTitle').textContent = 'Trails';
+    const box = $('trList'); box.textContent = '';
+    if (!segs.length) {
+      box.append(el('div', { class: 'empty' }, 'No segments yet. Ride a trail once, then tap ', el('b', null, 'New segment'), ' and pick that ride: the analyzer suggests a start and end on features it can find again (a jump landing, a drop, a big hit), then finds and times every later run by itself.'));
+    }
+    const groups = new Map();
+    for (const s of segs) { const k = s.trail || 'Other segments'; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(s); }
+    for (const [trail, list] of groups) {
+      box.append(el('h3', { class: 'trailhead' }, el('span', { class: 'sw', style: 'background:' + trailColor(trail === 'Other segments' ? list[0].name : trail) }), trail));
+      const ul = el('ul', { class: 'list' });
+      for (const s of list) {
+        const E = efforts.filter(e => e.segId === s.id), best = E.reduce((b, e) => !b || e.time < b.time ? e : b, null);
+        const last = E.reduce((b, e) => !b || e.when > b.when ? e : b, null);
+        ul.append(el('li', { class: 'item clickrow', onclick: () => openSeg(s.id) },
+          el('div', { class: 'grow' },
+            el('div', { class: 'name' }, s.name),
+            el('div', { class: 'meta' }, [s.length ? Math.round(s.length) + ' m' : 'no GPS line', A.plural(E.length, 'run'), new Set(E.map(e => e.rider)).size > 1 ? A.plural(new Set(E.map(e => e.rider)).size, 'rider') : '', last ? 'last ' + fmtDate(last.when) : ''].filter(Boolean).join(' · '))),
+          best ? el('div', { class: 'besttime' }, el('div', { class: 'v' }, fmtT(best.time)), el('div', { class: 'l' }, riderName(best.rider))) : el('span', { class: 'muted' }, 'no runs yet')));
+      }
+      box.append(ul);
+    }
+    news();
+    ensureMap().then(() => { drawHome(!A.LS.get('trView', null)); drawRides(); }).catch(() => {});
+  }
+
+  // ======================================================= new segment
+  let nw = null;    // { ride, ctx, dig, runs, t0, t1, sug, start, end, splits:Set, editing }
+  function renderNew(editSeg) {
+    view = 'new';
+    $('trHome').classList.add('hidden'); $('trSeg').classList.add('hidden');
+    const C = $('trNew'); C.classList.remove('hidden'); C.textContent = '';
+    $('trMapTitle').textContent = editSeg ? 'Change gates · ' + editSeg.name : 'New segment';
+    nw = { editing: editSeg || null, splits: new Set() };
+    const sel = el('select', { id: 'trRide' });
+    sel.append(el('option', { value: '' }, rides.length ? 'Choose the ride with your run on it…' : 'No rides yet'));
+    for (const r of rides) sel.append(el('option', { value: r.id }, r.name + ' · ' + A.fmtDur(r.duration) + (r.recordedAt ? ' · ' + fmtDate(r.recordedAt) : '')));
+    C.append(el('div', { class: 'row', style: 'justify-content:space-between' }, el('h2', { style: 'margin:0' }, editSeg ? 'Change gates' : 'New segment'), el('button', { class: 'btn small', onclick: () => editSeg ? openSeg(editSeg.id) : renderHome() }, 'Cancel')),
+      el('ol', { class: 'steps' },
+        el('li', null, 'Pick the ride with your run on the trail.'),
+        el('li', null, 'Set roughly where the segment starts and ends (sliders, the descent buttons, or tap the map).'),
+        el('li', null, 'Tap ', el('b', null, 'Find gates'), ': the start and end snap to sharp features the logger sees on every run.'),
+        el('li', null, 'Name it and save. Every ride, old and new, is then checked for it.')),
+      el('div', null, el('label', { class: 'f', for: 'trRide' }, 'Ride'), sel),
+      el('div', { id: 'trNewBody' }),
+      el('div', { id: 'trNewMsg', class: 'msg' }));
+    sel.addEventListener('change', () => { if (sel.value) loadNewRide(+sel.value); });
+    if (editSeg) { const r = rideByKey(editSeg.ref.rideKey); if (r) { sel.value = r.id; loadNewRide(r.id); } else A.msg('trNewMsg', 'The ride this segment was made from (' + editSeg.ref.rideName + ') is not on this device. Pick another run of it to set new gates.', 'err'); }
+    ensureMap().catch(() => {});
+  }
+  async function loadNewRide(id) {
+    const r = rides.find(x => x.id === id); if (!r) return;
+    A.msg('trNewMsg', 'Reading ' + r.name + '…');
+    await nextFrame();
+    try {
+      const ctx = await ctxFor(r), dig = await digestFor(r);
+      const runs = SEG.runs(dig);
+      Object.assign(nw, { ride: r, ctx, dig, runs, sug: null, start: null, end: null });
+      nw.splits = new Set();
+      if (nw.editing && nw.editing.ref.rideKey === r.key) { nw.t0 = nw.editing.ref.t0; nw.t1 = nw.editing.ref.t1; }
+      else if (runs.length) { const R = runs.slice().sort((a, b) => a.t0 - b.t0)[0] === runs[0] ? runs[0] : runs[0]; nw.t0 = R.t0; nw.t1 = R.t1; }
+      else { nw.t0 = 0; nw.t1 = dig.dur; }
+      A.msg('trNewMsg', '');
+      renderNewBody();
+    } catch (e) { console.error(e); A.msg('trNewMsg', 'Could not read ' + r.name + ': ' + e.message, 'err'); }
+  }
+  function renderNewBody() {
+    const B = $('trNewBody'); B.textContent = '';
+    const D = nw.dig.dur;
+    const chips = el('div', { class: 'row chips' });
+    nw.runs.slice().sort((a, b) => a.t0 - b.t0).forEach((R, i) => chips.append(el('button', { class: 'btn small', onclick: () => { nw.t0 = R.t0; nw.t1 = R.t1; nw.sug = null; renderNewBody(); } }, 'Descent ' + (i + 1) + ' · ' + clock(R.t0) + '–' + clock(R.t1) + (isFinite(R.kmh) ? ' · ' + Math.round(R.kmh) + ' km/h' : ''))));
+    const s0 = el('input', { type: 'range', min: 0, max: D.toFixed(1), step: 0.5, value: nw.t0 }), s1 = el('input', { type: 'range', min: 0, max: D.toFixed(1), step: 0.5, value: nw.t1 });
+    const lab = el('div', { class: 'muted' });
+    const upd = () => { lab.textContent = 'From ' + clock(nw.t0) + ' to ' + clock(nw.t1) + ' (' + A.fmtDur(nw.t1 - nw.t0) + ')'; drawNewChart(); drawNewMap(); };
+    s0.addEventListener('input', () => { nw.t0 = Math.min(+s0.value, nw.t1 - 10); s0.value = nw.t0; nw.sug = null; upd(); clearGates(); });
+    s1.addEventListener('input', () => { nw.t1 = Math.max(+s1.value, nw.t0 + 10); s1.value = nw.t1; nw.sug = null; upd(); clearGates(); });
+    let tapWhat = 'start';
+    const tapSeg = el('div', { class: 'seg' }, el('button', { 'aria-pressed': 'true', onclick: e => { tapWhat = 'start'; e.target.parentNode.children[0].setAttribute('aria-pressed', 'true'); e.target.parentNode.children[1].setAttribute('aria-pressed', 'false'); } }, 'Start'), el('button', { 'aria-pressed': 'false', onclick: e => { tapWhat = 'end'; e.target.parentNode.children[1].setAttribute('aria-pressed', 'true'); e.target.parentNode.children[0].setAttribute('aria-pressed', 'false'); } }, 'End'));
+    mapTap = ll => {
+      const g = nw.dig.gps; if (!g.length) return;
+      const ML = SEG.mlon(ll.lat); let best = null, bd = Infinity;
+      for (const f of g) { const d = Math.hypot((f[2] - ll.lng) * ML, (f[1] - ll.lat) * SEG.MLAT); if (d < bd) { bd = d; best = f; } }
+      if (!best || bd > 60) return;
+      if (tapWhat === 'start') { nw.t0 = Math.min(best[0], nw.t1 - 10); s0.value = nw.t0; } else { nw.t1 = Math.max(best[0], nw.t0 + 10); s1.value = nw.t1; }
+      nw.sug = null; clearGates(); upd();
+    };
+    B.append(nw.runs.length ? el('div', null, el('label', { class: 'f' }, 'Descents found in this ride'), chips) : null,
+      el('div', { class: 'grid2', style: 'margin-top:8px' }, el('div', null, el('label', { class: 'f' }, 'Rough start'), s0), el('div', null, el('label', { class: 'f' }, 'Rough end'), s1)),
+      lab,
+      nw.dig.gps.length ? el('div', { class: 'row', style: 'margin-top:6px' }, el('span', { class: 'muted' }, 'Tap the map to set the'), tapSeg) : el('div', { class: 'muted' }, 'This ride has no GPS: the segment will be found in other rides by the sensors alone, and won’t show on the map.'),
+      el('div', { id: 'trNewChart', class: 'chart short' }),
+      el('div', { class: 'row' }, el('button', { class: 'btn primary', id: 'trFind', onclick: findGates }, 'Find gates')),
+      el('div', { id: 'trGates' }));
+    upd();
+    if (nw.editing && nw.editing.ref.rideKey === nw.ride.key) findGates();
+  }
+  function clearGates() { nw.start = nw.end = null; nw.splits = new Set(); const g = $('trGates'); if (g) g.textContent = ''; }
+  function clock(t) { t = Math.max(0, t); const m = Math.floor(t / 60), s = Math.round(t - m * 60); return m + ':' + (s < 10 ? '0' : '') + s; }
+  function drawNewChart() {
+    const D = $('trNewChart'); if (!D || !window.Plotly) return;
+    const r = nw.ctx.r, step = Math.max(1, Math.floor(r.rows / 4000)), x = [], f = [], rr = [];
+    const lo = Math.max(0, nw.t0 - 30), hi = Math.min(nw.dig.dur, nw.t1 + 30);
+    for (let i = 0; i < r.rows; i += step) { const t = r.time[i]; if (t < lo || t > hi) continue; x.push(t); f.push(r.front[i] / A.params().frontTravel * 100); rr.push(r.rear[i] / A.params().rearTravel * 100); }
+    const shapes = [{ type: 'rect', xref: 'x', yref: 'paper', x0: nw.t0, x1: nw.t1, y0: 0, y1: 1, fillcolor: 'rgba(42,120,214,0.10)', line: { width: 0 } }];
+    const mark = (t, c) => shapes.push({ type: 'line', xref: 'x', yref: 'paper', x0: t, x1: t, y0: 0, y1: 1, line: { color: c, width: 2 } });
+    if (nw.start) mark(nw.start.t, '#0ca30c'); if (nw.end) mark(nw.end.t, '#d03b3b');
+    for (const f2 of featsChosenSplits()) mark(f2.t, '#2a78d6');
+    Plotly.react(D, [{ x, y: f, name: 'Front', line: { color: A.cssVar('--s1'), width: 1 } }, { x, y: rr, name: 'Rear', line: { color: A.cssVar('--s2'), width: 1 } }],
+      { margin: { l: 40, r: 8, t: 8, b: 30 }, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { color: A.cssVar('--ink2'), size: 11 }, showlegend: false, shapes,
+        xaxis: { title: { text: 's' }, gridcolor: A.cssVar('--grid') }, yaxis: { title: { text: 'travel %' }, gridcolor: A.cssVar('--grid'), rangemode: 'tozero' } },
+      { displayModeBar: false, responsive: true });
+  }
+  function featsChosenSplits() { return nw && nw.sug ? nw.sug.feats.filter(f => nw.splits.has(f)) : []; }
+  function drawNewMap() {
+    if (!map || !nw || !nw.dig) return;
+    layers.home.clearLayers(); layers.seg.clearLayers(); layers.newSeg.clearLayers();
+    const g = nw.dig.gps; if (g.length < 2) return;
+    const all = g.map(f => [f[1], f[2]]), span = g.filter(f => f[0] >= nw.t0 && f[0] <= nw.t1).map(f => [f[1], f[2]]);
+    L.polyline(all, { color: '#fff', weight: 3, opacity: 0.6 }).addTo(layers.newSeg);
+    if (span.length > 1) { L.polyline(span, { color: '#2a78d6', weight: 6 }).addTo(layers.newSeg); if (!drawNewMap.fitted) { map.fitBounds(L.latLngBounds(span).pad(0.2), { maxZoom: 18 }); drawNewMap.fitted = true; } }
+    const at = t => { const p = SEG.posAt(g, t); return p ? [p.lat, p.lon] : null; };
+    for (const [f, kind] of [[nw.start, 'start'], [nw.end, 'end']].concat(featsChosenSplits().map(x => [x, 'split']))) { if (!f) continue; const p = at(f.t); if (p) L.marker(p, { icon: gateIcon(kind) }).bindTooltip(f.label).addTo(layers.newSeg); }
+  }
+  async function findGates() {
+    const btn = $('trFind'); btn.disabled = true;
+    A.msg('trNewMsg', 'Looking for sharp, distinctive features (jump landings, drops, big hits)…');
+    await nextFrame(); await nextFrame();
+    try {
+      nw.sug = SEG.suggest(nw.ctx, nw.t0, nw.t1);
+      if (nw.editing && nw.editing.ref.rideKey === nw.ride.key) {
+        const near = (t) => nw.sug.feats.reduce((b, f) => !b || Math.abs(f.t - t) < Math.abs(b.t - t) ? f : b, null);
+        const s = near(nw.editing.gates[0].t), e = near(nw.editing.gates[1].t);
+        if (s && Math.abs(s.t - nw.editing.gates[0].t) < 0.3) nw.sug.start = s;
+        if (e && Math.abs(e.t - nw.editing.gates[1].t) < 0.3) nw.sug.end = e;
+        nw.sug.splits = nw.editing.splits.map(x => near(x.t)).filter(f => f && nw.editing.splits.some(x => Math.abs(x.t - f.t) < 0.3));
+      }
+      nw.start = nw.sug.start; nw.end = nw.sug.end; nw.splits = new Set(nw.sug.splits);
+      A.msg('trNewMsg', nw.start && nw.end ? 'Found ' + nw.sug.feats.length + ' features. The best start and end are picked; tap another to change.' : 'No clear features near the start or end. Move the rough start/end over a rougher part of the trail.', nw.start && nw.end ? 'ok' : 'err');
+      renderGates();
+    } catch (e) { console.error(e); A.msg('trNewMsg', e.message, 'err'); }
+    btn.disabled = false;
+  }
+  function featRow(f, name, checked, onPick, type) {
+    const pct = Math.max(4, Math.min(100, f.score));
+    const inp = el('input', { type: type || 'radio', name, checked: checked ? true : null });
+    inp.addEventListener('change', () => onPick(inp.checked));
+    const p = nw.dig.gps.length ? SEG.posAt(nw.dig.gps, f.t) : null;
+    return el('label', { class: 'featrow' + (checked ? ' on' : '') }, inp,
+      el('div', { class: 'grow' }, el('div', { class: 'fl' }, f.label),
+        el('div', { class: 'meta' }, clock(f.t) + ' · locks on to about ±' + f.precisionMs + ' ms · ' + Math.round(f.uniq * 100) + '% unlike anything within 20 s' + (p ? '' : ''))),
+      el('div', { class: 'scorebar', title: 'Score ' + f.score }, el('span', { style: 'width:' + pct + '%' })));
+  }
+  function renderGates() {
+    const G = $('trGates'); G.textContent = '';
+    if (!nw.sug) return;
+    const F = nw.sug.feats, reach = Math.max(15, 0.25 * (nw.t1 - nw.t0));
+    const startOpts = F.filter(f => f.t >= nw.t0 - 6 && f.t <= nw.t0 + reach).sort((a, b) => b.score - a.score).slice(0, 6);
+    const endOpts = F.filter(f => f.t >= nw.t1 - reach && f.t <= nw.t1 + 6).sort((a, b) => b.score - a.score).slice(0, 6);
+    if (nw.start && !startOpts.includes(nw.start)) startOpts.unshift(nw.start);
+    if (nw.end && !endOpts.includes(nw.end)) endOpts.unshift(nw.end);
+    const redraw = () => { renderGates(); drawNewChart(); drawNewMap(); };
+    const sb = el('div', { class: 'featlist' }); startOpts.sort((a, b) => a.t - b.t).forEach(f => sb.append(featRow(f, 'trStart', f === nw.start, () => { nw.start = f; redraw(); })));
+    const eb = el('div', { class: 'featlist' }); endOpts.sort((a, b) => a.t - b.t).forEach(f => eb.append(featRow(f, 'trEnd', f === nw.end, () => { nw.end = f; redraw(); })));
+    const allMids = nw.start && nw.end ? F.filter(f => f.t > nw.start.t + 4 && f.t < nw.end.t - 4 && f.score >= 25) : [];
+    const topMids = new Set(allMids.slice().sort((a, b) => b.score - a.score).slice(0, 10));
+    const mids = allMids.filter(f => nw.showAllSplits || topMids.has(f) || nw.splits.has(f)).sort((a, b) => a.t - b.t);
+    const spb = el('div', { class: 'featlist' }); mids.forEach(f => spb.append(featRow(f, 'trSplit', nw.splits.has(f), on => { if (on) nw.splits.add(f); else nw.splits.delete(f); if (nw.splits.size > 8) { nw.splits.delete(f); A.msg('trNewMsg', 'Up to 8 splits.', 'err'); } redraw(); }, 'checkbox')));
+    const trails = [...new Set(segs.map(s => s.trail).filter(Boolean))];
+    const dl = el('datalist', { id: 'trTrailList' }); trails.forEach(t => dl.append(el('option', { value: t })));
+    const nm = el('input', { id: 'trName', placeholder: 'e.g. Upper A-Line', value: nw.editing ? nw.editing.name : '' });
+    const tr = el('input', { id: 'trTrail', list: 'trTrailList', placeholder: 'e.g. A-Line (groups segments on the same trail)', value: nw.editing ? nw.editing.trail : '' });
+    G.append(el('h3', null, el('span', { class: 'gateic start inl' }, 'S'), ' Start gate'), sb,
+      el('h3', null, el('span', { class: 'gateic end inl' }, 'E'), ' End gate'), eb,
+      el('h3', null, 'Splits (sector times)'), mids.length ? spb : el('div', { class: 'muted' }, 'No strong features in between.'),
+      allMids.length > mids.length ? el('button', { class: 'btn small', style: 'margin-top:6px', onclick: () => { nw.showAllSplits = true; renderGates(); } }, 'Show all ' + allMids.length + ' features') : null,
+      el('div', { class: 'grid2', style: 'margin-top:10px' }, el('div', null, el('label', { class: 'f', for: 'trName' }, 'Segment name'), nm), el('div', null, el('label', { class: 'f', for: 'trTrail' }, 'Trail'), tr, dl)),
+      el('div', { class: 'row', style: 'margin-top:10px' }, el('button', { class: 'btn primary', id: 'trSave', onclick: () => saveNew(nm.value.trim(), tr.value.trim()) }, nw.editing ? 'Save new gates' : 'Save segment'),
+        nw.start && nw.end ? el('span', { class: 'muted' }, 'This run: ' + fmtT(nw.end.t - nw.start.t) + (nw.splits.size ? ' · ' + A.plural(nw.splits.size, 'split') : '')) : null));
+  }
+  async function saveNew(name, trail) {
+    if (!nw.start || !nw.end) { A.msg('trNewMsg', 'Pick a start and an end gate first.', 'err'); return; }
+    if (nw.end.t - nw.start.t < 8) { A.msg('trNewMsg', 'The end gate must be at least 8 s after the start gate.', 'err'); return; }
+    const r = nw.ride;
+    try {
+      const seg = SEG.makeSegment({ ctx: nw.ctx, dig: nw.dig, rideKey: r.key, rideName: r.name, rider: riderOf(r), recordedAt: whenOf(r) },
+        { id: nw.editing ? nw.editing.id : null, name: name || (nw.editing ? nw.editing.name : 'Segment ' + (segs.length + 1)), trail: trail || '', start: nw.start, end: nw.end, splits: featsChosenSplits() });
+      if (nw.editing) { seg.created = nw.editing.created; seg.notes = nw.editing.notes; seg.by = nw.editing.by; }
+      await DB.put('segments', seg);
+      await loadAll();
+      A.msg('trNewMsg', 'Saved. Checking your rides for it…', 'ok');
+      syncSoon();
+      openSeg(seg.id);
+      scanSoon();
+    } catch (e) { console.error(e); A.msg('trNewMsg', e.message, 'err'); }
+  }
+
+  // ======================================================= segment page
+  function openSeg(id, effortId) {
+    const s = segs.find(x => x.id === id); if (!s) { renderHome(); return; }
+    A.showView('trails');
+    view = 'seg'; curSeg = s; mapTap = null;
+    const E = efforts.filter(e => e.segId === s.id);
+    curEffort = (effortId && E.find(e => e.id === effortId)) || (curEffort && curEffort.segId === s.id && E.find(e => e.id === curEffort.id)) || null;
+    renderSeg(true);
+  }
+  function bestOf(list) { return list.reduce((b, e) => !b || e.time < b.time ? e : b, null); }
+  function renderSeg(fit) {
+    const s = curSeg; if (!s) return;
+    $('trHome').classList.add('hidden'); $('trNew').classList.add('hidden');
+    const P = $('trSeg'); P.classList.remove('hidden'); P.textContent = '';
+    $('trMapTitle').textContent = s.name;
+    const E = efforts.filter(e => e.segId === s.id).sort((a, b) => a.time - b.time);
+    const best = E[0] || null;
+    if (!curEffort && E.length) curEffort = E.slice().sort((a, b) => b.when - a.when)[0];
+    // header
+    const hdr = el('div', { class: 'card' },
+      el('div', { class: 'row', style: 'justify-content:space-between' }, el('button', { class: 'btn small', onclick: renderHome }, '← All segments'), el('div', { class: 'row' },
+        el('button', { class: 'btn small', onclick: () => editMeta(s) }, 'Rename'),
+        el('button', { class: 'btn small', onclick: () => renderNew(s) }, 'Change gates'),
+        el('button', { class: 'btn small', onclick: () => rescanSeg(s) }, 'Re-check rides'),
+        el('button', { class: 'btn small danger', onclick: () => deleteSeg(s) }, 'Delete'))),
+      el('h2', { style: 'margin:10px 0 2px' }, s.name), s.trail ? el('div', { class: 'muted' }, 'Trail: ' + s.trail) : null,
+      el('div', { class: 'tiles', style: 'margin-top:10px' },
+        tile(best ? fmtT(best.time) : '–', 'Best', best ? riderName(best.rider) + ' · ' + fmtDate(best.when) : 'no runs yet'),
+        tile(String(E.length), 'Runs', A.plural(new Set(E.map(e => e.rider)).size, 'rider')),
+        tile(s.length ? Math.round(s.length) + ' m' : '–', 'Length', s.length ? 'GPS line' : 'no GPS line'),
+        tile(idealTime(s, E), 'Ideal time', s.splits.length ? 'best of each sector' : 'add splits to see it')),
+      el('div', { class: 'gatesum' },
+        el('div', null, el('span', { class: 'gateic start inl' }, 'S'), ' ' + s.gates[0].label + ' · ±' + s.gates[0].precisionMs + ' ms'),
+        el('div', null, el('span', { class: 'gateic end inl' }, 'E'), ' ' + s.gates[1].label + ' · ±' + s.gates[1].precisionMs + ' ms'),
+        el('div', { class: 'muted' }, 'Made from ' + s.ref.rideName + (s.by ? ' (' + riderName(s.by) + ')' : '') + ' · ' + A.plural(s.splits.length, 'split') + (s.hasImu ? ' · pots + frame IMU' : ' · pots'))));
+    P.append(hdr);
+    // leaderboard
+    const board = el('div', { class: 'card' });
+    const bestPer = new Map(); for (const e of E) if (!bestPer.has(e.rider)) bestPer.set(e.rider, e);
+    const rows = boardMode === 'best' ? [...bestPer.values()] : E;
+    const tbl = el('table', { class: 'clickable board' });
+    tbl.append(el('thead', null, el('tr', null, el('th', null, '#'), el('th', { class: 'l' }, 'Rider'), el('th', { class: 'l wide' }, 'Date'), el('th', null, 'Time'), el('th', null, 'Gap'), el('th', { class: 'l wide' }, 'Setup'), el('th', { class: 'wide' }, 'Timing'))));
+    const tb = el('tbody');
+    rows.forEach((e, i) => {
+      const r = rideByKey(e.rideKey), su = setupFor(r);
+      const prs = E.filter(x => x.rider === e.rider && x.when < e.when);
+      const pr = prs.length && e.time < Math.min(...prs.map(x => x.time)) - 0.05;
+      const tr = el('tr', { class: curEffort && curEffort.id === e.id ? 'sel' : '', onclick: () => { curEffort = e; renderSeg(false); } },
+        el('td', null, String(i + 1)), el('td', { class: 'l' }, riderName(e.rider), pr ? el('span', { class: 'pill sig', style: 'margin-left:6px' }, 'PR') : null),
+        el('td', { class: 'l wide' }, fmtDate(e.when)), el('td', null, el('b', null, fmtT(e.time))), el('td', null, i === 0 && boardMode === 'best' ? '' : fmtGap(e.time - (best ? best.time : e.time))),
+        el('td', { class: 'l wide' }, su ? setupLabel(su.s) + (su.carried ? ' *' : '') : '–'), el('td', { class: 'wide' }, timing(e)));
+      tb.append(tr);
+    });
+    tbl.append(tb);
+    board.append(el('div', { class: 'row', style: 'justify-content:space-between' }, el('h2', { style: 'margin:0' }, 'Leaderboard'),
+      el('div', { class: 'seg' }, el('button', { 'aria-pressed': boardMode === 'best' ? 'true' : 'false', onclick: () => { boardMode = 'best'; renderSeg(false); } }, 'Best per rider'), el('button', { 'aria-pressed': boardMode === 'all' ? 'true' : 'false', onclick: () => { boardMode = 'all'; renderSeg(false); } }, 'All runs'))),
+      E.length ? el('div', { class: 'tbl' }, tbl) : el('div', { class: 'empty' }, scanning ? 'Checking your rides…' : 'No runs found yet. New rides are checked as they arrive.'),
+      E.length ? el('div', { class: 'muted' }, 'Tap a run to see it below. Timing: gates matched on the sensors (± a few hundredths), or GPS only (±0.7 s). * setup carried over from an earlier ride.') : null);
+    P.append(board);
+    if (curEffort) P.append(effortCard(s, curEffort, best, E));
+    if (E.length >= 2) P.append(historyCard(s, E));
+    if (s.splits.length && E.length) P.append(splitsCard(s, E));
+    if (E.length) P.append(setupsCard(s, E));
+    ensureMap().then(() => { drawSegOnMap(s, fit); if (curEffort) drawEffortTrack(curEffort); }).catch(() => {});
+  }
+  function tile(v, l, s) { return el('div', { class: 'tile' }, el('div', { class: 'v' }, v), el('div', { class: 'l' }, l), s ? el('div', { class: 's' }, s) : null); }
+  function sectorTimes(s, e) {          // [t0, split1, ..., t1] → sector durations (null when a split wasn't found)
+    const pts = [e.t0].concat(e.splits || s.splits.map(() => null)).concat([e.t1]);
+    const out = []; for (let i = 1; i < pts.length; i++) out.push(pts[i] != null && pts[i - 1] != null ? pts[i] - pts[i - 1] : null);
+    return out;
+  }
+  function idealTime(s, E) {
+    if (!s.splits.length || !E.length) return '–';
+    const n = s.splits.length + 1, best = new Array(n).fill(Infinity);
+    for (const e of E) sectorTimes(s, e).forEach((d, i) => { if (d != null && d < best[i]) best[i] = d; });
+    return best.every(isFinite) ? fmtT(best.reduce((a, b) => a + b, 0)) : '–';
+  }
+  const STAT_ROWS = [
+    ['Time', e => e.time, 2, -1, fmtT], ['Average speed (km/h)', e => e.stats && e.stats.kmh, 1, 1], ['Top GPS speed (km/h)', e => e.stats && e.stats.kmhMax, 1, 1],
+    ['Travel used, front (%)', e => e.stats && e.stats.travelF, 0, 0], ['Travel used, rear (%)', e => e.stats && e.stats.travelR, 0, 0],
+    ['Dynamic sag, front (%)', e => e.stats && e.stats.sagF, 1, 0], ['Dynamic sag, rear (%)', e => e.stats && e.stats.sagR, 1, 0],
+    ['95th percentile, front (%)', e => e.stats && e.stats.p95F, 0, 0], ['95th percentile, rear (%)', e => e.stats && e.stats.p95R, 0, 0],
+    ['Bottom-outs, front', e => e.stats && e.stats.bottomF, 0, -1], ['Bottom-outs, rear', e => e.stats && e.stats.bottomR, 0, -1],
+    ['Compression 95% (mm/s), front', e => e.stats && e.stats.compF, 0, 0], ['Compression 95% (mm/s), rear', e => e.stats && e.stats.compR, 0, 0],
+    ['Rebound 95% (mm/s), front', e => e.stats && e.stats.rebF, 0, 0], ['Rebound 95% (mm/s), rear', e => e.stats && e.stats.rebR, 0, 0],
+    ['Impacts, front', e => e.stats && e.stats.impactsF, 0, 0], ['Impacts, rear', e => e.stats && e.stats.impactsR, 0, 0],
+    ['Packing index (0–100)', e => e.stats && e.stats.packing, 0, -1]
+  ];
+  function effortCard(s, e, best, E) {
+    const r = rideByKey(e.rideKey), su = setupFor(r);
+    const C = el('div', { class: 'card' });
+    const other = (best && best.id !== e.id) ? best : E.find(x => x.id !== e.id) || null;
+    const pick = el('select', { 'aria-label': 'Compare with' });
+    for (const x of E) if (x.id !== e.id) pick.append(el('option', { value: x.id, selected: other && x.id === other.id ? true : null }, fmtT(x.time) + ' · ' + riderName(x.rider) + ' · ' + fmtDate(x.when) + ' · ' + x.rideName));
+    const vs = () => E.find(x => x.id === pick.value) || other;
+    const tbl = el('table', { class: 'stats3' });
+    const fillTbl = () => {
+      tbl.textContent = '';
+      const o = vs();
+      tbl.append(el('thead', null, el('tr', null, el('th', null, ''), el('th', null, 'This run'), el('th', null, o ? (o === best ? 'Best' : 'Other') : ''), el('th', null, 'Difference'))));
+      const tb = el('tbody');
+      for (const [name, get, d, good, f] of STAT_ROWS) {
+        const num = x => typeof x === 'number' && Number.isFinite(x) ? x : NaN;
+        const a = num(get(e)), b = o ? num(get(o)) : NaN; if (!Number.isFinite(a) && !Number.isFinite(b)) continue;
+        let diff = Number.isFinite(a) && Number.isFinite(b) ? a - b : NaN;
+        if (Number.isFinite(diff) && Math.abs(diff) < 0.5 * Math.pow(10, -d)) diff = 0;
+        const cls = !isFinite(diff) || Math.abs(diff) < Math.pow(10, -d) || good === 0 ? '' : (good > 0) === (diff > 0) ? 'better' : 'worse';
+        tb.append(el('tr', null, el('td', null, name), el('td', null, f ? f(a) : fmt(a, d)), el('td', null, o ? (f ? f(b) : fmt(b, d)) : ''), el('td', { class: cls }, isFinite(diff) ? (diff > 0 ? '+' : diff < 0 ? '−' : '') + (f && name === 'Time' ? Math.abs(diff).toFixed(2) + ' s' : fmt(Math.abs(diff), d)) : '')));
+      }
+      tbl.append(tb);
+    };
+    pick.addEventListener('change', fillTbl); fillTbl();
+    const label = s.name + ': ' + riderName(e.rider) + ' ' + fmtT(e.time);
+    C.append(el('div', { class: 'row', style: 'justify-content:space-between' }, el('h2', { style: 'margin:0' }, 'Run · ' + fmtT(e.time)), el('span', { class: 'muted' }, riderName(e.rider) + ' · ' + fmtDate(e.when) + ' · ' + e.rideName)),
+      el('div', { class: 'muted', style: 'margin:4px 0 8px' }, 'Gates at ' + e.t0.toFixed(2) + ' s and ' + e.t1.toFixed(2) + ' s of the ride · ' + timing(e) + ' · match ' + Math.round(100 * Math.min(e.conf.start, e.conf.end)) + '% at the gates, ' + Math.round(100 * e.conf.shape) + '% along the run' + (e.coverage != null ? ' · GPS on the line ' + Math.round(e.coverage * 100) + '%' : '')),
+      el('div', { class: 'row' }, el('span', { class: 'pill' }, su ? setupLabel(su.s) + (su.carried ? ' (carried over from ' + su.carried.name + ')' : '') : 'No setup'), r ? el('button', { class: 'btn small', onclick: () => editSetup(r) }, 'Edit setup') : null),
+      el('div', { class: 'row', style: 'margin-top:10px' },
+        r ? el('button', { class: 'btn primary', onclick: () => A.openAnalyze(r.id, e.t0, e.t1, 'stats', label + ' — trimmed to the gates.') }, 'Statistics page') : null,
+        r ? el('button', { class: 'btn', onclick: () => A.openAnalyze(r.id, e.t0, e.t1, 'charts', label + ' — trimmed to the gates.') }, 'Charts') : null,
+        r && other ? el('button', { class: 'btn', onclick: () => { const o = vs(), ro = rideByKey(o.rideKey); if (ro) A.openCompare(ro.id, [o.t0, o.t1], r.id, [e.t0, e.t1], s.name + ': ' + riderName(o.rider) + ' ' + fmtT(o.time) + ' (A) vs ' + riderName(e.rider) + ' ' + fmtT(e.time) + ' (B)'); } }, 'Compare') : null,
+        other ? el('div', { class: 'grow', style: 'min-width:200px' }, pick) : null),
+      el('div', { class: 'tbl', style: 'margin-top:10px' }, tbl),
+      el('div', { class: 'muted' }, 'Green/red: better/worse for the time-type numbers (speed, bottom-outs, packing). Travel and shaft speeds are shown without a judgement — what is right depends on the trail and your setup.'));
+    return C;
+  }
+  function historyCard(s, E) {
+    const C = el('div', { class: 'card' }, el('h2', null, 'History'), el('div', { class: 'chart short', id: 'trHist' }));
+    setTimeout(() => {
+      if (!window.Plotly || !$('trHist')) return;
+      const groups = new Map();
+      for (const e of E) { const su = setupFor(rideByKey(e.rideKey)), k = su ? setupLabel(su.s) : 'No setup'; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(e); }
+      const traces = [...groups].map(([k, list], i) => ({ type: 'scatter', mode: 'markers', name: k, x: list.map(e => new Date(e.when)), y: list.map(e => e.time),
+        text: list.map(e => riderName(e.rider) + ' · ' + e.rideName + ' · ' + fmtT(e.time)), hoverinfo: 'text', marker: { size: 10, color: PALETTE[i % PALETTE.length], symbol: list.map(e => ['circle', 'square', 'diamond', 'triangle-up', 'x'][[...new Set(E.map(x => x.rider))].indexOf(e.rider) % 5]) } }));
+      Plotly.react('trHist', traces, { margin: { l: 50, r: 8, t: 8, b: 40 }, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { color: A.cssVar('--ink2'), size: 11 },
+        yaxis: { title: { text: 'time (s)' }, gridcolor: A.cssVar('--grid') }, xaxis: { gridcolor: A.cssVar('--grid'), type: 'date', tickformat: '%b %d' }, legend: { orientation: 'h', y: -0.25 } }, { displayModeBar: false, responsive: true });
+      $('trHist').on && $('trHist').on('plotly_click', ev => { const p = ev.points && ev.points[0]; if (!p) return; const list = [...groups.values()][p.curveNumber]; if (list && list[p.pointIndex]) { curEffort = list[p.pointIndex]; renderSeg(false); } });
+    }, 0);
+    return C;
+  }
+  function splitsCard(s, E) {
+    const n = s.splits.length + 1, best = new Array(n).fill(Infinity), bestBy = new Array(n).fill(null);
+    for (const e of E) sectorTimes(s, e).forEach((d, i) => { if (d != null && d < best[i]) { best[i] = d; bestBy[i] = e; } });
+    const e = curEffort, mine = e ? sectorTimes(s, e) : [];
+    const tbl = el('table');
+    tbl.append(el('thead', null, el('tr', null, el('th', { class: 'l' }, 'Sector'), el('th', { class: 'l wide' }, 'From'), el('th', null, 'Best'), el('th', { class: 'l wide' }, 'Best by'), el('th', null, 'This run'), el('th', null, 'Lost'))));
+    const tb = el('tbody');
+    const names = [s.gates[0].label].concat(s.splits.map(x => x.label));
+    for (let i = 0; i < n; i++) {
+      const lost = mine[i] != null && isFinite(best[i]) ? mine[i] - best[i] : NaN;
+      tb.append(el('tr', null, el('td', { class: 'l' }, 'Sector ' + (i + 1)), el('td', { class: 'l wide muted' }, names[i].split(' · ')[0]),
+        el('td', null, isFinite(best[i]) ? best[i].toFixed(2) : '–'), el('td', { class: 'l wide' }, bestBy[i] ? riderName(bestBy[i].rider) + ' · ' + fmtDate(bestBy[i].when) : ''),
+        el('td', null, mine[i] != null ? mine[i].toFixed(2) : '–'), el('td', { class: isFinite(lost) && lost > 0.05 ? 'worse' : '' }, isFinite(lost) ? (lost < 0.005 ? 'best' : '+' + lost.toFixed(2)) : '')));
+    }
+    tbl.append(tb);
+    return el('div', { class: 'card' }, el('h2', null, 'Splits'), el('div', { class: 'tbl' }, tbl),
+      el('div', { class: 'muted' }, 'Ideal time ' + idealTime(s, E) + ' — the best of each sector added up. Sectors start at the split features, timed on the sensors like the gates.'));
+  }
+  function setupsCard(s, E) {
+    const groups = new Map();
+    for (const e of E) { const su = setupFor(rideByKey(e.rideKey)), k = su ? setupLabel(su.s) : 'No setup'; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(e); }
+    const mean = (list, f) => { const v = list.map(f).filter(x => x != null && isFinite(x)); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : NaN; };
+    const med = list => { const v = list.map(e => e.time).sort((a, b) => a - b); return v[Math.floor(v.length / 2)]; };
+    const tbl = el('table');
+    tbl.append(el('thead', null, el('tr', null, el('th', { class: 'l' }, 'Setup'), el('th', null, 'Runs'), el('th', null, 'Best'), el('th', null, 'Median'), el('th', null, 'Travel F/R %'), el('th', { class: 'wide' }, 'Sag F/R %'), el('th', null, 'Bottom-outs'), el('th', { class: 'wide' }, 'km/h'))));
+    const tb = el('tbody');
+    for (const [k, list] of [...groups].sort((a, b) => Math.min(...a[1].map(e => e.time)) - Math.min(...b[1].map(e => e.time)))) {
+      tb.append(el('tr', null, el('td', { class: 'l' }, k), el('td', null, String(list.length)), el('td', null, fmtT(Math.min(...list.map(e => e.time)))), el('td', null, fmtT(med(list))),
+        el('td', null, fmt(mean(list, e => e.stats && e.stats.travelF), 0) + ' / ' + fmt(mean(list, e => e.stats && e.stats.travelR), 0)),
+        el('td', { class: 'wide' }, fmt(mean(list, e => e.stats && e.stats.sagF), 1) + ' / ' + fmt(mean(list, e => e.stats && e.stats.sagR), 1)),
+        el('td', null, fmt(mean(list, e => e.stats ? e.stats.bottomF + e.stats.bottomR : NaN), 1)), el('td', { class: 'wide' }, fmt(mean(list, e => e.stats && e.stats.kmh), 1))));
+    }
+    tbl.append(tb);
+    return el('div', { class: 'card' }, el('h2', null, 'Setups on this segment'), el('div', { class: 'tbl' }, tbl),
+      el('div', { class: 'muted' }, groups.size < 2 ? 'Add a setup to your rides (Rides → Setup) to compare setups here.' : 'Averages per setup over all riders. Few runs per setup = rough numbers: lap-to-lap differences are often bigger than setup effects.'));
+  }
+  function editMeta(s) {
+    const nm = prompt('Segment name', s.name); if (nm == null) return;
+    const tr = prompt('Trail (segments with the same trail are grouped)', s.trail || ''); if (tr == null) return;
+    s.name = nm.trim() || s.name; s.trail = tr.trim(); s.updated = Date.now();
+    DB.put('segments', s).then(loadAll).then(() => { syncSoon(); openSeg(s.id); });
+  }
+  function deleteSeg(s) {
+    if (!confirm('Delete the segment "' + s.name + '"? Its times go too (your rides stay).' + (A.cloud.on() ? ' It is removed for everyone sharing your cloud.' : ''))) return;
+    s.deleted = true; s.updated = Date.now();
+    DB.put('segments', s).then(() => DB.byIndex('efforts', 'seg', s.id)).then(list => Promise.all(list.map(e => DB.del('efforts', e.id)))).then(loadAll).then(() => { syncSoon(); renderHome(); });
+  }
+  function rescanSeg(s) {
+    DB.all('scans').then(list => Promise.all(list.filter(x => x.id.indexOf(s.id + '|') === 0).map(x => DB.del('scans', x.id)))).then(() => { busy(true, 'Re-checking every ride…'); scanSoon(); });
+  }
+
+  // ======================================================= cloud sync (segments, setups, rider names)
+  let syncT = null, syncing = false;
+  function syncSoon() { clearTimeout(syncT); syncT = setTimeout(sync, 1500); }
+  async function sync() {
+    if (!A.cloud.on() || syncing) return;
+    syncing = true;
+    try {
+      const res = await A.cloud.fetch('/catalog');
+      if (res.status === 404) return;                  // Worker older than this analyzer
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const remote = await res.json();
+      let changed = false;
+      // segments
+      const local = new Map(allSegs.map(s => [s.id, s]));
+      for (const id in (remote.segments || {})) {
+        const R = remote.segments[id], Lc = local.get(id);
+        if (!Lc || (R.updated || 0) > (Lc.updated || 0)) {
+          if (R.deleted) { if (Lc) { await DB.put('segments', Object.assign({}, Lc, { deleted: true, updated: R.updated })); changed = true; } else await DB.put('segments', { id, deleted: true, updated: R.updated, name: R.name || '' }); continue; }
+          const fr = await A.cloud.fetch('/catalog/seg/' + encodeURIComponent(id));
+          if (fr.ok) { const full = await fr.json(); if (full && full.id === id) { await DB.put('segments', full); changed = true; } }
+        }
+      }
+      for (const s of allSegs) {
+        const R = (remote.segments || {})[s.id];
+        if (!R || (s.updated || 0) > (R.updated || 0)) await A.cloud.fetch('/catalog/seg/' + encodeURIComponent(s.id), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(s) });
+      }
+      // setups and rider names (small, merged per item)
+      const up = {};
+      for (const k in (remote.setups || {})) { const R = remote.setups[k], Lc = setups[k]; if (!Lc || (R.updated || 0) > (Lc.updated || 0)) { setups[k] = R; await DB.put('setups', R); changed = true; } }
+      for (const k in setups) { const R = (remote.setups || {})[k]; if (!R || (setups[k].updated || 0) > (R.updated || 0)) up[k] = setups[k]; }
+      if (Object.keys(up).length) await A.cloud.fetch('/catalog/setups', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(up) });
+      const rr = remote.riders || {}; let rup = false;
+      for (const k in rr) if (!riders[k] || (rr[k].updated || 0) > (riders[k].updated || 0)) { riders[k] = rr[k]; changed = true; }
+      for (const k in riders) if (!rr[k] || (riders[k].updated || 0) > (rr[k].updated || 0)) rup = true;
+      if (changed) await DB.put('kv', { k: 'riders', v: riders });
+      if (rup) await A.cloud.fetch('/catalog/riders', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(riders) });
+      if (changed) { await loadAll(); A.refreshLibrary(); rerender(); scanSoon(); }
+      A.LS.set('trSynced', Date.now());
+    } catch (e) { console.warn('Trails sync:', e); }
+    finally { syncing = false; }
+  }
+
+  // ======================================================= riders (names for logger names)
+  function renderRiders() {
+    const ids = [...new Set(rides.map(riderOf))];
+    const box = $('trRiders'); if (!box) return;
+    box.textContent = '';
+    for (const id of ids) {
+      const i = el('input', { value: riders[id] ? riders[id].name : '', placeholder: id === 'me' ? 'Your name (rides opened from files)' : 'Name for logger ' + id });
+      i.addEventListener('change', () => { riders[id] = { name: i.value.trim(), updated: Date.now() }; DB.put('kv', { k: 'riders', v: riders }).then(() => { rerender(); syncSoon(); }); });
+      box.append(el('div', null, el('label', { class: 'f' }, id === 'me' ? 'Files' : 'Logger ' + id), i));
+    }
+  }
+
+  // ======================================================= glue
+  function rerender(quiet) {
+    if (!ready) return;
+    if (view === 'home') { if (!quiet || !$('trHome').classList.contains('hidden')) renderHome(); }
+    else if (view === 'seg' && curSeg) { const s = segs.find(x => x.id === curSeg.id); if (s) { curSeg = s; if (!quiet) renderSeg(false); else renderSeg(false); } else renderHome(); }
+    renderRiders();
+  }
+  function rideChips(r) {
+    if (!ready) return null;
+    const E = efforts.filter(e => e.rideKey === r.key), su = setupFor(r);
+    if (!E.length && !su) return null;
+    const box = el('div', { class: 'ridechips' });
+    if (su) box.append(el('span', { class: 'pill', title: su.carried ? 'Carried over from ' + su.carried.name : 'Setup' }, setupLabel(su.s) + (su.carried ? ' *' : '')));
+    for (const e of E.sort((a, b) => a.t0 - b.t0)) { const s = segs.find(x => x.id === e.segId); if (s) box.append(el('button', { class: 'pill btnpill', onclick: () => openSeg(s.id, e.id) }, s.name + ' ' + fmtT(e.time))); }
+    return box;
+  }
+  function onRides(list) {
+    rides = list || [];
+    if (!ready) return;
+    for (const k of [...ctxCache.keys()]) if (!rides.some(r => r.key === k)) ctxCache.delete(k);
+    loadEfforts().then(() => { rerender(true); scanSoon(); });
+  }
+  function init(api) {
+    A = api; rides = A.rides();
+    document.querySelectorAll('#trBase button').forEach(b => b.addEventListener('click', () => setBase(b.dataset.base)));
+    setBase(A.LS.get('trBase', 'sat'));
+    $('trNewBtn').addEventListener('click', () => renderNew(null));
+    $('trShowRides').checked = !!A.LS.get('trShowRides', false);
+    $('trShowRides').addEventListener('change', () => { A.LS.set('trShowRides', $('trShowRides').checked); drawRides(); });
+    $('trSaveArea').addEventListener('click', () => { if (map) saveArea(map.getBounds()); });
+    $('trLocate').addEventListener('click', () => { if (!map) return; map.locate({ setView: true, maxZoom: 16 }); map.once('locationfound', e => L.circleMarker(e.latlng, { radius: 7, color: '#2a78d6', fillOpacity: 0.8 }).addTo(layers.seg)); map.once('locationerror', () => A.msg('trMapMsg', 'Location not available (allow location for this site).', 'err')); });
+    document.querySelector('nav.tabs button[data-view="trails"]').addEventListener('click', () => { setTimeout(() => { if (map) map.invalidateSize(); if (view === 'home') renderHome(); }, 60); });
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && Date.now() - A.LS.get('trSynced', 0) > 60000) sync(); });
+    loadAll().then(() => {
+      ready = true;
+      renderHome(); renderRiders(); A.refreshLibrary();
+      sync(); scanSoon();
+    });
+  }
+  window.SegUI = { init, onRides, rideChips, editSetup, openSeg, _state: () => ({ segs, efforts, setups, riders, scanning, view }) };
+})();
+</script>
+<script>
 /* ---- app.js ---- */
 /* Suspension Analyzer — UI controller. */
 (function () {
@@ -4548,6 +6062,7 @@ if (!window.Plotly) (function () {
       if (selA != null && !rides.some(r => r.id === selA)) selA = null;
       if (selB != null && !rides.some(r => r.id === selB)) selB = null;
       renderLibrary(); fillSelects(); renderLoggerList(); qlActions();
+      if (window.SegUI) try { window.SegUI.onRides(rides); } catch (e) { console.warn('Trails:', e); }
       Store.estimate().then(e => { if (e && e.usage != null) $('storageInfo').textContent = fmtBytes(e.usage) + ' used' + (e.volatile ? ' (not saved: private browsing?)' : ''); });
     });
   }
@@ -4561,12 +6076,14 @@ if (!window.Plotly) (function () {
       ul.append(el('li', { class: 'item' },
         el('div', { class: 'grow' },
           el('div', { class: 'name' }, r.name, tags),
-          el('div', { class: 'meta' }, [r.recordedAt ? 'ridden ' + fmtWhen(r.recordedAt) : '', fmtDur(r.duration), r.stops ? plural(r.stops, 'stop') + ' (' + fmtDur(r.pausedS) + ')' : '', (r.rate ? Math.round(r.rate) + ' Hz' : ''), fmtBytes(r.size), r.source === 'logger' ? 'from logger' : 'from file', r.recordedAt ? '' : new Date(r.importedAt).toLocaleString()].filter(Boolean).join(' · '))),
+          el('div', { class: 'meta' }, [r.recordedAt ? 'ridden ' + fmtWhen(r.recordedAt) : '', fmtDur(r.duration), r.stops ? plural(r.stops, 'stop') + ' (' + fmtDur(r.pausedS) + ')' : '', (r.rate ? Math.round(r.rate) + ' Hz' : ''), fmtBytes(r.size), r.source === 'logger' ? 'from logger' : 'from file', r.recordedAt ? '' : new Date(r.importedAt).toLocaleString()].filter(Boolean).join(' · ')),
+          window.SegUI ? window.SegUI.rideChips(r) : null),
         el('div', { class: 'row' },
           r.summary ? el('button', { class: 'btn small', onclick: () => showQuickLook(r.summary, r.name, r.id) }, 'Quick look') : null,
           el('button', { class: 'btn small primary', onclick: () => { $('anRide').value = r.id; showView('analyze'); runAnalyze(); } }, 'Analyze'),
-          el('button', { class: 'btn small', 'aria-pressed': r.id === selA ? 'true' : 'false', onclick: () => { selA = r.id; if (selB === r.id) selB = null; LS.set('selA', selA); LS.set('selB', selB); renderLibrary(); fillSelects(); } }, 'A'),
-          el('button', { class: 'btn small', 'aria-pressed': r.id === selB ? 'true' : 'false', onclick: () => { selB = r.id; if (selA === r.id) selA = null; LS.set('selA', selA); LS.set('selB', selB); renderLibrary(); fillSelects(); } }, 'B'),
+          el('button', { class: 'btn small', 'aria-pressed': r.id === selA ? 'true' : 'false', onclick: () => { selA = r.id; if (selB === r.id) selB = null; clearCmpWin(); LS.set('selA', selA); LS.set('selB', selB); renderLibrary(); fillSelects(); } }, 'A'),
+          el('button', { class: 'btn small', 'aria-pressed': r.id === selB ? 'true' : 'false', onclick: () => { selB = r.id; if (selA === r.id) selA = null; clearCmpWin(); LS.set('selA', selA); LS.set('selB', selB); renderLibrary(); fillSelects(); } }, 'B'),
+          window.SegUI ? el('button', { class: 'btn small', onclick: () => window.SegUI.editSetup(r) }, 'Setup') : null,
           el('button', { class: 'btn small', onclick: () => downloadRide(r.id) }, 'Save'),
           el('button', { class: 'btn small danger', onclick: () => deleteRide(r) }, 'Delete'))));
     }
@@ -4581,8 +6098,17 @@ if (!window.Plotly) (function () {
     };
     fill($('anRide'), null); fill($('cmpA'), selA); fill($('cmpB'), selB);
   }
-  $('cmpA').addEventListener('change', e => { selA = e.target.value ? +e.target.value : null; LS.set('selA', selA); renderLibrary(); });
-  $('cmpB').addEventListener('change', e => { selB = e.target.value ? +e.target.value : null; LS.set('selB', selB); renderLibrary(); });
+  $('cmpA').addEventListener('change', e => { selA = e.target.value ? +e.target.value : null; LS.set('selA', selA); clearCmpWin(); renderLibrary(); });
+  $('cmpB').addEventListener('change', e => { selB = e.target.value ? +e.target.value : null; LS.set('selB', selB); clearCmpWin(); renderLibrary(); });
+  // A segment run opened from Trails: each ride is cut to its own run (gate to gate)
+  let cmpWin = null;
+  function clearCmpWin() { if (!cmpWin) return; cmpWin = null; $('cmpWinNote').classList.add('hidden'); }
+  function showCmpWin() {
+    const n = $('cmpWinNote'); if (!cmpWin) { n.classList.add('hidden'); return; }
+    n.textContent = ''; n.classList.remove('hidden');
+    n.append(el('b', null, cmpWin.label || 'Segment runs'), ' — A ' + fmt(cmpWin.A[0], 1) + '–' + fmt(cmpWin.A[1], 1) + ' s, B ' + fmt(cmpWin.B[0], 1) + '–' + fmt(cmpWin.B[1], 1) + ' s (each ride cut to its run, gate to gate). ',
+      el('button', { class: 'btn small', onclick: () => { clearCmpWin(); runCompare(); } }, 'Use whole rides'));
+  }
 
   function deleteRide(r) {
     if (!confirm('Delete ' + r.name + ' from this device? (The copy on the logger is not affected.)')) return;
@@ -5181,10 +6707,10 @@ if (!window.Plotly) (function () {
   function tile(v, l, s) { return el('div', { class: 'tile' }, el('div', { class: 'v' }, v), el('div', { class: 'l' }, l), s ? el('div', { class: 's' }, s) : null); }
   function runAnalyze() {
     const id = +$('anRide').value;
-    if (!id) { msg('anMsg', 'Choose a ride first.', 'err'); return; }
+    if (!id) { msg('anMsg', 'Choose a ride first.', 'err'); return Promise.resolve(null); }
     readParamInputs();
     msg('anMsg', 'Analyzing…');
-    getParsed(id).then(parsed => {
+    return getParsed(id).then(parsed => {
       const p = Object.assign({}, params, { trimStart: parseFloat($('trimStart').value) || 0, trimEnd: parseFloat($('trimEnd').value) || Infinity });
       const t0 = performance.now();
       const r = SA.analyze(parsed, p);
@@ -5198,7 +6724,8 @@ if (!window.Plotly) (function () {
       $('trimEnd').placeholder = fmt(parsed.time[parsed.rows - 1] - parsed.time[0], 1);
       renderAnalysis(r);
       msg('anMsg', 'Analyzed ' + r.rows.toLocaleString() + ' rows in ' + Math.round(performance.now() - t0) + ' ms.', 'ok');
-    }).catch(e => { console.error(e); msg('anMsg', e.message, 'err'); });
+      return r;
+    }).catch(e => { console.error(e); msg('anMsg', e.message, 'err'); return null; });
   }
   $('btnAnalyze').addEventListener('click', runAnalyze);
   $('anRide').addEventListener('change', () => { $('trimStart').value = 0; $('trimEnd').value = ''; runAnalyze(); });
@@ -5916,8 +7443,10 @@ if (!window.Plotly) (function () {
           opts.pathUnits = seconds ? 'seconds' : 'indices at ' + opts.pathRate + ' Hz';
         }
         const t0 = performance.now();
-        const A = SA.analyze(pa, params), B = SA.analyze(pb, params);
+        const win = (w) => w ? Object.assign({}, params, { trimStart: w[0], trimEnd: w[1] }) : params;
+        const A = SA.analyze(pa, win(cmpWin && cmpWin.A)), B = SA.analyze(pb, win(cmpWin && cmpWin.B));
         A.name = pa.name; B.name = pb.name;
+        showCmpWin();
         const R = CMP.run(A, B, pa, pb, params, opts);
         R.A = A; R.B = B;
         // GPS tracks for the Map tab (either ride's is enough)
@@ -6878,7 +8407,7 @@ if (!window.Plotly) (function () {
   Store.persist();
   refreshLibrary().then(() => {
     const v = LS.get('view', 'rides');
-    showView(['rides', 'analyze', 'compare', 'setup'].includes(v) ? v : 'rides');
+    showView(['rides', 'analyze', 'compare', 'setup', 'trails'].includes(v) ? v : 'rides');
     handleIncoming();
     cloudSetupInit();
     const q1 = new URLSearchParams(location.search), focus = q1.get('ride') ? { name: q1.get('ride'), host: q1.get('host') } : null;
@@ -6892,6 +8421,27 @@ if (!window.Plotly) (function () {
       return directSync(false);
     });
   }).catch(e => { msg('linkMsg', 'Storage unavailable: ' + e.message + ' (private browsing?)', 'err'); handleIncoming(); });
+
+  // ======================================================= API for the Trails tab (trails.js)
+  window.SA_APP = {
+    getParsed, rides: () => rides, params: () => params, el, fmt, fmtDur, fmtWhen, fmtBytes, msg, cssVar, LS, showView, plural,
+    cloud: { on: () => cloudOn(), fetch: (path, opts) => cfetch(path, opts) },
+    refreshLibrary: () => refreshLibrary(),
+    // Analyze one run: the ride cut to t0..t1, on a given sub-tab (e.g. 'stats')
+    openAnalyze(id, t0, t1, sub, note) {
+      $('anRide').value = id; $('trimStart').value = (Math.round(t0 * 100) / 100).toString(); $('trimEnd').value = (Math.round(t1 * 100) / 100).toString();
+      showView('analyze');
+      return runAnalyze().then(r => { if (r && sub) showSub(sub); if (r && note) msg('anMsg', note, 'ok'); return r; });
+    },
+    // Compare two runs, each ride cut to its own window
+    openCompare(idA, wA, idB, wB, label) {
+      selA = idA; selB = idB; LS.set('selA', selA); LS.set('selB', selB);
+      renderLibrary(); fillSelects();
+      cmpWin = { A: wA, B: wB, label }; showCmpWin();
+      showView('compare'); runCompare();
+    }
+  };
+  if (window.SegUI) try { window.SegUI.init(window.SA_APP); } catch (e) { console.warn('Trails:', e); }
 
   // Offline use (website only): push-sw.js keeps a copy of this page and the
   // charting library, so past rides open with no signal. Same worker as notifications.
