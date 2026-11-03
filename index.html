@@ -238,6 +238,15 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
 .setupgrid .wide2{grid-column:1/-1}
 @media(max-width:520px){.setupgrid{grid-template-columns:1fr 1fr}}
 .leaflet-container{font:12px system-ui,sans-serif}
+.report h2{font-size:18px}
+.setupline{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:10px 0;padding:8px 10px;border-radius:10px;background:var(--chip);font-size:14px}
+.runlist{display:grid;gap:8px;margin-top:6px}
+.runrow{border:1px solid var(--ring);border-radius:10px;padding:8px 10px;background:var(--surface)}
+.runhead{font-size:15px}
+.segline{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:4px;font-size:14px}
+.runnums{margin-top:3px}
+.report ul.insights{margin:10px 0 0}
+.report ul.insights li:first-child{font-size:15px}
 </style>
 </head>
 <body>
@@ -261,6 +270,7 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
 
   <!-- ============================== RIDES ============================== -->
   <section class="view on" id="view-rides">
+    <div id="report"></div>
     <div class="card hidden" id="quickLook"></div>
     <div class="card">
       <h2>Logger</h2>
@@ -320,7 +330,8 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
     </div>
     <div id="trHome">
       <div class="card">
-        <div class="row" style="justify-content:space-between"><h2 style="margin:0">Segments</h2><button class="btn primary small" id="trNewBtn">New segment</button></div>
+        <div class="row" style="justify-content:space-between"><h2 style="margin:0">Segments</h2><button class="btn small" id="trNewBtn">Make one by hand</button></div>
+        <label class="row" style="gap:6px;margin-top:6px;font-size:14px"><input type="checkbox" id="trAuto" checked> Make segments automatically from descents I ride more than once</label>
         <div id="trStatus" class="msg" role="status"></div>
         <div id="trList"></div>
       </div>
@@ -346,8 +357,11 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
         <span class="rate-badge" id="anRate" title="Rows per second in this file">&ndash; Hz</span>
       </div>
       <div class="row" style="margin-top:8px">
+        <div style="min-width:200px;flex:1 1 200px"><label class="f" for="anPart">Part</label><select id="anPart"><option value="desc">Descents</option><option value="whole">Whole recording</option></select></div>
+        <span id="trimBox" class="row hidden">
         <div style="width:130px"><label class="f" for="trimStart">Trim start (s)</label><input id="trimStart" type="number" min="0" step="0.1" value="0"></div>
         <div style="width:130px"><label class="f" for="trimEnd">Trim end (s)</label><input id="trimEnd" type="number" min="0" step="0.1" placeholder="end"></div>
+        </span>
         <button class="btn primary" id="btnAnalyze" style="align-self:flex-end">Analyze</button>
       </div>
       <div id="anMsg" class="msg"></div>
@@ -1444,7 +1458,9 @@ if (!window.Plotly) (function () {
     const clean = x => perSegment(x, segs, y => smooth(limitChange(medianFilter(y, p.medianFilterSize), p.maxPosChange)));
     const front = clean(fr), rear = clean(rr);
     // zero = the robust top-out level, so 0 mm is full extension
-    const zero = { front: p.autoZero ? robustBaseline(front) : 0, rear: p.autoZero ? robustBaseline(rear) : 0 };
+    // a part of a ride (a run, descents) uses the zero of the whole recording when it is given (fixedZero)
+    const fz = p.fixedZero && isFinite(p.fixedZero.front) && isFinite(p.fixedZero.rear) ? p.fixedZero : null;
+    const zero = fz ? { front: fz.front, rear: fz.rear } : { front: p.autoZero ? robustBaseline(front) : 0, rear: p.autoZero ? robustBaseline(rear) : 0 };
     for (let i = 0; i < n; i++) { front[i] -= zero.front; rear[i] -= zero.rear; fr[i] -= zero.front; rr[i] -= zero.rear; }
     const vel = x => type === 'savgol' ? perSegment(x, segs, y => sgDerivative(y, rate, p.velocityWindow, p.velocityOrder))
                                        : diffVelocity(x, time, gapT, p.velocityFilterWindow, type);
@@ -1462,7 +1478,7 @@ if (!window.Plotly) (function () {
       'Front ADC ' + fa0 + '–' + fa1 + ' → ' + f1((fa1 - fa0) / 4095 * p.frontPotStroke) + ' of ' + p.frontPotStroke + ' mm pot stroke used',
       'Rear ADC ' + ra0 + '–' + ra1 + ' → ' + f1((ra1 - ra0) / 4095 * p.rearPotStroke) + ' of ' + p.rearPotStroke + ' mm pot stroke used',
       'Position: median ' + p.medianFilterSize + ', max ' + p.maxPosChange + ' mm/row, ' + (type === 'none' || pw < 3 ? 'no smoothing' : (type === 'savgol' ? 'Savitzky-Golay' : 'moving average') + ' ' + pw + ' rows'),
-      'Zero (top-out): ' + (p.autoZero ? 'front ' + f1(zero.front) + ' mm, rear ' + f1(zero.rear) + ' mm subtracted' : 'off'),
+      'Zero (top-out): ' + (fz ? 'from the whole recording: front ' + f1(zero.front) + ' mm, rear ' + f1(zero.rear) + ' mm' : p.autoZero ? 'front ' + f1(zero.front) + ' mm, rear ' + f1(zero.rear) + ' mm subtracted' : 'off'),
       'Velocity: ' + (type === 'savgol' ? 'Savitzky-Golay derivative, ' + p.velocityWindow + ' rows, order ' + p.velocityOrder : type === 'moving_average' ? 'difference → median → ±5000 clamp → moving average ' + p.velocityFilterWindow + ' rows' : 'raw difference, ±5000 clamp'),
       'Velocity range: front ' + f0(fv[0]) + ' to ' + f0(fv[1]) + ' mm/s, rear ' + f0(rv[0]) + ' to ' + f0(rv[1]) + ' mm/s',
       'Strokes: front ' + strokes.front.compression.length + ' compression / ' + strokes.front.rebound.length + ' rebound, rear ' + strokes.rear.compression.length + ' / ' + strokes.rear.rebound.length
@@ -4813,12 +4829,14 @@ if (!window.Plotly) (function () {
     const out = [], binsN = Math.max(1, Math.ceil(L / 10)), maxDur = Math.max(60, 3 * seg.ref.dur);
     for (let k = 0; k < S.length - 1; k++) {
       const a = S[k], b = S[k + 1];
-      if (!(a.on && b.on && a.d < 0 && b.d >= 0 && a.d > -40 && b.d < 40 && b.d - a.d < 25)) continue;
-      if (along(k) < 0.2) continue;                                        // crossing the wrong way (or a switchback)
+      const crossing = a.on && b.on && a.d < 0 && b.d >= 0 && a.d > -40 && b.d < 40 && b.d - a.d < 25;
+      const sideIn = !a.on && b.on && b.d >= -5 && b.d < 25;              // joined the line from the side, at the start
+      if (!crossing && !sideIn) continue;
+      if (crossing && along(k) < 0.2) continue;                            // crossing the wrong way (or a switchback)
       // must then follow the line forward (d ≥ 20 m within 60 s, on the line)
       let fwd = false; for (let q = k + 1; q < S.length && S[q].t - a.t < 60; q++) { if (!S[q].on) continue; if (S[q].d >= 20 && S[q].d < 80) { fwd = true; break; } if (S[q].d < -45) break; }
       if (!fwd) continue;
-      const tS = a.t + (b.t - a.t) * (0 - a.d) / (b.d - a.d);
+      const tS = crossing ? a.t + (b.t - a.t) * (0 - a.d) / (b.d - a.d) : b.t;
       const cov = new Uint8Array(binsN); let tE = NaN, j = k + 1, offFor = 0, tLeave = NaN;
       for (; j < S.length - 1; j++) {
         const p = S[j], q = S[j + 1];
@@ -4827,6 +4845,7 @@ if (!window.Plotly) (function () {
         if (p.on && p.d >= 0 && p.d <= L) cov[Math.min(binsN - 1, Math.floor(p.d / 10))] = 1;
         if (!p.on) { offFor += q.t - p.t; if (offFor > 60) break; } else offFor = 0;
         if (p.on && q.on && p.d < L && q.d >= L && q.d - p.d < 60) { tE = p.t + (q.t - p.t) * (L - p.d) / (q.d - p.d); break; }
+        if (p.on && !q.on && p.d >= L - 25 && p.d <= L + 5) { tE = p.t; break; }   // left the line to the side, at the end
       }
       if (isFinite(tE)) {
         let c = 0; for (const v of cov) c += v;
@@ -4985,9 +5004,18 @@ if (!window.Plotly) (function () {
     let passes = seg.path && dig.gps.length >= 5 ? gpsPasses(seg, dig) : [];
     const gpsCovers = seg.path && dig.gps.length >= 5 && near === true && gpsCoverage(dig) > 0.8;
     // sensors: when there's no GPS pass (no GPS, dropouts, or GPS in the trees), look where the GPS doesn't exclude
-    if (!passes.length || !gpsCovers) {
+    // sensors too: rides without GPS, GPS dropouts, or a way onto the line the GPS check missed.
+    // In a ride with GPS a sensor-found run must start where the GPS says the start gate is.
+    {
       const sp = sensorPasses(seg, dig);
-      for (const p of sp) if (!passes.some(q => p.tS < q.tE && p.tE > q.tS)) passes.push(p);
+      for (const p of sp) {
+        if (passes.some(q => p.tS < q.tE && p.tE > q.tS)) continue;
+        if (gpsCovers && seg.gates[0].lat != null) {
+          const at = posAt(dig.gps, p.tS);
+          if (!at || Math.hypot((at.lon - seg.gates[0].lon) * mlon(at.lat), (at.lat - seg.gates[0].lat) * MLAT) > 60) continue;
+        }
+        passes.push(p);
+      }
     }
     const out = [];
     if (!passes.length) return out;
@@ -5002,7 +5030,9 @@ if (!window.Plotly) (function () {
       let tS = okS ? rs.t : P.tS, tE = okE ? re.t : P.tE;
       if (!(tE - tS > 0.4 * seg.ref.dur && tE - tS < 3 * seg.ref.dur)) continue;
       const ver = verify(seg, dig, tS, tE);
-      if (P.method === 'sensor' && !(okS && okE)) continue;            // sensor-only needs both gates found
+      // a gate that doesn't lock on: keep the run only if the whole shape matches clearly (time from the shape, ±0.3 s)
+      const strongShape = ver.mean >= 0.65 && ver.good >= 0.9;
+      if (P.method === 'sensor' && !(okS && okE) && !strongShape) continue;
       if (P.method === 'sensor' && ver.mean < 0.45) continue;
       if (P.method === 'gps' && !(okS || okE) && ver.mean < 0.25 && P.coverage < 0.85) continue;
       // splits
@@ -5013,11 +5043,11 @@ if (!window.Plotly) (function () {
         const rr = refine(sp.snip, ctx, guess, 1.8, win);
         return rr.ncc >= 0.55 && rr.margin > 0.02 && rr.t > tS && rr.t < tE ? round(rr.t, 3) : null;
       });
-      const method = okS && okE ? (P.method === 'gps' ? 'gps+sensor' : 'sensor') : P.method === 'gps' ? (okS || okE ? 'gps+sensor partly' : 'gps') : 'sensor';
+      const method = okS && okE ? (P.method === 'gps' ? 'gps+sensor' : 'sensor') : P.method === 'gps' ? (okS || okE ? 'gps+sensor partly' : 'gps') : 'shape';
       out.push({ t0: round(tS, 3), t1: round(tE, 3), time: round(tE - tS, 3), splits, method,
                  conf: { start: round(rs.ncc, 2), end: round(re.ncc, 2), shape: round(ver.mean, 2) }, okS, okE,
                  coverage: P.coverage != null ? round(P.coverage, 2) : null,
-                 precisionMs: okS && okE ? Math.round(Math.hypot(seg.gates[0].precisionMs || 20, seg.gates[1].precisionMs || 20)) : 700 });
+                 precisionMs: okS && okE ? Math.round(Math.hypot(seg.gates[0].precisionMs || 20, seg.gates[1].precisionMs || 20)) : method === 'shape' ? 300 : 700 });
     }
     // overlapping results: keep the most confident
     out.sort((a, b) => (b.conf.start + b.conf.end + b.conf.shape) - (a.conf.start + a.conf.end + a.conf.shape));
@@ -5039,9 +5069,9 @@ if (!window.Plotly) (function () {
   }
 
   // ------------------------------------------------------------ numbers for one run
-  function effortStats(parsed, p, e, seg) {
+  function effortStats(parsed, p, e, seg, zero) {
     const SA = SAm();
-    const a = SA.analyze(parsed, Object.assign({}, p, { trimStart: e.t0, trimEnd: e.t1 }));
+    const a = SA.analyze(parsed, Object.assign({}, p, { trimStart: e.t0, trimEnd: e.t1, fixedZero: zero || null }));
     const F = a.stats.front, R = a.stats.rear, TF = p.frontTravel, TR = p.rearTravel;
     const ALIGN = ALm();
     let vmax = NaN; try { const fx = ALIGN.gpsFixes(parsed, parsed.time[0]).filter(f => f.t >= e.t0 && f.t <= e.t1 && isFinite(f.v)); if (fx.length) vmax = Math.max(...fx.map(f => f.v)); } catch (err) {}
@@ -5059,7 +5089,114 @@ if (!window.Plotly) (function () {
     };
   }
 
-  const SEG = { VERSION, FSC, FSF, makeCtx, digest, runs, fineWin, refine, features, suggest, makeSegment, signature, matchRide, gpsPasses, sensorPasses,
+  // ------------------------------------------------------------ automatic segments
+  // A descent's GPS line as points every ~10 m: [lat, lon, t]
+  function linePoints(gps, t0, t1) {
+    const tr = trackOf(gps, t0, t1, 0.25).filter(q => isFinite(q[1]));
+    const out = []; let last = null, acc = 0;
+    for (const q of tr) {
+      if (!last) { out.push([q[1], q[2], q[0]]); last = q; continue; }
+      const d = Math.hypot((q[2] - last[2]) * mlon(q[1]), (q[1] - last[1]) * MLAT);
+      acc += d; last = q;
+      if (acc >= 10) { out.push([q[1], q[2], q[0]]); acc = 0; }
+    }
+    return out;
+  }
+  function pointGrid(pts) {
+    const lat0 = pts.length ? pts[0][0] : 0, ML = mlon(lat0), cell = 30, g = new Map();
+    pts.forEach((p, i) => { const k = Math.floor((p[1] - pts[0][1]) * ML / cell) + ',' + Math.floor((p[0] - lat0) * MLAT / cell); if (!g.has(k)) g.set(k, []); g.get(k).push(i); });
+    return { near(lat, lon, r) {
+      const cx = Math.floor((lon - pts[0][1]) * ML / cell), cy = Math.floor((lat - lat0) * MLAT / cell); let bi = -1, bd = r;
+      for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) { const L = g.get((cx + a) + ',' + (cy + b)); if (!L) continue; for (const i of L) { const d = Math.hypot((pts[i][1] - lon) * ML, (pts[i][0] - lat) * MLAT); if (d < bd) { bd = d; bi = i; } } }
+      return bi;
+    } };
+  }
+  // Longest stretch of A that follows B in the same direction: [i0, i1] (indices into A) or null
+  function sharedStretch(A, B, gridB, R) {
+    const m = A.map(p => gridB.near(p[0], p[1], R));
+    let best = null, i = 0;
+    while (i < m.length) {
+      if (m[i] < 0) { i++; continue; }
+      let j = i, gap = 0, end = i;
+      while (j < m.length) { if (m[j] >= 0) { gap = 0; end = j; } else if (++gap > 3) break; j++; }
+      // same direction: B's indices mostly increase along the stretch
+      let up = 0, n = 0, prev = -1; for (let k = i; k <= end; k++) if (m[k] >= 0) { if (prev >= 0) { n++; if (m[k] >= prev) up++; } prev = m[k]; }
+      if (n >= 5 && up / n >= 0.75 && (!best || end - i > best[1] - best[0])) best = [i, end];
+      i = end + 1;
+    }
+    return best;
+  }
+  // items: [{ id, when, gps, t0, t1 }] (descents with GPS); avoid: [[lat, lon], ...] lines of existing (and deleted) segments.
+  // Returns [{ ref: item, t0, t1, members: [id...], length }] — stretches ridden at least twice, not already a segment.
+  function autoClusters(items, avoid, opt) {
+    opt = opt || {};
+    const MIN = opt.minLength || 200, R = opt.radius || 25;
+    const avoidPts = (avoid || []).filter(l => l.length).map(l => l.map(p => [p[0], p[1], 0]));
+    const avoidGrids = avoidPts.map(pointGrid);
+    // each descent: its line, minus whatever is already a segment
+    const runs = [];
+    for (const it of items) {
+      const pts = linePoints(it.gps, it.t0, it.t1);
+      if (pts.length * 10 < MIN) continue;
+      const free = pts.map(p => !avoidGrids.some(g => g.near(p[0], p[1], R) >= 0));
+      let i = 0;
+      while (i < pts.length) {
+        if (!free[i]) { i++; continue; }
+        let j = i; while (j < pts.length && free[j]) j++;
+        if ((j - i) * 10 >= MIN) runs.push({ it, pts: pts.slice(i, j) });
+        i = j;
+      }
+    }
+    if (runs.length < 2) return [];
+    runs.forEach(r => { r.grid = pointGrid(r.pts); });
+    const parent = runs.map((_, i) => i), find = x => parent[x] === x ? x : (parent[x] = find(parent[x]));
+    const links = [];
+    for (let a = 0; a < runs.length; a++) for (let b = a + 1; b < runs.length; b++) {
+      const st = sharedStretch(runs[a].pts, runs[b].pts, runs[b].grid, R);
+      if (st && (st[1] - st[0]) * 10 >= MIN) { parent[find(a)] = find(b); links.push([a, b]); }
+    }
+    const groups = new Map();
+    runs.forEach((r, i) => { const k = find(i); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(i); });
+    const out = [];
+    for (const idx of groups.values()) {
+      if (idx.length < 2) continue;
+      const mem = idx.map(i => runs[i]).sort((a, b) => a.it.when - b.it.when || a.pts[0][2] - b.pts[0][2]);
+      // the reference: the earliest run; keep the part of it that at least half of the others follow
+      let bestC = null;
+      for (const ref of mem.slice(0, 3)) {
+        const others = mem.filter(r => r !== ref), cnt = new Array(ref.pts.length).fill(0);
+        for (const o of others) { const st = sharedStretch(ref.pts, o.pts, o.grid, R); if (st) for (let k = st[0]; k <= st[1]; k++) cnt[k]++; }
+        const need = Math.max(1, Math.ceil(others.length / 2));
+        let i = 0, b = null;
+        while (i < cnt.length) { if (cnt[i] < need) { i++; continue; } let j = i; while (j < cnt.length && cnt[j] >= need) j++; if (!b || j - i > b[1] - b[0]) b = [i, j - 1]; i = j; }
+        if (b && (b[1] - b[0]) * 10 >= MIN && (!bestC || b[1] - b[0] > bestC.b[1] - bestC.b[0])) bestC = { ref, b };
+      }
+      if (!bestC) continue;
+      const P = bestC.ref.pts;
+      out.push({ ref: bestC.ref.it, t0: P[bestC.b[0]][2], t1: P[bestC.b[1]][2], length: (bestC.b[1] - bestC.b[0]) * 10, members: [...new Set(mem.map(r => r.it.id))], line: P.slice(bestC.b[0], bestC.b[1] + 1).map(p => [p[0], p[1]]) });
+    }
+    return out.sort((a, b) => b.length - a.length);
+  }
+
+  // ------------------------------------------------------------ several parts of rides as one recording
+  // parts: [{ parsed, t0, t1, name }] → a parsed-like object (time continuous, 6 s gaps so GPS lines break)
+  function combineParts(parts) {
+    const first = parts[0].parsed, keys = Object.keys(first).filter(k => first[k] && first[k].length === first.rows && k !== 'columns' && parts.every(q => q.parsed[k] && q.parsed[k].length === q.parsed.rows));
+    const ranges = parts.map(q => { const T = q.parsed.time, b0 = T[0]; const a = lowerIndex(T, b0 + q.t0), b = Math.min(q.parsed.rows, lowerIndex(T, b0 + q.t1)); return [a, Math.max(a, b)]; });
+    const n = ranges.reduce((s, r) => s + r[1] - r[0], 0);
+    const out = { rows: n, badRows: 0, pausedRows: 0, pauses: [], columns: first.columns, parts: [] };
+    for (const k of keys) out[k] = new first[k].constructor(n);
+    let o = 0, tOff = 0;
+    parts.forEach((q, pi) => {
+      const [a, b] = ranges[pi], T = q.parsed.time, t0 = T[a];
+      out.parts.push({ name: q.name, from: tOff, to: tOff + (b > a ? T[b - 1] - t0 : 0), srcT0: t0 - T[0] });
+      for (const k of keys) { const src = q.parsed[k]; if (k === 'time') { for (let i = a; i < b; i++) out.time[o + i - a] = T[i] - t0 + tOff; } else out[k].set(src.subarray(a, b), o); }
+      tOff += (b > a ? T[b - 1] - t0 : 0) + 6; o += b - a;
+    });
+    return out;
+  }
+
+  const SEG = { VERSION, autoClusters, combineParts, linePoints, FSC, FSF, makeCtx, digest, runs, fineWin, refine, features, suggest, makeSegment, signature, matchRide, gpsPasses, sensorPasses,
                 verify, effortStats, trackOf, posAt, makePath, pathIndex, segNear, gpsCoverage, snippetOf, quantile, mlon, MLAT };
   if (isNode) module.exports = SEG; else root.SEG = SEG;
 })(typeof window !== 'undefined' ? window : this);
@@ -5131,7 +5268,7 @@ if (!window.Plotly) (function () {
   const fmtGap = g => !isFinite(g) ? '–' : Math.abs(g) < 0.005 ? '±0.00' : (g > 0 ? '+' : '−') + Math.abs(g).toFixed(2);
   const fmtDate = ms => { try { return new Date(ms).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }); } catch (e) { return ''; } };
   const esc = s => String(s == null ? '' : s);
-  const timing = e => e && e.okS && e.okE ? '±' + Math.max(10, e.precisionMs || 20) + ' ms' : '±0.7 s (GPS)';
+  const timing = e => e && e.okS && e.okE ? '±' + Math.max(10, e.precisionMs || 20) + ' ms' : e && e.method === 'shape' ? '±0.3 s (shape)' : '±0.7 s (GPS)';
   function busy(on, text) { const s = $('trStatus'); if (s) A.msg('trStatus', text || '', on ? '' : 'ok'); }
   const nextFrame = () => new Promise(r => setTimeout(r, 0));
   const PALETTE = ['#2a78d6', '#eb6834', '#0ca30c', '#9b59b6', '#d03b3b', '#c9a227', '#17a2b8', '#6c757d'];
@@ -5163,7 +5300,7 @@ if (!window.Plotly) (function () {
     if (s.tyreF || s.tyreR) p.push('tyres ' + (s.tyreF || '–') + '/' + (s.tyreR || '–'));
     return p.join(' · ') || 'Setup';
   }
-  function editSetup(r) {
+  function editSetup(r, onSave) {
     if (!ready) return;
     const cur = setupFor(r), f = Object.assign({}, cur ? cur.s : {});
     let dlg = $('setupDlg');
@@ -5184,7 +5321,7 @@ if (!window.Plotly) (function () {
         setups[r.key] ? el('button', { class: 'btn danger', onclick: () => { saveSetup(r, null).then(() => dlg.close()); } }, 'Clear') : null,
         el('button', { class: 'btn primary', onclick: () => {
           const o = {}; for (const k in inputs) { const v = inputs[k].value.trim(); if (v !== '') o[k] = inputs[k].type === 'number' ? +v : v; }
-          saveSetup(r, o).then(() => dlg.close());
+          (onSave ? Promise.resolve(onSave(o)) : saveSetup(r, o)).then(() => dlg.close());
         } }, 'Save')));
     if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
   }
@@ -5220,8 +5357,22 @@ if (!window.Plotly) (function () {
     try {
       do {
         rescan = false;
+        // 1. every ride's digest (newest first: the report needs them)
+        const byNew = rides.slice().sort((a, b) => whenOf(b) - whenOf(a));
+        let k = 0;
+        for (const r of byNew) {
+          const rec = await DB.get('digests', r.key);
+          if (rec && rec.pkey === pkey() && rec.dig && rec.dig.v === SEG.VERSION) { digMem.set(r.key, rec.dig); continue; }
+          busy(true, 'Reading rides: ' + (++k) + ' (' + r.name + ')…');
+          await nextFrame();
+          try { digMem.set(r.key, await digestFor(r)); } catch (err) { console.warn('Trails: could not read ' + r.name, err); }
+          if (k % 2 === 0) renderReport();
+        }
+        renderReport();
+        // 2. automatic segments: descents ridden at least twice
+        if (A.LS.get('trAuto', true)) { try { await autoSegments(); } catch (err) { console.warn('Trails auto segments:', err); } }
         const live = segs.slice(), pk = pkey();
-        if (!live.length) break;
+        if (!live.length) { busy(false, ''); break; }
         const scans = new Map((await DB.all('scans')).map(s => [s.id, s]));
         const todo = [];
         for (const r of rides.slice().sort((a, b) => whenOf(b) - whenOf(a))) {
@@ -5245,7 +5396,7 @@ if (!window.Plotly) (function () {
               const old = (await DB.byIndex('efforts', 'ride', r.key)).filter(e => e.segId === s.id);
               for (const o of old) await DB.del('efforts', o.id);
               for (const e of list) {
-                let stats = null; try { stats = SEG.effortStats(ctx.parsed, A.params(), e, s); } catch (err) { console.warn(err); }
+                let stats = null; try { stats = SEG.effortStats(ctx.parsed, A.params(), e, s, ctx.r.zero); } catch (err) { console.warn(err); }
                 const rec = Object.assign({}, e, { id: s.id + '|' + r.key + '|' + Math.round(e.t0 * 10), segId: s.id, rideKey: r.key, rideId: r.id, rideName: r.name, rider: riderOf(r), when: whenOf(r), stats });
                 await DB.put('efforts', rec); found++;
               }
@@ -5256,10 +5407,11 @@ if (!window.Plotly) (function () {
         }
         await loadEfforts();
         if (todo.length) busy(false, 'Checked ' + A.plural(todo.length, 'ride') + ': ' + A.plural(found, 'run') + ' found.');
-        news();
+        news(); renderReport();
       } while (rescan);
     } finally { scanning = false; rerender(); }
   }
+  const digMem = new Map();             // rideKey -> digest (this session)
   function loadEfforts() { return DB.all('efforts').then(list => { const live = new Set(segs.map(s => s.id)), have = new Set(rides.map(r => r.key)); efforts = list.filter(e => live.has(e.segId) && have.has(e.rideKey)); }); }
   function loadAll() {
     return Promise.all([DB.all('segments'), DB.all('setups'), DB.get('kv', 'riders')]).then(([S, U, R]) => {
@@ -5269,6 +5421,194 @@ if (!window.Plotly) (function () {
       return loadEfforts();
     });
   }
+
+  // ======================================================= automatic segments
+  async function osmName(line) {
+    if (!navigator.onLine || !line || line.length < 3) return null;
+    const pick = [0.2, 0.5, 0.8].map(f => line[Math.floor(f * (line.length - 1))]);
+    const q = '[out:json][timeout:8];(' + pick.map(p => 'way(around:20,' + p[0].toFixed(6) + ',' + p[1].toFixed(6) + ')[highway][name];').join('') + ');out tags;';
+    try {
+      const ac = new AbortController(), to = setTimeout(() => ac.abort(), 9000);
+      const r = await fetch('https://overpass-api.de/api/interpreter', { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, signal: ac.signal });
+      clearTimeout(to);
+      if (!r.ok) return null;
+      const j = await r.json(), count = new Map();
+      for (const e of j.elements || []) {
+        const t = e.tags || {}; if (/^(motorway|trunk|primary|secondary|tertiary|residential|service|unclassified)$/.test(t.highway || '')) continue;
+        const n = t['mtb:name'] || t.name; if (n) count.set(n, (count.get(n) || 0) + 1);
+      }
+      let best = null; for (const [n, c] of count) if (!best || c > best[1]) best = [n, c];
+      return best ? best[0] : null;
+    } catch (e) { return null; }
+  }
+  async function autoSegments() {
+    const items = [];
+    for (const r of rides) {
+      const dig = digMem.get(r.key); if (!dig || !dig.bbox) continue;
+      for (const d of SEG.runs(dig)) if (isFinite(d.kmh)) items.push({ id: r.key + '@' + d.t0, ride: r, when: whenOf(r), gps: dig.gps, t0: d.t0, t1: d.t1 });
+    }
+    if (items.length < 2) return;
+    const avoid = allSegs.map(lineOf).filter(Boolean);
+    const sig = items.map(i => i.id).sort().join('|') + '#' + allSegs.length;
+    if (A.LS.get('trAutoSig', '') === sig) return;          // nothing new since the last look
+    const clusters = SEG.autoClusters(items, avoid).slice(0, 4);
+    let made = 0;
+    for (const c of clusters) {
+      busy(true, 'Making a segment from a descent you rode ' + A.plural(c.members.length, 'time') + '…');
+      await nextFrame();
+      const r = c.ref.ride, ctx = await ctxFor(r), dig = digMem.get(r.key);
+      const sug = SEG.suggest(ctx, c.t0, c.t1);
+      if (!sug.start || !sug.end || sug.end.t - sug.start.t < 15) continue;
+      const name = await osmName(c.line);
+      const n = segs.filter(x => /^Trail \d+$/.test(x.name)).length + 1 + made;
+      const seg = SEG.makeSegment({ ctx, dig, rideKey: r.key, rideName: r.name, rider: riderOf(r), recordedAt: whenOf(r) },
+        { name: name || 'Trail ' + n, trail: name || '', start: sug.start, end: sug.end, splits: sug.splits });
+      seg.auto = true;
+      await DB.put('segments', seg); made++;
+      allSegs.push(seg);
+    }
+    A.LS.set('trAutoSig', items.map(i => i.id).sort().join('|') + '#' + allSegs.length);
+    if (made) { await loadAll(); syncSoon(); A.msg('trStatus', 'New: ' + A.plural(made, 'segment') + ' made from descents you rode more than once. Rename them any time.', 'ok'); }
+  }
+
+  // ======================================================= sessions and the ride report
+  // A session: one rider's recordings with less than 2 h between them (you can stop and start, or power off, between runs)
+  function sessions() {
+    const by = new Map();
+    for (const r of rides) { const k = riderOf(r); if (!by.has(k)) by.set(k, []); by.get(k).push(r); }
+    const out = [];
+    for (const [rider, list] of by) {
+      list.sort((a, b) => whenOf(a) - whenOf(b));
+      let cur = null;
+      for (const r of list) {
+        const t = whenOf(r);
+        if (!cur || t - cur.end > 2 * 3600e3) { cur = { rider, rides: [], start: t, end: t }; out.push(cur); }
+        cur.rides.push(r); cur.end = Math.max(cur.end, t + (r.duration || 0) * 1000);
+      }
+    }
+    for (const S of out) S.id = S.rider + '|' + S.rides[0].key;
+    return out.sort((a, b) => b.end - a.end);
+  }
+  function descentsOf(r) { const d = digMem.get(r.key); return d ? SEG.runs(d).sort((a, b) => a.t0 - b.t0) : null; }
+  const quick = new Map();                 // rideKey@t0 -> stats of a run with no segment
+  async function quickStats(r, d) {
+    const k = r.key + '@' + d.t0; if (quick.has(k)) return quick.get(k);
+    const ctx = await ctxFor(r);
+    const st = SEG.effortStats(ctx.parsed, A.params(), { t0: d.t0, t1: d.t1, time: d.t1 - d.t0 }, null, ctx.r.zero);
+    quick.set(k, st); return st;
+  }
+  let reportSession = null;
+  function renderReport() {
+    const box = $('report'); if (!box || !ready) return;
+    const all = sessions();
+    if (!all.length) { box.textContent = ''; return; }
+    const S = (reportSession && all.find(x => x.id === reportSession)) || all[0];
+    box.textContent = '';
+    const C = el('div', { class: 'card report' });
+    box.append(C);
+    const sel = el('select', { 'aria-label': 'Session' });
+    all.slice(0, 30).forEach(x => sel.append(el('option', { value: x.id, selected: x === S ? true : null }, fmtDay(x.start) + ' · ' + riderName(x.rider) + ' · ' + A.plural(x.rides.length, 'recording'))));
+    sel.addEventListener('change', () => { reportSession = sel.value; renderReport(); });
+    // runs: each timed run (its own gates), plus descents that no timed run covers
+    const runs = [];
+    for (const r of S.rides) {
+      const timed = efforts.filter(e => e.rideKey === r.key).sort((a, b) => a.t0 - b.t0);
+      const wins = [];
+      for (const e of timed) { const w = wins.find(x => e.t0 < x.t1 && e.t1 > x.t0); if (w) { w.t0 = Math.min(w.t0, e.t0); w.t1 = Math.max(w.t1, e.t1); } else wins.push({ t0: e.t0, t1: e.t1, timed: true }); }
+      const D = descentsOf(r) || [];
+      for (const d of D) { const cov = wins.reduce((c, w) => c + Math.max(0, Math.min(w.t1, d.t1) - Math.max(w.t0, d.t0)), 0); if (cov < 0.3 * (d.t1 - d.t0)) wins.push({ t0: d.t0, t1: d.t1 }); }
+      wins.sort((a, b) => a.t0 - b.t0).forEach(d => runs.push({ r, d }));
+    }
+    const pending = S.rides.filter(r => !digMem.has(r.key)).length;
+    C.append(el('div', { class: 'row', style: 'justify-content:space-between' },
+      el('h2', { style: 'margin:0' }, all[0] === S ? 'Latest ride' : 'Ride'),
+      el('div', { style: 'min-width:200px;flex:0 1 320px' }, sel)),
+      el('div', { class: 'muted' }, fmtDay(S.start) + ' · ' + riderName(S.rider) + ' · ' + A.plural(S.rides.length, 'recording') + ' · ' + A.plural(runs.length, 'run') + (pending ? ' · reading ' + pending + ' more…' : '')));
+    // setup: one tap
+    C.append(setupPrompt(S));
+    // runs
+    const E = efforts.filter(e => S.rides.some(r => r.key === e.rideKey));
+    const list = el('div', { class: 'runlist' });
+    runs.forEach(({ r, d }, i) => {
+      const mine = E.filter(e => e.rideKey === r.key && e.t0 < d.t1 && e.t1 > d.t0);
+      const row = el('div', { class: 'runrow' });
+      const head = el('div', { class: 'runhead' }, el('b', null, 'Run ' + (i + 1)), el('span', { class: 'muted' }, ' · ' + fmtClock(whenOf(r) + d.t0 * 1000) + ' · ' + A.fmtDur(d.t1 - d.t0) + (S.rides.length > 1 ? ' · ' + r.name : '')));
+      row.append(head);
+      for (const e of mine) {
+        const s = segs.find(x => x.id === e.segId); if (!s) continue;
+        const prior = efforts.filter(x => x.segId === s.id && x.rider === e.rider && x.when < e.when);
+        const pb = prior.length ? Math.min(...prior.map(x => x.time)) : NaN;
+        const allBest = efforts.filter(x => x.segId === s.id && x.id !== e.id).reduce((b, x) => !b || x.time < b.time ? x : b, null);
+        const tag = !prior.length ? el('span', { class: 'pill' }, 'first time') : e.time < pb - 0.05 ? el('span', { class: 'pill sig' }, 'PR −' + (pb - e.time).toFixed(2) + ' s') : el('span', { class: 'pill' }, '+' + (e.time - pb).toFixed(2) + ' s vs your best');
+        row.append(el('div', { class: 'segline' },
+          el('a', { href: '#', onclick: ev => { ev.preventDefault(); openSeg(s.id, e.id); } }, s.name), ' ', el('b', null, fmtT(e.time)), ' ', tag,
+          allBest && allBest.rideKey !== e.rideKey ? el('button', { class: 'btn small', onclick: () => { const ro = rideByKey(allBest.rideKey); if (ro) A.openCompare(ro.id, [allBest.t0, allBest.t1], r.id, [e.t0, e.t1], s.name + ': best ' + fmtT(allBest.time) + ' (A) vs this run ' + fmtT(e.time) + ' (B)'); } }, 'Where did I lose time?') : null));
+      }
+      const stats = mine.length && mine[0].stats ? mine[0].stats : null;
+      const nums = el('div', { class: 'runnums muted' });
+      const fill = st => { nums.textContent = st ? 'Travel used front ' + Math.round(st.travelF) + '% · rear ' + Math.round(st.travelR) + '% · bottom-outs ' + (st.bottomF + st.bottomR) + ' · packing ' + st.packing + (st.kmh ? ' · ' + st.kmh + ' km/h avg' : '') : ''; };
+      if (stats) fill(stats); else quickStats(r, d).then(fill).catch(() => {});
+      row.append(nums, el('div', { class: 'row', style: 'margin-top:4px' },
+        el('button', { class: 'btn small', onclick: () => A.openAnalyze(r.id, d.t0, d.t1, 'stats', 'Run ' + (i + 1) + ' (' + r.name + ')') }, 'Stats'),
+        el('button', { class: 'btn small', onclick: () => A.openAnalyze(r.id, d.t0, d.t1, 'charts', 'Run ' + (i + 1) + ' (' + r.name + ')') }, 'Charts')));
+      list.append(row);
+    });
+    if (!runs.length) list.append(el('div', { class: 'muted' }, pending ? 'Working out your runs…' : 'No descents in these recordings (no riding at speed).'));
+    C.append(list);
+    // highlights
+    const hl = highlights(S, runs, E);
+    if (hl.length) C.append(el('ul', { class: 'insights' }, ...hl.map(h => el('li', null, h))));
+    C.append(el('div', { class: 'row', style: 'margin-top:8px' },
+      runs.length ? el('button', { class: 'btn primary', onclick: () => A.openAnalyzeParts(runs.map(({ r, d }) => ({ id: r.id, t0: d.t0, t1: d.t1 })), 'all ' + A.plural(runs.length, 'run') + ' of ' + fmtDay(S.start), 'stats') }, runs.length > 1 ? 'Analyze all runs together' : 'Analyze this run') : null,
+      el('button', { class: 'btn', onclick: () => A.showView('trails') }, 'Trails & leaderboards')));
+  }
+  function highlights(S, runs, E) {
+    const out = [];
+    const prs = E.filter(e => { const prior = efforts.filter(x => x.segId === e.segId && x.rider === e.rider && x.when < e.when); return prior.length && e.time < Math.min(...prior.map(x => x.time)) - 0.05; });
+    if (prs.length) out.push(A.plural(prs.length, 'personal best') + ': ' + prs.map(e => { const s = segs.find(x => x.id === e.segId); return (s ? s.name : '?') + ' ' + fmtT(e.time); }).join(', '));
+    else if (E.length) out.push(A.plural(E.length, 'timed run') + ' on ' + A.plural(new Set(E.map(e => e.segId)).size, 'segment') + '.');
+    // compared with this rider's usual on the same segments
+    for (const sid of new Set(E.map(e => e.segId))) {
+      const s = segs.find(x => x.id === sid); if (!s) continue;
+      const now = E.filter(e => e.segId === sid && e.stats), before = efforts.filter(e => e.segId === sid && e.rider === S.rider && e.stats && !E.includes(e));
+      if (!now.length || before.length < 2) continue;
+      const m = (L, f) => L.reduce((a, e) => a + f(e.stats), 0) / L.length;
+      const dR = m(now, x => x.travelR) - m(before, x => x.travelR), dF = m(now, x => x.travelF) - m(before, x => x.travelF), dB = m(now, x => x.bottomF + x.bottomR) - m(before, x => x.bottomF + x.bottomR);
+      if (Math.abs(dR) >= 5 || Math.abs(dF) >= 5) out.push(s.name + ': ' + (Math.abs(dR) >= Math.abs(dF) ? 'rear' : 'front') + ' used ' + Math.abs(Math.round(Math.abs(dR) >= Math.abs(dF) ? dR : dF)) + '% ' + ((Math.abs(dR) >= Math.abs(dF) ? dR : dF) > 0 ? 'more' : 'less') + ' travel than your usual' + (Math.abs(dB) >= 1 ? ', ' + (dB > 0 ? '+' : '') + dB.toFixed(1) + ' bottom-outs per run' : '') + '.');
+    }
+    const auto = segs.filter(s => s.auto && S.rides.some(r => r.key === s.ref.rideKey));
+    if (auto.length) out.push('New segment' + (auto.length > 1 ? 's' : '') + ' from runs you repeated: ' + auto.map(s => s.name).join(', ') + ' (rename in Trails).');
+    return out;
+  }
+  function setupPrompt(S) {
+    const box = el('div', { class: 'setupline' });
+    const own = S.rides.filter(r => setups[r.key] && !setups[r.key].deleted);
+    const skipped = A.LS.get('trSetupSkip', []).includes(S.id);
+    if (own.length === S.rides.length || skipped) {
+      const su = setupFor(S.rides[0]);
+      box.append(el('span', null, 'Setup: ', el('b', null, su ? setupLabel(su.s) : 'none')), el('button', { class: 'btn small', onclick: () => editSetupSession(S) }, 'Change'));
+      return box;
+    }
+    const prev = setupFor(S.rides[0]);
+    if (prev && prev.s && Object.keys(prev.s).length) {
+      box.append(el('span', null, 'Same setup as last time? ', el('b', null, setupLabel(prev.s))),
+        el('button', { class: 'btn small primary', onclick: () => applySetupSession(S, prev.s) }, 'Yes, same'),
+        el('button', { class: 'btn small', onclick: () => editSetupSession(S) }, 'Something changed'));
+    } else {
+      box.append(el('span', null, 'Log your setup (pressures, clicks, tyres) to compare setups later.'),
+        el('button', { class: 'btn small primary', onclick: () => editSetupSession(S) }, 'Add setup'),
+        el('button', { class: 'btn small', onclick: () => { const L = A.LS.get('trSetupSkip', []); L.push(S.id); A.LS.set('trSetupSkip', L.slice(-200)); renderReport(); } }, 'Not now'));
+    }
+    return box;
+  }
+  function applySetupSession(S, fields) {
+    const now = Date.now();
+    return Promise.all(S.rides.map(r => { const rec = { rideKey: r.key, rider: riderOf(r), fields: Object.assign({}, fields), deleted: false, updated: now }; setups[r.key] = rec; return DB.put('setups', rec); }))
+      .then(() => { A.refreshLibrary(); rerender(); syncSoon(); });
+  }
+  function editSetupSession(S) { editSetup(S.rides[0], fields => applySetupSession(S, fields)); }
+  const fmtDay = ms => { try { return new Date(ms).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }); } catch (e) { return ''; } };
+  const fmtClock = ms => { try { return new Date(ms).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); } catch (e) { return ''; } };
 
   // ======================================================= news (new runs since the last visit)
   function news() {
@@ -5420,7 +5760,7 @@ if (!window.Plotly) (function () {
     $('trMapTitle').textContent = 'Trails';
     const box = $('trList'); box.textContent = '';
     if (!segs.length) {
-      box.append(el('div', { class: 'empty' }, 'No segments yet. Ride a trail once, then tap ', el('b', null, 'New segment'), ' and pick that ride: the analyzer suggests a start and end on features it can find again (a jump landing, a drop, a big hit), then finds and times every later run by itself.'));
+      box.append(el('div', { class: 'empty' }, 'No segments yet. Ride a trail twice (with GPS) and it becomes a segment by itself: gates on features the logger finds again (a jump landing, a drop, a big hit), every run timed. Or make one by hand from a run.'));
     }
     const groups = new Map();
     for (const s of segs) { const k = s.trail || 'Other segments'; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(s); }
@@ -5432,7 +5772,7 @@ if (!window.Plotly) (function () {
         const last = E.reduce((b, e) => !b || e.when > b.when ? e : b, null);
         ul.append(el('li', { class: 'item clickrow', onclick: () => openSeg(s.id) },
           el('div', { class: 'grow' },
-            el('div', { class: 'name' }, s.name),
+            el('div', { class: 'name' }, s.name, s.auto ? el('span', { class: 'pill', style: 'margin-left:6px' }, 'auto') : null),
             el('div', { class: 'meta' }, [s.length ? Math.round(s.length) + ' m' : 'no GPS line', A.plural(E.length, 'run'), new Set(E.map(e => e.rider)).size > 1 ? A.plural(new Set(E.map(e => e.rider)).size, 'rider') : '', last ? 'last ' + fmtDate(last.when) : ''].filter(Boolean).join(' · '))),
           best ? el('div', { class: 'besttime' }, el('div', { class: 'v' }, fmtT(best.time)), el('div', { class: 'l' }, riderName(best.rider))) : el('span', { class: 'muted' }, 'no runs yet')));
       }
@@ -5859,6 +6199,7 @@ if (!window.Plotly) (function () {
   // ======================================================= glue
   function rerender(quiet) {
     if (!ready) return;
+    renderReport();
     if (view === 'home') { if (!quiet || !$('trHome').classList.contains('hidden')) renderHome(); }
     else if (view === 'seg' && curSeg) { const s = segs.find(x => x.id === curSeg.id); if (s) { curSeg = s; if (!quiet) renderSeg(false); else renderSeg(false); } else renderHome(); }
     renderRiders();
@@ -5883,6 +6224,8 @@ if (!window.Plotly) (function () {
     document.querySelectorAll('#trBase button').forEach(b => b.addEventListener('click', () => setBase(b.dataset.base)));
     setBase(A.LS.get('trBase', 'sat'));
     $('trNewBtn').addEventListener('click', () => renderNew(null));
+    $('trAuto').checked = A.LS.get('trAuto', true);
+    $('trAuto').addEventListener('change', () => { A.LS.set('trAuto', $('trAuto').checked); A.LS.set('trAutoSig', ''); if ($('trAuto').checked) scanSoon(); });
     $('trShowRides').checked = !!A.LS.get('trShowRides', false);
     $('trShowRides').addEventListener('change', () => { A.LS.set('trShowRides', $('trShowRides').checked); drawRides(); });
     $('trSaveArea').addEventListener('click', () => { if (map) saveArea(map.getBounds()); });
@@ -5895,7 +6238,11 @@ if (!window.Plotly) (function () {
       sync(); scanSoon();
     });
   }
-  window.SegUI = { init, onRides, rideChips, editSetup, openSeg, _state: () => ({ segs, efforts, setups, riders, scanning, view }) };
+  // For Analyze: a ride's descents (from its digest) and the zero of the whole recording
+  function descentsById(id) { const r = rides.find(x => x.id === id); if (!r) return Promise.resolve([]); return digestFor(r).then(d => { digMem.set(r.key, d); return SEG.runs(d).sort((a, b) => a.t0 - b.t0); }); }
+  function zeroById(id) { const r = rides.find(x => x.id === id); return r ? ctxFor(r).then(c => c.r.zero) : Promise.resolve(null); }
+  window.SegUI = { init, onRides, rideChips, editSetup, openSeg, ready: () => ready, descents: descentsById, zero: zeroById, renderReport,
+                   _state: () => ({ segs, efforts, setups, riders, scanning, view, sessions: sessions().map(S => ({ id: S.id, n: S.rides.length })) }) };
 })();
 </script>
 <script>
@@ -6080,7 +6427,7 @@ if (!window.Plotly) (function () {
           window.SegUI ? window.SegUI.rideChips(r) : null),
         el('div', { class: 'row' },
           r.summary ? el('button', { class: 'btn small', onclick: () => showQuickLook(r.summary, r.name, r.id) }, 'Quick look') : null,
-          el('button', { class: 'btn small primary', onclick: () => { $('anRide').value = r.id; showView('analyze'); runAnalyze(); } }, 'Analyze'),
+          el('button', { class: 'btn small primary', onclick: () => { anJob = null; $('anRide').value = r.id; $('anPart').dataset.ride = ''; showView('analyze'); runAnalyze(); } }, 'Analyze'),
           el('button', { class: 'btn small', 'aria-pressed': r.id === selA ? 'true' : 'false', onclick: () => { selA = r.id; if (selB === r.id) selB = null; clearCmpWin(); LS.set('selA', selA); LS.set('selB', selB); renderLibrary(); fillSelects(); } }, 'A'),
           el('button', { class: 'btn small', 'aria-pressed': r.id === selB ? 'true' : 'false', onclick: () => { selB = r.id; if (selA === r.id) selA = null; clearCmpWin(); LS.set('selA', selA); LS.set('selB', selB); renderLibrary(); fillSelects(); } }, 'B'),
           window.SegUI ? el('button', { class: 'btn small', onclick: () => window.SegUI.editSetup(r) }, 'Setup') : null,
@@ -6265,7 +6612,7 @@ if (!window.Plotly) (function () {
   function qlActions() {
     const act = $('qlAct'); if (!act) return; act.textContent = '';
     if (qlId == null) { const r = rides.find(x => x.name === qlName && x.source === 'logger'); if (r) qlId = r.id; }
-    if (qlId != null) act.append(el('button', { class: 'btn primary small', onclick: () => { $('anRide').value = qlId; showView('analyze'); runAnalyze(); } }, 'Full analysis'));
+    if (qlId != null) act.append(el('button', { class: 'btn primary small', onclick: () => { anJob = null; $('anRide').value = qlId; $('anPart').dataset.ride = ''; showView('analyze'); runAnalyze(); } }, 'Full analysis'));
     else act.append(el('span', { class: 'muted' }, qlUploading ? 'The full ride is still uploading from the logger – it appears here when it’s done.' : 'Full recording on its way… the full analysis opens once it is in your library.'));
   }
 
@@ -6591,7 +6938,7 @@ if (!window.Plotly) (function () {
     return p.then(() => {
       ids = ids.filter(x => x != null);
       if (ids.length >= 2) { selA = ids[0]; selB = ids[1]; LS.set('selA', selA); LS.set('selB', selB); fillSelects(); renderLibrary(); showView('compare'); runCompare(); }
-      else if (ids.length === 1) { $('anRide').value = ids[0]; showView('analyze'); runAnalyze(); }
+      else if (ids.length === 1) { anJob = null; $('anRide').value = ids[0]; $('anPart').dataset.ride = ''; showView('analyze'); runAnalyze(); }
     });
   }
 
@@ -6621,7 +6968,7 @@ if (!window.Plotly) (function () {
     const go = ids => {
       banner.classList.add('hidden');
       if (ids.length >= 2) { selA = ids[0]; selB = ids[1]; LS.set('selA', selA); LS.set('selB', selB); fillSelects(); renderLibrary(); showView('compare'); runCompare(); }
-      else if (ids.length === 1) { $('anRide').value = ids[0]; showView('analyze'); runAnalyze(); }
+      else if (ids.length === 1) { anJob = null; $('anRide').value = ids[0]; $('anPart').dataset.ride = ''; showView('analyze'); runAnalyze(); }
     };
     const what = want.join(' and ');
     const showButton = () => {
@@ -6705,30 +7052,78 @@ if (!window.Plotly) (function () {
 
   // ======================================================= analyze
   function tile(v, l, s) { return el('div', { class: 'tile' }, el('div', { class: 'v' }, v), el('div', { class: 'l' }, l), s ? el('div', { class: 's' }, s) : null); }
+  // What Analyze looks at. Default: the descents of the chosen ride (standing, climbs and
+  // lifts cut out; several runs joined). Or one run, the whole ride (with trim boxes), a
+  // segment run (anJob.window), or several rides' descents together (anJob.parts).
+  let anJob = null;
+  const segOK = () => !!(window.SegUI && window.SegUI.ready && window.SegUI.ready());
+  function partLabel(d, i) { return 'Run ' + (i + 1) + ' · ' + clockS(d.t0) + '–' + clockS(d.t1); }
+  function fillParts(id, list) {
+    const sel = $('anPart'), cur = sel.value || 'desc';
+    sel.textContent = '';
+    sel.append(el('option', { value: 'desc' }, list && list.length > 1 ? 'Descents (all ' + list.length + ' runs)' : 'Descents'));
+    (list || []).forEach((d, i) => sel.append(el('option', { value: 'run' + i }, partLabel(d, i))));
+    sel.append(el('option', { value: 'whole' }, 'Whole recording'));
+    sel.value = [...sel.options].some(o => o.value === cur) ? cur : 'desc';
+    sel.dataset.ride = id;
+    $('trimBox').classList.toggle('hidden', sel.value !== 'whole');
+  }
+  function jobFor(id, parsed) {
+    const base = Object.assign({}, params);
+    if (anJob && anJob.window && anJob.id === id)
+      return (segOK() ? window.SegUI.zero(id) : Promise.resolve(null)).then(z => ({ parsed, p: Object.assign(base, { trimStart: anJob.window[0], trimEnd: anJob.window[1], fixedZero: z }), note: anJob.label }));
+    const whole = () => ({ parsed, p: Object.assign(base, { trimStart: parseFloat($('trimStart').value) || 0, trimEnd: parseFloat($('trimEnd').value) || Infinity }) });
+    if (!segOK()) { fillParts(id, null); $('anPart').value = 'whole'; $('trimBox').classList.remove('hidden'); return Promise.resolve(whole()); }
+    return Promise.all([window.SegUI.descents(id), window.SegUI.zero(id)]).then(([list, z]) => {
+      if ($('anPart').dataset.ride !== String(id)) fillParts(id, list);
+      const part = $('anPart').value;
+      $('trimBox').classList.toggle('hidden', part !== 'whole');
+      if (part === 'whole' || !list.length) { if (!list.length && part !== 'whole') { $('anPart').value = 'whole'; $('trimBox').classList.remove('hidden'); } return Object.assign(whole(), { note: list.length ? '' : 'No descents found (no riding at speed), so the whole recording is shown.' }); }
+      if (part === 'desc' && list.length > 1) {
+        const comb = window.SEG.combineParts(list.map(d => ({ parsed, t0: d.t0, t1: d.t1, name: parsed.name })));
+        comb.name = parsed.name + ' (descents)';
+        return { parsed: comb, p: Object.assign(base, { fixedZero: z }), note: 'Descents only: ' + plural(list.length, 'run') + ' joined (standing, climbs and lifts cut out). Pick one run or the whole recording under Part.' };
+      }
+      const d = part === 'desc' ? list[0] : list[+part.slice(3)] || list[0];
+      return { parsed, p: Object.assign(base, { trimStart: d.t0, trimEnd: d.t1, fixedZero: z }), note: (part === 'desc' ? 'Descent only' : partLabel(d, list.indexOf(d))) + ' (standing and climbing cut out).' };
+    });
+  }
   function runAnalyze() {
+    readParamInputs();
+    if (anJob && anJob.parts) {                     // several rides' descents together
+      msg('anMsg', 'Analyzing ' + anJob.label + '…');
+      const job = anJob;
+      return Promise.all(job.parts.map(q => getParsed(q.id).then(parsed => ({ parsed, t0: q.t0, t1: q.t1, name: parsed.name }))))
+        .then(parts => (segOK() ? window.SegUI.zero(job.parts[0].id) : Promise.resolve(null)).then(z => {
+          const comb = window.SEG.combineParts(parts); comb.name = job.label;
+          return showAnalysis(comb, Object.assign({}, params, { fixedZero: z }), job.note || ('Analyzed ' + job.label + ': ' + plural(parts.length, 'run') + ' joined.'));
+        })).catch(e => { console.error(e); msg('anMsg', e.message, 'err'); return null; });
+    }
     const id = +$('anRide').value;
     if (!id) { msg('anMsg', 'Choose a ride first.', 'err'); return Promise.resolve(null); }
-    readParamInputs();
     msg('anMsg', 'Analyzing…');
-    return getParsed(id).then(parsed => {
-      const p = Object.assign({}, params, { trimStart: parseFloat($('trimStart').value) || 0, trimEnd: parseFloat($('trimEnd').value) || Infinity });
-      const t0 = performance.now();
-      const r = SA.analyze(parsed, p);
-      r.name = parsed.name;
-      if (r.rows < 10) { msg('anMsg', 'Not enough data after trimming (' + r.rows + ' rows).', 'err'); return; }
-      Object.defineProperty(r, '_parsed', { value: parsed, enumerable: false });
-      try { r.track = TRACK.build(parsed, r); } catch (e) { console.warn(e); r.track = { ok: false, reason: 'The GPS track could not be read (' + e.message + ').' }; }
-      try { r.imu = { frame: CMP.imuChannel(parsed, ['fax', 'fay', 'faz'], r.rate, 20), bar: CMP.imuChannel(parsed, ['bax', 'bay', 'baz'], r.rate, 20) }; } catch (e) { r.imu = null; }
-      lastAnalysis = r;
-      $('anRate').textContent = Math.round(r.rate) + ' Hz' + (params.rateOverride > 0 ? ' (override)' : '');
-      $('trimEnd').placeholder = fmt(parsed.time[parsed.rows - 1] - parsed.time[0], 1);
-      renderAnalysis(r);
-      msg('anMsg', 'Analyzed ' + r.rows.toLocaleString() + ' rows in ' + Math.round(performance.now() - t0) + ' ms.', 'ok');
-      return r;
-    }).catch(e => { console.error(e); msg('anMsg', e.message, 'err'); return null; });
+    return getParsed(id).then(parsed => jobFor(id, parsed)).then(j => showAnalysis(j.parsed, j.p, j.note))
+      .catch(e => { console.error(e); msg('anMsg', e.message, 'err'); return null; });
   }
-  $('btnAnalyze').addEventListener('click', runAnalyze);
-  $('anRide').addEventListener('change', () => { $('trimStart').value = 0; $('trimEnd').value = ''; runAnalyze(); });
+  function showAnalysis(parsed, p, note) {
+    const t0 = performance.now();
+    const r = SA.analyze(parsed, p);
+    r.name = parsed.name;
+    if (r.rows < 10) { msg('anMsg', 'Not enough data after trimming (' + r.rows + ' rows).', 'err'); return null; }
+    Object.defineProperty(r, '_parsed', { value: parsed, enumerable: false });
+    try { r.track = TRACK.build(parsed, r); } catch (e) { console.warn(e); r.track = { ok: false, reason: 'The GPS track could not be read (' + e.message + ').' }; }
+    try { r.imu = { frame: CMP.imuChannel(parsed, ['fax', 'fay', 'faz'], r.rate, 20), bar: CMP.imuChannel(parsed, ['bax', 'bay', 'baz'], r.rate, 20) }; } catch (e) { r.imu = null; }
+    lastAnalysis = r;
+    $('anRate').textContent = Math.round(r.rate) + ' Hz' + (params.rateOverride > 0 ? ' (override)' : '');
+    $('trimEnd').placeholder = fmt(parsed.time[parsed.rows - 1] - parsed.time[0], 1);
+    renderAnalysis(r);
+    msg('anMsg', (note ? note + ' ' : '') + 'Analyzed ' + r.rows.toLocaleString() + ' rows in ' + Math.round(performance.now() - t0) + ' ms.', 'ok');
+    return r;
+  }
+  function clockS(t) { t = Math.max(0, Math.round(t)); return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0'); }
+  $('btnAnalyze').addEventListener('click', () => runAnalyze());
+  $('anRide').addEventListener('change', () => { anJob = null; $('trimStart').value = 0; $('trimEnd').value = ''; $('anPart').value = 'desc'; $('anPart').dataset.ride = ''; runAnalyze(); });
+  $('anPart').addEventListener('change', () => { anJob = null; $('trimBox').classList.toggle('hidden', $('anPart').value !== 'whole'); runAnalyze(); });
 
   // ---- sub-tabs (as in the original analyzer, plus Map)
   const SUBS = ['charts', 'map', 'imu', 'stats', 'events', 'balance', 'advanced'];
@@ -8406,8 +8801,7 @@ if (!window.Plotly) (function () {
   if (imported) msg('paramMsg', 'Brought over your settings from the previous analyzer on this site (travel, pots, linkage, filter, invert).', 'ok');
   Store.persist();
   refreshLibrary().then(() => {
-    const v = LS.get('view', 'rides');
-    showView(['rides', 'analyze', 'compare', 'setup', 'trails'].includes(v) ? v : 'rides');
+    showView('rides');                       // the ride report first, every time the analyzer opens
     handleIncoming();
     cloudSetupInit();
     const q1 = new URLSearchParams(location.search), focus = q1.get('ride') ? { name: q1.get('ride'), host: q1.get('host') } : null;
@@ -8429,9 +8823,17 @@ if (!window.Plotly) (function () {
     refreshLibrary: () => refreshLibrary(),
     // Analyze one run: the ride cut to t0..t1, on a given sub-tab (e.g. 'stats')
     openAnalyze(id, t0, t1, sub, note) {
+      anJob = { id, window: [t0, t1], label: note || '' };
       $('anRide').value = id; $('trimStart').value = (Math.round(t0 * 100) / 100).toString(); $('trimEnd').value = (Math.round(t1 * 100) / 100).toString();
       showView('analyze');
-      return runAnalyze().then(r => { if (r && sub) showSub(sub); if (r && note) msg('anMsg', note, 'ok'); return r; });
+      return runAnalyze().then(r => { if (r && sub) showSub(sub); return r; });
+    },
+    // Several runs (from one or more rides) analyzed as one: parts [{id, t0, t1}]
+    openAnalyzeParts(parts, label, sub, note) {
+      anJob = { parts, label, note };
+      $('anRide').value = parts[0].id;
+      showView('analyze');
+      return runAnalyze().then(r => { if (r && sub) showSub(sub); return r; });
     },
     // Compare two runs, each ride cut to its own window
     openCompare(idA, wA, idB, wB, label) {
