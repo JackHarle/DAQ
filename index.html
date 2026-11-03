@@ -245,6 +245,7 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
 .runhead{font-size:15px}
 .segline{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:4px;font-size:14px}
 .runnums{margin-top:3px}
+.gainloss{font-size:13px;color:var(--ink2);margin:3px 0 4px}
 .report ul.insights{margin:10px 0 0}
 .report ul.insights li:first-child{font-size:15px}
 </style>
@@ -3136,7 +3137,7 @@ if (!window.Plotly) (function () {
       }
       list.push(S);
     }
-    // Ride-wide offsets (setup, sag, tyre pressure...) vs local differences (riding)
+    // Ride-wide offsets (setup, sag, tire pressure...) vs local differences (riding)
     const allDp = [], allLr = { front: [], rear: [] };
     list.forEach(S => { S.blocks.forEach(b => allDp.push(b.dp)); S.hitLr.forEach(h => allLr[h.side].push(h.v)); });
     const baseDp = allDp.length >= 8 ? median(allDp) : 0;
@@ -5210,7 +5211,7 @@ if (!window.Plotly) (function () {
  *   - Every ride (now and future) is checked for every segment in the background (segments.js).
  *   - Segment page: leaderboard, history, splits and ideal time, setups compared, each run's
  *     suspension numbers next to the best, and one tap to the Statistics page or Compare.
- *   - Setups (pressures, clicks, tyres) per ride, carried over from the rider's previous ride.
+ *   - Setups (pressures, clicks, tires, frame settings) per ride, carried over from the rider's previous ride.
  *   - Shared through your cloud (segments, setups, rider names) when the cloud is set up.
  * Storage: IndexedDB "sa-trails" (segments, efforts, digests, scans, setups, kv).
  */
@@ -5280,7 +5281,10 @@ if (!window.Plotly) (function () {
     ['name', 'Setup name', 'text', 'e.g. Race, Soft fork'],
     ['forkPsi', 'Fork psi', 'number'], ['forkTokens', 'Fork tokens', 'number'], ['forkHSC', 'Fork HSC', 'number'], ['forkLSC', 'Fork LSC', 'number'], ['forkHSR', 'Fork HSR', 'number'], ['forkLSR', 'Fork LSR', 'number'],
     ['shockPsi', 'Shock psi / spring', 'text'], ['shockTokens', 'Shock tokens', 'number'], ['shockHSC', 'Shock HSC', 'number'], ['shockLSC', 'Shock LSC', 'number'], ['shockHSR', 'Shock HSR', 'number'], ['shockLSR', 'Shock LSR', 'number'],
-    ['tyreF', 'Front tyre psi', 'number'], ['tyreR', 'Rear tyre psi', 'number'], ['notes', 'Notes', 'text', 'tyres, inserts, bike…']
+    ['tyreF', 'Front tire psi', 'number'], ['tyreR', 'Rear tire psi', 'number'],
+    ['bbPos', 'BB position', 'text', 'e.g. low, high, −5 mm'], ['chainstay', 'Chainstay length', 'text', 'e.g. 435 mm, long'],
+    ['progression', 'Progression', 'select', ['', '1', '2', '3', '4']], ['bridge', 'Bridge stiffness', 'select', ['', 'Stiff', 'Medium', 'Soft']],
+    ['notes', 'Notes', 'text', 'tires, inserts, bike…']
   ];
   // The setup a ride was ridden with: its own, or carried over from the rider's previous ride that has one
   function setupFor(r) {
@@ -5297,7 +5301,11 @@ if (!window.Plotly) (function () {
     const p = [];
     if (s.forkPsi) p.push('F ' + s.forkPsi + (s.forkTokens ? '/' + s.forkTokens + 't' : ''));
     if (s.shockPsi) p.push('R ' + s.shockPsi + (s.shockTokens ? '/' + s.shockTokens + 't' : ''));
-    if (s.tyreF || s.tyreR) p.push('tyres ' + (s.tyreF || '–') + '/' + (s.tyreR || '–'));
+    if (s.tyreF || s.tyreR) p.push('tires ' + (s.tyreF || '–') + '/' + (s.tyreR || '–'));
+    if (s.progression) p.push('prog ' + s.progression);
+    if (s.bridge) p.push(s.bridge.toLowerCase() + ' bridge');
+    if (s.bbPos) p.push('BB ' + s.bbPos);
+    if (s.chainstay) p.push('CS ' + s.chainstay);
     return p.join(' · ') || 'Setup';
   }
   function editSetup(r, onSave) {
@@ -5309,7 +5317,9 @@ if (!window.Plotly) (function () {
     const inputs = {};
     const grid = el('div', { class: 'setupgrid' });
     for (const [k, lab, type, ph] of SETUP_FIELDS) {
-      const i = el('input', { type, step: type === 'number' ? 'any' : null, inputmode: type === 'number' ? 'decimal' : null, placeholder: ph || '', value: f[k] != null ? f[k] : '' });
+      let i;
+      if (type === 'select') { i = el('select'); for (const o of ph) i.append(el('option', { value: o, selected: String(f[k] == null ? '' : f[k]) === o ? true : null }, o || '–')); }
+      else i = el('input', { type, step: type === 'number' ? 'any' : null, inputmode: type === 'number' ? 'decimal' : null, placeholder: ph || '', value: f[k] != null ? f[k] : '' });
       inputs[k] = i;
       grid.append(el('div', { class: k === 'name' || k === 'notes' ? 'wide2' : '' }, el('label', { class: 'f' }, lab), i));
     }
@@ -5540,9 +5550,15 @@ if (!window.Plotly) (function () {
         const pb = prior.length ? Math.min(...prior.map(x => x.time)) : NaN;
         const allBest = efforts.filter(x => x.segId === s.id && x.id !== e.id).reduce((b, x) => !b || x.time < b.time ? x : b, null);
         const tag = !prior.length ? el('span', { class: 'pill' }, 'first time') : e.time < pb - 0.05 ? el('span', { class: 'pill sig' }, 'PR −' + (pb - e.time).toFixed(2) + ' s') : el('span', { class: 'pill' }, '+' + (e.time - pb).toFixed(2) + ' s vs your best');
+        // against your own best before this run, else the best anyone has done
+        const mineBest = prior.length ? prior.reduce((b, x) => x.time < b.time ? x : b) : null;
+        const ref = mineBest || (allBest && allBest.rideKey !== e.rideKey ? allBest : null);
         row.append(el('div', { class: 'segline' },
-          el('a', { href: '#', onclick: ev => { ev.preventDefault(); openSeg(s.id, e.id); } }, s.name), ' ', el('b', null, fmtT(e.time)), ' ', tag,
-          allBest && allBest.rideKey !== e.rideKey ? el('button', { class: 'btn small', onclick: () => { const ro = rideByKey(allBest.rideKey); if (ro) A.openCompare(ro.id, [allBest.t0, allBest.t1], r.id, [e.t0, e.t1], s.name + ': best ' + fmtT(allBest.time) + ' (A) vs this run ' + fmtT(e.time) + ' (B)'); } }, 'Where did I lose time?') : null));
+          el('a', { href: '#', onclick: ev => { ev.preventDefault(); openSeg(s.id, e.id); } }, s.name), ' ', el('b', null, fmtT(e.time)), ' ', tag));
+        if (ref) {
+          row.append(el('div', { class: 'gainloss' }, gainLossText(s, e, ref)),
+            gainLossBtn(null, () => { const ro = rideByKey(ref.rideKey); if (ro) A.openCompare(ro.id, [ref.t0, ref.t1], r.id, [e.t0, e.t1], s.name + ': ' + (ref === mineBest ? 'your best' : 'best') + ' ' + fmtT(ref.time) + ' (A) vs this run ' + fmtT(e.time) + ' (B)', 'loss'); }));
+        }
       }
       const stats = mine.length && mine[0].stats ? mine[0].stats : null;
       const nums = el('div', { class: 'runnums muted' });
@@ -5595,7 +5611,7 @@ if (!window.Plotly) (function () {
         el('button', { class: 'btn small primary', onclick: () => applySetupSession(S, prev.s) }, 'Yes, same'),
         el('button', { class: 'btn small', onclick: () => editSetupSession(S) }, 'Something changed'));
     } else {
-      box.append(el('span', null, 'Log your setup (pressures, clicks, tyres) to compare setups later.'),
+      box.append(el('span', null, 'Log your setup (pressures, clicks, tires, frame settings) to compare setups later.'),
         el('button', { class: 'btn small primary', onclick: () => editSetupSession(S) }, 'Add setup'),
         el('button', { class: 'btn small', onclick: () => { const L = A.LS.get('trSetupSkip', []); L.push(S.id); A.LS.set('trSetupSkip', L.slice(-200)); renderReport(); } }, 'Not now'));
     }
@@ -6023,6 +6039,21 @@ if (!window.Plotly) (function () {
     const out = []; for (let i = 1; i < pts.length; i++) out.push(pts[i] != null && pts[i - 1] != null ? pts[i] - pts[i - 1] : null);
     return out;
   }
+  // "Gained 0.4 s in sector 2 · lost 1.1 s in sector 3" against another run (from the split times), or the total
+  function gainLossText(s, e, o) {
+    if (!o) return '';
+    const total = e.time - o.time;
+    const tot = Math.abs(total) < 0.005 ? 'same time' : (total < 0 ? Math.abs(total).toFixed(2) + ' s faster' : total.toFixed(2) + ' s slower');
+    if (!s.splits.length) return tot + ' than ' + (o.rider === e.rider ? 'your best' : 'the best');
+    const a = sectorTimes(s, e), b = sectorTimes(s, o), d = a.map((x, i) => x != null && b[i] != null ? x - b[i] : null);
+    let g = -1, l = -1; d.forEach((x, i) => { if (x == null) return; if (x < -0.05 && (g < 0 || x < d[g])) g = i; if (x > 0.05 && (l < 0 || x > d[l])) l = i; });
+    const parts = [];
+    if (g >= 0) parts.push('gained ' + (-d[g]).toFixed(2) + ' s in sector ' + (g + 1));
+    if (l >= 0) parts.push('lost ' + d[l].toFixed(2) + ' s in sector ' + (l + 1));
+    const who = o.rider === e.rider ? 'your best' : 'the best';
+    return (parts.length ? parts.join(' · ') + ' — ' : '') + tot + ' than ' + who;
+  }
+  const gainLossBtn = (label, onClick) => el('button', { class: 'btn small', onclick: onClick }, label || 'Where did I gain and lose time?');
   function idealTime(s, E) {
     if (!s.splits.length || !E.length) return '–';
     const n = s.splits.length + 1, best = new Array(n).fill(Infinity);
@@ -6063,7 +6094,9 @@ if (!window.Plotly) (function () {
       }
       tbl.append(tb);
     };
-    pick.addEventListener('change', fillTbl); fillTbl();
+    const gl = el('div', { class: 'gainloss' });
+    const fillGl = () => { const o = vs(); gl.textContent = o ? 'Against ' + riderName(o.rider) + ' ' + fmtT(o.time) + ': ' + gainLossText(s, e, o) : ''; };
+    pick.addEventListener('change', () => { fillTbl(); fillGl(); }); fillTbl(); fillGl();
     const label = s.name + ': ' + riderName(e.rider) + ' ' + fmtT(e.time);
     C.append(el('div', { class: 'row', style: 'justify-content:space-between' }, el('h2', { style: 'margin:0' }, 'Run · ' + fmtT(e.time)), el('span', { class: 'muted' }, riderName(e.rider) + ' · ' + fmtDate(e.when) + ' · ' + e.rideName)),
       el('div', { class: 'muted', style: 'margin:4px 0 8px' }, 'Gates at ' + e.t0.toFixed(2) + ' s and ' + e.t1.toFixed(2) + ' s of the ride · ' + timing(e) + ' · match ' + Math.round(100 * Math.min(e.conf.start, e.conf.end)) + '% at the gates, ' + Math.round(100 * e.conf.shape) + '% along the run' + (e.coverage != null ? ' · GPS on the line ' + Math.round(e.coverage * 100) + '%' : '')),
@@ -6071,8 +6104,9 @@ if (!window.Plotly) (function () {
       el('div', { class: 'row', style: 'margin-top:10px' },
         r ? el('button', { class: 'btn primary', onclick: () => A.openAnalyze(r.id, e.t0, e.t1, 'stats', label + ' — trimmed to the gates.') }, 'Statistics page') : null,
         r ? el('button', { class: 'btn', onclick: () => A.openAnalyze(r.id, e.t0, e.t1, 'charts', label + ' — trimmed to the gates.') }, 'Charts') : null,
-        r && other ? el('button', { class: 'btn', onclick: () => { const o = vs(), ro = rideByKey(o.rideKey); if (ro) A.openCompare(ro.id, [o.t0, o.t1], r.id, [e.t0, e.t1], s.name + ': ' + riderName(o.rider) + ' ' + fmtT(o.time) + ' (A) vs ' + riderName(e.rider) + ' ' + fmtT(e.time) + ' (B)'); } }, 'Compare') : null,
+        r && other ? el('button', { class: 'btn', onclick: () => { const o = vs(), ro = rideByKey(o.rideKey); if (ro) A.openCompare(ro.id, [o.t0, o.t1], r.id, [e.t0, e.t1], s.name + ': ' + riderName(o.rider) + ' ' + fmtT(o.time) + ' (A) vs ' + riderName(e.rider) + ' ' + fmtT(e.time) + ' (B)', 'loss'); } }, 'Where did I gain and lose time?') : null,
         other ? el('div', { class: 'grow', style: 'min-width:200px' }, pick) : null),
+      gl,
       el('div', { class: 'tbl', style: 'margin-top:10px' }, tbl),
       el('div', { class: 'muted' }, 'Green/red: better/worse for the time-type numbers (speed, bottom-outs, packing). Travel and shaft speeds are shown without a judgement — what is right depends on the trail and your setup.'));
     return C;
@@ -7825,8 +7859,12 @@ if (!window.Plotly) (function () {
     if (mode === 'manual') opts.offset = parseFloat($('offset').value) || 0;
     const pathFile = mode === 'path' ? $('dtwFile').files[0] : null;
     if (mode === 'path' && !pathFile) { msg('cmpMsg', 'Choose the mapping file first.', 'err'); $('btnCompare').disabled = false; return; }
-    Promise.all([getParsed(selA), getParsed(selB), pathFile ? pathFile.text() : null])
-      .then(([pa, pb, pathText]) => new Promise(res => setTimeout(() => res([pa, pb, pathText]), 30)))   // let the message paint
+    // a segment run each: the rides are cut to the runs (GPS, IMU and pots alike), each keeping its recording's zero
+    const zeroOf = id => cmpWin && window.SegUI && window.SegUI.ready() ? window.SegUI.zero(id).catch(() => null) : Promise.resolve(null);
+    const cut = (p, w, name) => { if (!w || !window.SEG) return p; const c = window.SEG.combineParts([{ parsed: p, t0: w[0], t1: w[1], name }]); c.name = name; return c; };
+    let zA = null, zB = null;
+    Promise.all([getParsed(selA), getParsed(selB), pathFile ? pathFile.text() : null, zeroOf(selA), zeroOf(selB)])
+      .then(([pa, pb, pathText, za, zb]) => { zA = za; zB = zb; return new Promise(res => setTimeout(() => res([cmpWin ? cut(pa, cmpWin.A, pa.name) : pa, cmpWin ? cut(pb, cmpWin.B, pb.name) : pb, pathText]), 30)); })   // let the message paint
       .then(([pa, pb, pathText]) => {
         if (pathText != null) {
           opts.path = SA.parseWarpPath(pathText);
@@ -7838,8 +7876,8 @@ if (!window.Plotly) (function () {
           opts.pathUnits = seconds ? 'seconds' : 'indices at ' + opts.pathRate + ' Hz';
         }
         const t0 = performance.now();
-        const win = (w) => w ? Object.assign({}, params, { trimStart: w[0], trimEnd: w[1] }) : params;
-        const A = SA.analyze(pa, win(cmpWin && cmpWin.A)), B = SA.analyze(pb, win(cmpWin && cmpWin.B));
+        const win = z => z ? Object.assign({}, params, { fixedZero: z }) : params;
+        const A = SA.analyze(pa, win(zA)), B = SA.analyze(pb, win(zB));
         A.name = pa.name; B.name = pb.name;
         showCmpWin();
         const R = CMP.run(A, B, pa, pb, params, opts);
@@ -8836,11 +8874,13 @@ if (!window.Plotly) (function () {
       return runAnalyze().then(r => { if (r && sub) showSub(sub); return r; });
     },
     // Compare two runs, each ride cut to its own window
-    openCompare(idA, wA, idB, wB, label) {
+    openCompare(idA, wA, idB, wB, label, csub) {
       selA = idA; selB = idB; LS.set('selA', selA); LS.set('selB', selB);
       renderLibrary(); fillSelects();
       cmpWin = { A: wA, B: wB, label }; showCmpWin();
-      showView('compare'); runCompare();
+      showView('compare');
+      if (csub && CSUBS.includes(csub)) showCsub(csub);      // e.g. 'loss': where time was gained and lost
+      runCompare();
     }
   };
   if (window.SegUI) try { window.SegUI.init(window.SA_APP); } catch (e) { console.warn('Trails:', e); }
