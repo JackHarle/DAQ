@@ -6,8 +6,13 @@
  * Push: a push from your Worker carries no data; this asks the Worker which
  * ride arrived, shows "Ride ready", and opens the analyzer on that ride. */
 const CACHE = 'sa-offline-v1';
+const TILES = 'sa-tiles-v1', MAX_TILES = 6000;
 const PAGE = new URL('./', self.registration.scope).href;
-const LIBS = ['https://cdn.plot.ly/plotly-2.27.0.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.27.0/plotly.min.js'];
+const LIBS = ['https://cdn.plot.ly/plotly-2.27.0.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.27.0/plotly.min.js',
+              'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css',
+              'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'];
+// Map tiles (Trails tab): kept after the first look, so a trail's map works with no signal
+const TILE_HOSTS = /(^|\.)(server\.arcgisonline\.com|tile\.opentopomap\.org|tile-cyclosm\.openstreetmap\.fr)$/;
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => Promise.all([
@@ -16,7 +21,7 @@ self.addEventListener('install', e => {
   ])).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', e => e.waitUntil((async () => {
-  for (const k of await caches.keys()) if (k.startsWith('sa-offline-') && k !== CACHE) await caches.delete(k);
+  for (const k of await caches.keys()) if ((k.startsWith('sa-offline-') && k !== CACHE) || (k.startsWith('sa-tiles-') && k !== TILES)) await caches.delete(k);
   await self.clients.claim();
 })()));
 
@@ -24,7 +29,18 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
-  // Charting library: a fixed version, so the cached copy is always right
+  // Map tiles: cache first; trimmed now and then to the newest MAX_TILES
+  if (TILE_HOSTS.test(url.hostname)) {
+    e.respondWith(caches.open(TILES).then(async c => {
+      const hit = await c.match(url.href);
+      if (hit) return hit;
+      const r = await fetch(req.mode === 'navigate' ? url.href : req);
+      if (r.ok || r.type === 'opaque') { c.put(url.href, r.clone()).catch(() => {}); if (Math.random() < 0.02) trimTiles(c); }
+      return r;
+    }));
+    return;
+  }
+  // Charting and map libraries: fixed versions, so the cached copy is always right
   if (LIBS.includes(url.href)) {
     e.respondWith(caches.open(CACHE).then(async c => {
       const hit = await c.match(url.href);
@@ -55,6 +71,10 @@ self.addEventListener('fetch', e => {
     }
   })());
 });
+
+async function trimTiles(c) {
+  try { const keys = await c.keys(); for (let i = 0; i < keys.length - MAX_TILES; i++) await c.delete(keys[i]); } catch (e) {}
+}
 
 function cfg() {
   return new Promise(res => {
