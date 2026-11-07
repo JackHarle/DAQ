@@ -51,6 +51,10 @@ h1{font-size:17px;margin:0;font-weight:700;white-space:nowrap;overflow:hidden;te
 .chip{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--ink2);background:var(--chip);border-radius:999px;padding:4px 10px;white-space:nowrap}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
 .dot.on{background:var(--good)}
+.dot.warn{background:var(--warn,#c9a227)}
+#linkChip{cursor:pointer}
+.devstatus{scroll-margin-top:120px;display:grid;gap:4px;margin:4px 0 10px;padding:10px 12px;border-radius:10px;background:var(--chip);font-size:14px}
+.devstatus .bad{color:var(--crit);font-weight:600}
 nav.tabs{display:flex;gap:4px;max-width:1100px;margin:8px auto 0;overflow-x:auto}
 nav.tabs button{flex:1;min-width:70px;background:none;border:0;border-bottom:3px solid transparent;color:var(--ink2);
   font:600 15px system-ui,-apple-system,"Segoe UI",sans-serif;padding:10px 6px;cursor:pointer}
@@ -253,7 +257,7 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
 <body>
 <header>
   <div class="top">
-    <h1>Suspension Analyzer <span class="appver" id="appVer" title="Analyzer version">v2026.11.02</span></h1>
+    <h1>Suspension Analyzer <span class="appver" id="appVer" title="Analyzer version">v2026.11.06</span></h1>
     <span class="chip" id="linkChip"><span class="dot" id="linkDot"></span><span id="linkText">No logger</span></span>
   </div>
   <nav class="tabs" role="tablist">
@@ -273,8 +277,9 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
   <section class="view on" id="view-rides">
     <div id="report"></div>
     <div class="card hidden" id="quickLook"></div>
-    <div class="card">
+    <div class="card" style="scroll-margin-top:110px">
       <h2>Logger</h2>
+      <div id="devStatus" class="devstatus hidden" role="status"></div>
       <div class="row">
         <div class="grow" style="min-width:200px">
           <label class="f" for="loggerAddr">Logger address</label>
@@ -5534,6 +5539,12 @@ if (!window.Plotly) (function () {
       el('h2', { style: 'margin:0' }, all[0] === S ? 'Latest ride' : 'Ride'),
       el('div', { style: 'min-width:200px;flex:0 1 320px' }, sel)),
       el('div', { class: 'muted' }, fmtDay(S.start) + ' · ' + riderName(S.rider) + ' · ' + A.plural(S.rides.length, 'recording') + ' · ' + A.plural(runs.length, 'run') + (pending ? ' · reading ' + pending + ' more…' : '')));
+    // battery over the session, from the logger's ride summaries (firmware 4.6.6+ with the divider on pin 11)
+    const bs = S.rides.map(r => r.summary && r.summary.batt).filter(b => b && b.start_v > 0);
+    if (bs.length) {
+      const v0 = bs[0].start_v, v1 = bs[bs.length - 1].end_v || bs[bs.length - 1].start_v, lo = Math.min(...bs.map(b => b.min_v || b.end_v || b.start_v));
+      C.append(el('div', { class: 'muted' }, 'Battery ' + v0.toFixed(2) + ' → ' + v1.toFixed(2) + ' V over this ride' + (lo < 3.4 ? ' · dipped to ' + lo.toFixed(2) + ' V: charge before the next ride' : '')));
+    }
     // setup: one tap
     C.append(setupPrompt(S));
     // runs
@@ -6813,10 +6824,53 @@ if (!window.Plotly) (function () {
   let loggerFiles = [], loggerPick = new Set(), linkBusy = false;
   const LINK_BTNS = ['btnGetNew', 'btnList', 'btnImport', 'btnRefresh'];
 
-  function setChip(state, text) {
+  function setChip(state, text, title) {
     $('linkDot').classList.toggle('on', state === 'on');
+    $('linkDot').classList.toggle('warn', state === 'warn');
     $('linkText').textContent = text;
+    $('linkChip').title = title || '';
   }
+
+  // ======================================================= logger status via the cloud
+  // This website (https) can't talk to the logger (http) directly, so the logger
+  // (firmware 4.7.1+) tells the cloud how it is when it's on your hotspot:
+  // battery, GPS, rides still to upload. Shown in the header chip and the Logger card.
+  let devTimer = null;
+  const ago = ms => { const s = Math.max(0, (Date.now() - ms) / 1000); return s < 90 ? 'just now' : s < 3600 ? Math.round(s / 60) + ' min ago' : s < 86400 * 2 ? Math.round(s / 3600) + ' h ago' : Math.round(s / 86400) + ' days ago'; };
+  function devStatus() {
+    clearTimeout(devTimer);
+    if (direct) return Promise.resolve();
+    if (!cloudOn()) { setChip('off', 'No logger', 'Set up the cloud (Setup) to see your logger here'); return Promise.resolve(); }
+    return cfetch('/devices').then(r => r.status === 404 ? null : r.ok ? r.json() : null).then(list => {
+      if (!list) { setChip('off', 'Logger via cloud', 'Update the Worker (cloud/worker.js) to see the logger’s battery and status here'); return; }
+      // the newest ride also counts as "heard from" (older firmware sends no status)
+      const lastRide = rides.filter(r => r.source === 'logger').reduce((b, r) => Math.max(b, r.importedAt || 0), 0);
+      const d = list[0];
+      const box = $('devStatus');
+      if (!d) {
+        setChip(lastRide ? 'warn' : 'off', lastRide ? 'Logger · ride ' + ago(lastRide) : 'No logger yet', 'No status from the logger yet: it sends one from firmware 4.7.1, when it joins your hotspot');
+        box.classList.add('hidden'); return;
+      }
+      const age = Date.now() - d.seen, fresh = age < 20 * 60e3;
+      const batt = d.batt && isFinite(d.batt.v) ? d.batt.v.toFixed(2) + ' V (' + d.batt.pct + '%)' : null;
+      setChip(fresh ? 'on' : 'warn', (fresh ? 'Logger · ' : 'Logger seen ') + ago(d.seen) + (batt ? ' · ' + d.batt.pct + '%' : ''),
+        'Last status from ' + d.host + ' through the cloud, ' + ago(d.seen) + '. It only reports while on your hotspot.');
+      box.textContent = ''; box.classList.remove('hidden');
+      const line = (k, v, bad) => box.append(el('div', null, el('b', null, k + ': '), bad ? el('span', { class: 'bad' }, v) : v));
+      line('Last heard', ago(d.seen) + ' through the cloud' + (fresh ? '' : ' (it reports only while it is on your hotspot)'));
+      line('Battery', batt || 'not measured (no divider on pin 11)', d.batt && d.batt.v < 3.4);
+      const gps = d.gps || {};
+      line('GPS', !gps.hz ? 'no data from the GPS module — check its wiring' : gps.fix ? 'locked (' + gps.hz.toFixed(1) + ' Hz)' : 'searching for satellites (' + gps.hz.toFixed(1) + ' Hz)', !gps.hz);
+      if (d.pending) line('Waiting to upload', plural(d.pending, 'ride'));
+      const lr = d.last_rec || {}, miss = [!lr.summary && 'ride summary', !lr.compress && 'compression', !lr.preroll && 'auto-pause'].filter(Boolean);
+      if (lr.min_free && miss.length) line('Last recording ran without', miss.join(', ') + ' (not enough memory)', true);
+      if (d.sd === false) line('SD card', 'not found', true);
+      line('Firmware', d.fw + ' · ' + d.host + (isFinite(d.rssi) ? ' · WiFi ' + d.rssi + ' dBm' : ''));
+    }).catch(() => setChip('off', 'Logger: no internet', 'Can’t reach the cloud right now'))
+      .finally(() => { if (document.visibilityState === 'visible') devTimer = setTimeout(devStatus, 60000); });
+  }
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') devStatus(); });
+  $('linkChip').addEventListener('click', () => { showView('rides'); $('devStatus').closest('.card').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
   function fileNum(n) { const m = /data_(\d+)\.csv$/i.exec(n); return m ? +m[1] : -1; }
   // Same recording = same logger, name and size (size changes if a file number is reused)
   function loggerKey(f) { return 'logger:' + ((LoggerLink.info && LoggerLink.info.host) || LoggerLink.origin) + ':' + f.name + ':' + f.size; }
@@ -8846,7 +8900,7 @@ if (!window.Plotly) (function () {
     if (focus) history.replaceState(null, '', location.pathname);
     if (cloudOn()) cloudSync(false, focus);
     return detectDirect().then(st => {
-      if (!st) return;
+      if (!st) { devStatus(); return; }
       direct = st; enterDirect();
       if (directWant.length) return directOpen(directWant);
       showView('rides');
