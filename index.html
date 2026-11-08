@@ -56,8 +56,10 @@ h1{font-size:17px;margin:0;font-weight:700;white-space:nowrap;overflow:hidden;te
 .devstatus{scroll-margin-top:120px;display:grid;gap:4px;margin:4px 0 10px;padding:10px 12px;border-radius:10px;background:var(--chip);font-size:14px}
 .devstatus .bad{color:var(--crit);font-weight:600}
 nav.tabs{display:flex;gap:4px;max-width:1100px;margin:8px auto 0;overflow-x:auto}
-nav.tabs button{flex:1;min-width:70px;background:none;border:0;border-bottom:3px solid transparent;color:var(--ink2);
-  font:600 15px system-ui,-apple-system,"Segoe UI",sans-serif;padding:10px 6px;cursor:pointer}
+nav.tabs button{flex:1 1 0;min-width:0;background:none;border:0;border-bottom:3px solid transparent;color:var(--ink2);
+  font:600 15px system-ui,-apple-system,"Segoe UI",sans-serif;padding:10px 2px;min-height:44px;cursor:pointer;white-space:nowrap}
+@media(max-width:400px){nav.tabs button{font-size:14px;padding:10px 0}}
+@media(max-width:375px){nav.tabs button{font-size:13px}}
 nav.tabs button.on{color:var(--ink);border-bottom-color:var(--accent)}
 main{max-width:1100px;margin:0 auto;padding:14px 16px}
 section.view{display:none}section.view.on{display:block}
@@ -98,6 +100,19 @@ input[type=checkbox],input[type=radio]{width:20px;height:20px;padding:0;margin:0
 .rate-badge{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;border-radius:999px;padding:2px 10px;border:1px solid var(--ring)}
 .chart{width:100%;height:340px}
 .chart.short{height:260px}
+.backbar{margin:-4px 0 10px}
+.backbar .btn{box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.card,.subtabs,.chartwrap{scroll-margin-top:calc(var(--hdrH,96px) + 12px)}
+.chartwrap{position:relative}
+.chartctl{display:flex;justify-content:flex-end;gap:6px;margin:0 0 2px}
+.chartctl:not(:has(button:not(.hidden))){display:none}
+.chartctl button{min-height:36px;padding:6px 12px;border-radius:999px;border:1px solid var(--axis);background:var(--card);color:var(--ink);font:600 13px system-ui,-apple-system,"Segoe UI",sans-serif;cursor:pointer;}
+.chartctl button.zoom[aria-pressed="true"]{background:var(--accent);color:var(--accentInk);border-color:var(--accent)}
+.chartctl button.reset{background:var(--accent);color:var(--accentInk);border-color:var(--accent)}
+@media(pointer:coarse){.chartctl button{min-height:40px}}
+/* touch: a swipe over a chart scrolls the page unless Zoom is on */
+.chartwrap:not(.zoomon) .nsewdrag,.chartwrap:not(.zoomon) .draglayer .drag{touch-action:pan-y!important}
+.chartwrap.zoomon .nsewdrag{touch-action:none!important}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink2);margin:4px 0 0}
 .sw{display:inline-block;width:14px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
 table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
@@ -124,6 +139,7 @@ tr.sig td{font-weight:600}
 .pill.sig{background:var(--accent);color:var(--accentInk)}
 .pill.off{background:transparent;border:1px solid var(--axis);color:var(--muted)}
 .pill.a{background:var(--s1);color:#fff}.pill.b{background:var(--s2);color:#fff}
+.pill.box{background:var(--chip);color:var(--ink);border:1px solid var(--axis);margin-left:6px}
 .pill.same{background:var(--chip);color:var(--ink2)}
 .pill.diff{background:var(--warn);color:#1a1300}
 .pill.part{background:transparent;border:1px solid var(--warn);color:var(--ink2)}
@@ -213,7 +229,10 @@ ol.losses .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 
 /* ---- Trails */
 .trmap{width:100%;height:52vh;min-height:300px;max-height:620px;border-radius:10px;overflow:hidden;margin-top:8px;background:var(--surface);border:1px solid var(--ring);position:relative;z-index:0;isolation:isolate}
-.trmap.nomap{height:60px}
+.trmap.nomap{height:60px;min-height:0}
+@media(max-width:640px){.trmap{height:38vh;min-height:220px}}
+@media(max-height:500px){.trmap{height:60vh;min-height:0}}
+#trNew,#trSeg{scroll-margin-top:110px}
 nav.tabs button.dotted::after{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--crit);margin-left:5px;vertical-align:2px}
 .trailhead{display:flex;align-items:center;gap:6px;font-size:15px;color:var(--ink)}
 .clickrow{cursor:pointer}.clickrow:hover{background:var(--chip)}
@@ -252,12 +271,71 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
 .gainloss{font-size:13px;color:var(--ink2);margin:3px 0 4px}
 .report ul.insights{margin:10px 0 0}
 .report ul.insights li:first-child{font-size:15px}
+/* ---- UX pass: first run, report takeaways, busy states, plain help */
+.h1sub{font-weight:500;color:var(--ink2)}
+@media(max-width:380px){.h1sub{display:none}}
+.start h2{font-size:18px}
+ol.startsteps{list-style:none;counter-reset:st;margin:10px 0 0;padding:0;display:grid;gap:12px}
+ol.startsteps>li{counter-increment:st;position:relative;padding:0 0 0 40px;min-height:30px}
+ol.startsteps>li::before{content:counter(st);position:absolute;left:0;top:0;width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--accentInk);display:grid;place-items:center;font-weight:700;font-size:14px}
+ol.startsteps>li>b{display:block;font-size:15px;margin:2px 0}
+label.btn{cursor:pointer}
+details.help{margin-top:6px}
+details.help>summary{font-weight:600;color:var(--ink2);font-size:14px}
+.msg.busy::before,.spin{content:"";display:inline-block;width:14px;height:14px;margin-right:8px;vertical-align:-2px;border-radius:50%;border:2px solid var(--grid);border-top-color:var(--accent);animation:spin .8s linear infinite;will-change:transform}
+.msg.warn{color:var(--ink)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.msg.busy::before,.spin{animation-duration:2.4s}}
+.working{display:flex;align-items:center;gap:0;margin:10px 0 0;padding:10px 12px;border-radius:10px;background:var(--chip);font-size:14px}
+ul.takeaways{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:8px}
+ul.takeaways li{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:10px 12px 10px 14px;border-radius:10px;background:var(--surface);border:1px solid var(--ring);border-left:5px solid var(--s1);font-size:15px;line-height:1.4}
+ul.takeaways li>span{flex:1 1 200px}
+ul.takeaways li.good{border-left-color:var(--good)}
+ul.takeaways li.warn{border-left-color:var(--warn)}
+ul.takeaways li.info{border-left-color:var(--s1)}
+.nextacts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.nextacts .btn{flex:1 1 160px}
+.report h3{font-size:15px;color:var(--ink);margin:16px 0 4px}
+.report ul.insights.plain li:first-child{font-weight:400;list-style:disc;margin-left:0;font-size:14px}
+.report ul.insights.plain{font-size:14px;color:var(--ink2)}
+.otherride{margin-top:14px;padding-top:10px;border-top:1px solid var(--ring)}
+.banner.offline{background:var(--card);border-left:5px solid var(--warn)}
+.headline{margin:0 0 10px}
+.headline .big{font-size:20px;font-weight:700;line-height:1.3}
+.headline .tag{font-size:13px;vertical-align:3px;margin:0 2px 0 0}
+#cmpSure{margin-top:8px}#cmpSure>summary{font-size:15px;font-weight:600;color:var(--ink2)}
+.notes{margin-top:8px;padding:10px 12px;border-radius:10px;background:var(--chip);font-size:14px;display:grid;gap:4px}
+.card.refused{border-left:5px solid var(--warn)}
+.card.refused h2{font-size:17px}
+.card.refused ul{margin:4px 0 0;padding-left:20px}.card.refused li{margin:3px 0}
+.btn.wide1{flex:1 1 auto;max-width:360px}
+/* ---- phone */
+.alignpick{width:210px}
+.abbar{position:sticky;bottom:10px;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--card);border:1px solid var(--accent);box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.abbar .muted{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1 1 160px}
+@media(max-width:520px){#view-compare .grid2{grid-template-columns:1fr}.alignpick{width:100%}}
+@media(max-width:640px){
+  .scroll{max-height:none}
+  #chPace{height:290px} #chGap{height:200px}
+}
+@media(max-width:520px){.tiles{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.tile{padding:8px 6px}.tile .v{font-size:19px}.tile .l,.tile .s{font-size:11.5px}}
+@media(max-width:520px){#anTabs{flex-wrap:wrap;overflow:visible;gap:0}#anTabs button{flex:1 1 auto;padding:9px 8px}}
+#anEvents td{white-space:nowrap}
+@media(pointer:coarse){
+  #btnResetZoom,#btnResetZoom2{display:none}
+  .subtabs button{min-height:44px}
+  label.row{min-height:40px}
+  .seg button{min-height:44px;min-width:44px}
+  .btn.small{min-height:40px}
+  details summary{padding:11px 0}
+  .pill,.tag{font-size:12px}
+}
 </style>
 </head>
 <body>
 <header>
   <div class="top">
-    <h1>Suspension Analyzer <span class="appver" id="appVer" title="Analyzer version">v2026.11.06</span></h1>
+    <h1>ShokIQ <span class="h1sub">Analyzer</span> <span class="appver" id="appVer" title="Analyzer version">v2026.11.08b</span></h1>
     <span class="chip" id="linkChip"><span class="dot" id="linkDot"></span><span id="linkText">No logger</span></span>
   </div>
   <nav class="tabs" role="tablist">
@@ -265,32 +343,50 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
     <button data-view="trails" role="tab">Trails</button>
     <button data-view="analyze" role="tab">Analyze</button>
     <button data-view="compare" role="tab">Compare</button>
-    <button data-view="setup" role="tab">Setup</button>
+    <button data-view="setup" role="tab">Settings</button>
   </nav>
 </header>
 
 <main>
   <div id="noCharts" class="banner hidden">Charts can&#39;t load right now (no internet?). Rides, numbers and tables still work; reload when you&#39;re back online to see the charts.</div>
   <div id="incoming" class="banner hidden"></div>
+  <div id="offlineBar" class="banner offline hidden" role="status"><b>You&#39;re offline.</b> Rides on this phone still open. New rides, maps and trail names come in when you have signal again.</div>
 
   <!-- ============================== RIDES ============================== -->
   <section class="view on" id="view-rides">
+    <div id="start" class="card start hidden">
+      <h2>Let&#39;s get your first ride in</h2>
+      <p class="muted" style="margin:0 0 4px">Three steps. After that, every ride shows up here with a short report.</p>
+      <ol class="startsteps">
+        <li><b>Connect your logger</b>
+          <div class="muted">Turn on your phone&#39;s hotspot, then switch the logger on. It joins your hotspot by itself. Flip the toggle to record a ride, flip it back to stop.</div></li>
+        <li><b>Get your rides</b>
+          <div class="muted">With the hotspot on, finished rides upload by themselves and appear here. Next to the logger without signal? Get them straight from it.</div>
+          <div class="row" style="margin-top:6px"><button class="btn primary" id="stGetNew" type="button">Get rides from the logger</button><button class="btn" id="stCloud" type="button">Check for uploaded rides</button></div></li>
+        <li><b>Or open a ride file</b>
+          <div class="muted">Have a CSV from the logger&#39;s SD card? Open it from this phone.</div>
+          <div class="row" style="margin-top:6px"><label class="btn" for="fileInput" id="stOpen">Open a ride file</label></div></li>
+      </ol>
+      <div id="stMsg" class="msg" role="status"></div>
+    </div>
     <div id="report"></div>
     <div class="card hidden" id="quickLook"></div>
-    <div class="card" style="scroll-margin-top:110px">
+    <div class="card" id="loggerCard" style="scroll-margin-top:110px">
       <h2>Logger</h2>
       <div id="devStatus" class="devstatus hidden" role="status"></div>
       <div class="row">
         <div class="grow" style="min-width:200px">
           <label class="f" for="loggerAddr">Logger address</label>
-          <input id="loggerAddr" type="text" inputmode="url" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="http://datalogger.local">
+          <input id="loggerAddr" type="text" inputmode="url" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="http://shokiq-1.local">
         </div>
       </div>
       <div class="row" style="margin-top:8px">
         <button class="btn primary" id="btnGetNew">Get new rides</button>
-        <button class="btn" id="btnList">Show recordings</button>
+        <button class="btn" id="btnList">See what&#39;s on the logger</button>
       </div>
-      <div class="muted" style="margin-top:6px">Opens a logger tab for a moment: it hands the recordings to this page and closes by itself. Your phone must be on the same network as the logger (your hotspot). Android: use the logger&#39;s IP if <code>.local</code> doesn't work.</div>
+      <details class="help"><summary>How getting rides works</summary>
+        <div class="muted">A logger tab opens for a moment: it hands the recordings to this page and closes by itself. Your phone must be on the same network as the logger (your hotspot). Android: use the logger&#39;s IP if <code>.local</code> doesn't work.</div>
+      </details>
       <div id="linkMsg" class="msg" role="status"></div>
       <div id="cloudLine" class="msg" role="status"></div>
       <div class="progress hidden" id="importBar"><div></div></div>
@@ -304,16 +400,21 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="libCard">
       <div class="row" style="justify-content:space-between">
-        <h2 style="margin:0">Ride library</h2>
+        <h2 style="margin:0">All rides</h2>
         <span class="muted" id="storageInfo"></span>
       </div>
       <div class="muted" style="margin:4px 0 10px">Saved in this browser on this device. Tap <b>A</b> and <b>B</b> to pick two rides to compare.</div>
+      <div class="row hidden" id="boxFilterRow" style="margin:0 0 10px;gap:8px;align-items:center">
+        <label class="f" for="boxFilter" style="margin:0">Show</label>
+        <select id="boxFilter" style="flex:1;max-width:280px"></select>
+        <span class="muted" style="font-size:13px">Picking one box also limits cloud downloads to it.</span>
+      </div>
       <ul class="list" id="rideList"></ul>
-      <label class="drop" id="drop" style="display:block;margin-top:10px">
-        <input type="file" id="fileInput" accept=".csv,text/csv" multiple class="hidden">
-        &#128193; Open CSV files from this device (or drop them here)
+      <input type="file" id="fileInput" accept=".csv,text/csv" multiple class="hidden">
+      <label class="drop" id="drop" for="fileInput" style="display:block;margin-top:10px">
+        &#128193; Open ride files (CSV) from this phone
       </label>
     </div>
   </section>
@@ -337,7 +438,7 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
     <div id="trHome">
       <div class="card">
         <div class="row" style="justify-content:space-between"><h2 style="margin:0">Segments</h2><button class="btn small" id="trNewBtn">Make one by hand</button></div>
-        <label class="row" style="gap:6px;margin-top:6px;font-size:14px"><input type="checkbox" id="trAuto" checked> Make segments automatically from descents I ride more than once</label>
+        <label class="row" style="gap:6px;margin-top:6px;font-size:14px"><input type="checkbox" id="trAuto" checked> Make segments by themselves from runs I ride more than once</label>
         <div id="trStatus" class="msg" role="status"></div>
         <div id="trList"></div>
       </div>
@@ -360,10 +461,10 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
           <label class="f" for="anRide">Ride</label>
           <select id="anRide"></select>
         </div>
-        <span class="rate-badge" id="anRate" title="Rows per second in this file">&ndash; Hz</span>
+        <span class="rate-badge" id="anRate" title="Readings per second in this file">&ndash; Hz</span>
       </div>
       <div class="row" style="margin-top:8px">
-        <div style="min-width:200px;flex:1 1 200px"><label class="f" for="anPart">Part</label><select id="anPart"><option value="desc">Descents</option><option value="whole">Whole recording</option></select></div>
+        <div style="min-width:200px;flex:1 1 200px"><label class="f" for="anPart">Which part</label><select id="anPart"><option value="desc">Downhill runs</option><option value="whole">Whole recording</option></select></div>
         <span id="trimBox" class="row hidden">
         <div style="width:130px"><label class="f" for="trimStart">Trim start (s)</label><input id="trimStart" type="number" min="0" step="0.1" value="0"></div>
         <div style="width:130px"><label class="f" for="trimEnd">Trim end (s)</label><input id="trimEnd" type="number" min="0" step="0.1" placeholder="end"></div>
@@ -371,8 +472,7 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
         <button class="btn primary" id="btnAnalyze" style="align-self:flex-end">Analyze</button>
       </div>
       <div id="anMsg" class="msg"></div>
-      <div class="muted" id="filterStatus" style="margin-top:4px"></div>
-      <details id="procLog"><summary>Processing log</summary><pre id="procLogText" class="log"></pre></details>
+      <details id="procLog"><summary>Technical details</summary><div class="muted" id="filterStatus" style="margin-top:4px"></div><pre id="procLogText" class="log"></pre></details>
     </div>
 
     <div id="anResults" class="hidden">
@@ -385,7 +485,7 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
         <nav class="subtabs" id="anTabs" role="tablist" aria-label="Analysis views">
           <button type="button" role="tab" data-sub="charts" class="on">Charts</button>
           <button type="button" role="tab" data-sub="map">Map</button>
-          <button type="button" role="tab" data-sub="imu">IMU</button>
+          <button type="button" role="tab" data-sub="imu">Motion</button>
           <button type="button" role="tab" data-sub="stats">Statistics</button>
           <button type="button" role="tab" data-sub="events">Events</button>
           <button type="button" role="tab" data-sub="balance">Balance</button>
@@ -508,14 +608,10 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
           <h3>Stroke analysis histograms</h3>
           <div class="muted">How individual strokes are spread: how deep they go and how fast they move.</div>
           <div class="grid2c">
-            <div><h4>Front compression &ndash; stroke depth</h4><div id="hFCD" class="chart mini"></div></div>
-            <div><h4>Front compression &ndash; max velocity</h4><div id="hFCV" class="chart mini"></div></div>
-            <div><h4>Front rebound &ndash; stroke depth</h4><div id="hFRD" class="chart mini"></div></div>
-            <div><h4>Front rebound &ndash; max velocity</h4><div id="hFRV" class="chart mini"></div></div>
-            <div><h4>Rear compression &ndash; stroke depth</h4><div id="hRCD" class="chart mini"></div></div>
-            <div><h4>Rear compression &ndash; max velocity</h4><div id="hRCV" class="chart mini"></div></div>
-            <div><h4>Rear rebound &ndash; stroke depth</h4><div id="hRRD" class="chart mini"></div></div>
-            <div><h4>Rear rebound &ndash; max velocity</h4><div id="hRRV" class="chart mini"></div></div>
+            <div><h4>Compression &ndash; stroke depth</h4><div id="hCD" class="chart mini"></div></div>
+            <div><h4>Compression &ndash; max velocity</h4><div id="hCV" class="chart mini"></div></div>
+            <div><h4>Rebound &ndash; stroke depth</h4><div id="hRD" class="chart mini"></div></div>
+            <div><h4>Rebound &ndash; max velocity</h4><div id="hRV" class="chart mini"></div></div>
           </div>
         </div>
       </div>
@@ -538,15 +634,18 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
         <div><label class="f" for="cmpA"><span class="tag a">A</span> Reference ride</label><select id="cmpA"></select></div>
         <div><label class="f" for="cmpB"><span class="tag b">B</span> Comparison ride</label><select id="cmpB"></select></div>
       </div>
-      <h3>Line up B with A</h3>
+      <div class="row" style="margin-top:12px"><button class="btn primary wide1" id="btnCompare" type="button">Compare these rides</button></div>
+      <div id="cmpMsg" class="msg" role="status"></div>
+      <details id="cmpOpts" style="margin-top:4px"><summary>Line-up options</summary>
+        <div class="muted" style="margin-bottom:6px">To compare, the two rides are lined up so the same spot on the trail matches in both. Automatic works for most rides.</div>
       <div class="row">
-        <div style="width:210px"><label class="f" for="alignMode">Rough alignment</label>
+        <div class="alignpick"><label class="f" for="alignMode">Line up by</label>
           <select id="alignMode">
-            <option value="gps">GPS track (recommended; uses the sensors when there is no GPS)</option>
-            <option value="pots">Sensors only (travel + IMU, no GPS)</option>
-            <option value="manual">Manual offset</option>
-            <option value="path">Mapping file (time pairs or warp path)</option>
-            <option value="none">Start of file</option>
+            <option value="gps">Automatic (GPS, or sensors if no GPS)</option>
+            <option value="pots">Sensors only (ignore GPS)</option>
+            <option value="manual">By hand: shift ride B</option>
+            <option value="path">From a mapping file</option>
+            <option value="none">Starts of the files</option>
           </select></div>
         <div id="offBox" class="hidden" style="width:150px"><label class="f" for="offset">B offset (s)</label><input id="offset" type="number" step="0.05" value="0"></div>
         <div id="dtwBox" class="hidden row">
@@ -554,10 +653,9 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
           <div style="width:170px"><label class="f" for="dtwRate">Index rate (Hz, index pairs only)</label><input id="dtwRate" type="number" min="1" step="1" placeholder="250"></div>
           <div class="muted" style="flex-basis:100%">A file with a <code>time1,time2</code> header (or decimal numbers) is read as seconds in ride A and ride B; whole-number pairs are sample indices at the index rate.</div>
         </div>
-        <label class="row" style="gap:6px;align-self:flex-end;min-height:42px"><input type="checkbox" id="alignRefine" checked> Refine with pots + IMU</label>
-        <button class="btn primary" id="btnCompare" style="align-self:flex-end">Compare</button>
+        <label class="row" style="gap:6px;align-self:flex-end;min-height:42px"><input type="checkbox" id="alignRefine" checked> Fine-tune with the suspension and motion sensors</label>
       </div>
-      <details style="margin-top:8px"><summary>Alignment settings</summary>
+      <details style="margin-top:8px"><summary>Expert settings</summary>
         <div class="grid3">
           <div><label class="f" for="p_alignBand">Sensor search window, max (&plusmn; s)</label><input id="p_alignBand" type="number" min="0.5" max="20" step="0.1"></div>
           <div><label class="f" for="p_alignRate">Fine alignment rate (Hz)</label><input id="p_alignRate" type="number" min="10" max="250" step="5"></div>
@@ -568,13 +666,17 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
         </div>
         <div class="muted" style="margin-top:6px">GPS matches the two tracks by position and heading (resampled every 2&nbsp;m) and trims both rides to the section they share; every point gets a timing uncertainty from the GPS drift, speed and gaps between fixes. The pots and IMU then fine-tune the timing in two passes (10&nbsp;Hz inside that uncertainty, then the fine rate within &plusmn;0.35&nbsp;s), with the warp speed limited to 0.5&ndash;2&times; so it can&#39;t jitter on noise. The search window caps how far the sensors may move the timing from GPS. GPS drift: about 3.5&nbsp;m for a 1&nbsp;Hz receiver; lower it for a 10&nbsp;Hz or RTK unit.</div>
       </details>
-      <div class="muted" id="alignInfo" style="margin-top:6px"></div>
-      <div id="cmpMsg" class="msg"></div>
+      </details>
+      <details class="help"><summary>How lining up works</summary>
+        <div class="muted">No two runs take exactly the same time, so the analyzer matches them up point by point. First it uses GPS (where you were on the trail). Then it fine-tunes with the suspension sensors and the motion sensors (IMU) in the logger box, which feel the same bumps in both rides. This stretching of one ride's clock to fit the other is called <i>time warping</i>. Every comparison is checked a second, independent way; if the rides can&#39;t be matched reliably, you&#39;re told instead of shown made-up numbers.</div>
+        <div class="muted" id="alignInfo" style="margin-top:6px"></div>
+      </details>
     </div>
 
     <div id="cmpResults" class="hidden">
-      <div id="cmpNotes" class="banner hidden"></div>
-      <div class="card"><div class="tiles" id="cmpTiles"></div></div>
+      <div class="card"><div id="cmpHead" class="headline"></div><div class="tiles" id="cmpTiles"></div>
+        <details id="cmpSure"><summary>How sure is this?</summary><div class="tiles" id="cmpTiles2" style="margin-top:6px"></div></details>
+        <div id="cmpNotes" class="notes hidden"></div></div>
       <div class="card tabcard">
         <nav class="subtabs" id="cmpTabs" role="tablist" aria-label="Comparison views">
           <button type="button" role="tab" data-csub="speed" class="on">Speed</button>
@@ -728,7 +830,7 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
           <h3>Paired hits</h3>
           <div class="muted" style="margin-bottom:6px">Tap a row to see that hit in both rides.</div>
           <div class="tbl scroll"><table id="cmpHits" class="clickable"></table></div>
-          <div class="grid2" style="grid-template-columns:1fr 1fr;margin-top:10px">
+          <div class="grid2c" style="margin-top:10px">
             <div><h3 id="hitTitle">Position</h3><div id="chHitP" class="chart short"></div></div>
             <div><h3>Velocity</h3><div id="chHitV" class="chart short"></div></div>
           </div>
@@ -749,7 +851,7 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
           <h3>Sensor cross-check</h3>
           <div class="tbl"><table id="cmpChannels"></table></div>
           <div class="muted" style="margin:6px 0 4px"><b>r</b> = how well each sensor matches between the rides (5&nbsp;s windows, busiest half). <b>Held out</b> = that sensor&#39;s match when the timing comes only from the <i>other</i> sensor group, so it had no say: a big rise from the rough map means the alignment is real, not fitted to noise. Weight 0 = the sensor didn&#39;t match and was left out.</div>
-          <div class="grid2" style="grid-template-columns:1fr 1fr">
+          <div class="grid2c">
             <div id="trackBox"><h3>GPS tracks</h3><div id="chTrack" class="chart short"></div></div>
             <div><h3>B time &minus; A time</h3><div id="chOffset" class="chart short"></div></div>
           </div>
@@ -780,7 +882,7 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
 
         <div class="card">
           <h2>Travel histograms</h2>
-          <div class="grid2" style="grid-template-columns:1fr 1fr">
+          <div class="grid2c">
             <div><h3>Front</h3><div id="chCmpHF" class="chart short"></div></div>
             <div><h3>Rear</h3><div id="chCmpHR" class="chart short"></div></div>
           </div>
@@ -794,7 +896,8 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
     <div class="card">
       <h2>Cloud &amp; notifications</h2>
       <div class="muted" id="offlineState" style="margin-bottom:6px"></div>
-      <div class="muted" style="margin-bottom:8px">Your logger (firmware 4.4+) uploads each ride to your own Cloudflare Worker after Stop, over your hotspot. With this set, new rides come in by themselves when this page opens, from anywhere, without a logger tab. Setup steps: FIRMWARE_SUMMARY.md, section 13.</div>
+      <div class="muted" style="margin-bottom:8px">Your logger uploads each ride over your hotspot when you stop recording. With this set, new rides show up here by themselves.</div>
+      <details class="help"><summary>Using your own cloud</summary><div class="muted">The rides go to a Cloudflare Worker (logger firmware 4.4 or newer). To use your own, enter its address and read key below. Setup steps: FIRMWARE_SUMMARY.md, section 13.</div></details>
       <div class="grid3">
         <div style="grid-column:span 2"><label class="f" for="cloudUrl">Worker address</label><input id="cloudUrl" type="url" inputmode="url" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="https://suspension-logger.NAME.workers.dev"></div>
         <div><label class="f" for="cloudKey">Read key</label><input id="cloudKey" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off"></div>
@@ -823,14 +926,19 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
       </div>
       <h3>Sensors</h3>
       <div class="grid2">
-        <div><label class="f" for="p_frontPotStroke">Front pot stroke (mm)</label><input id="p_frontPotStroke" type="number" min="1"></div>
-        <div><label class="f" for="p_rearPotStroke">Rear pot stroke (mm)</label><input id="p_rearPotStroke" type="number" min="1"></div>
+        <div><label class="f" for="p_frontPotStroke">Front sensor length (mm)</label><input id="p_frontPotStroke" type="number" min="1"></div>
+        <div><label class="f" for="p_rearPotStroke">Rear sensor length (mm)</label><input id="p_rearPotStroke" type="number" min="1"></div>
       </div>
       <div class="row" style="margin-top:8px">
-        <label class="row" style="gap:6px"><input type="checkbox" id="p_invertFront"> Invert front</label>
-        <label class="row" style="gap:6px"><input type="checkbox" id="p_invertRear"> Invert rear</label>
+        <label class="row" style="gap:6px"><input type="checkbox" id="p_invertFront"> Flip front sensor direction</label>
+        <label class="row" style="gap:6px"><input type="checkbox" id="p_invertRear"> Flip rear sensor direction</label>
       </div>
-      <h3>Data filtering</h3>
+      <div class="grid2" style="margin-top:8px">
+        <div><label class="f" for="p_frontPot">Front sensor</label><select id="p_frontPot"><option value="auto">Auto-detect</option><option value="on">Connected</option><option value="off">Not connected</option></select></div>
+        <div><label class="f" for="p_rearPot">Rear sensor</label><select id="p_rearPot"><option value="auto">Auto-detect</option><option value="on">Connected</option><option value="off">Not connected</option></select></div>
+      </div>
+      <p class="muted" style="margin:4px 0 0">A travel sensor (potentiometer, or &ldquo;pot&rdquo;) that isn&#39;t plugged in is left out of the numbers, the ride report and lining up rides. Auto-detect spots an unplugged one.</p>
+      <details style="margin-top:10px"><summary>Smoothing</summary>
       <div class="filterbox">
         <div class="grid3">
           <div><label class="f" for="p_filterType">Filter type</label>
@@ -845,7 +953,9 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
         </div>
         <div class="muted" id="filterHelp" style="margin-top:6px"></div>
       </div>
-      <h3>Rear linkage: shock &rarr; wheel (wheel = a + b&middot;s + c&middot;s&sup2; + d&middot;s&sup3;)</h3>
+      </details>
+      <details><summary>Rear linkage (shock to wheel)</summary>
+      <div class="muted">wheel = a + b&middot;s + c&middot;s&sup2; + d&middot;s&sup3;, where s is shock travel. Easiest: fit it from a linkage file below.</div>
       <div class="grid2">
         <div><label class="f" for="p_rearA">a</label><input id="p_rearA" type="number" step="any"></div>
         <div><label class="f" for="p_rearB">b</label><input id="p_rearB" type="number" step="any"></div>
@@ -857,6 +967,7 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
         &#128202; Fit a, b, c, d from a linkage CSV (shock mm, wheel mm)
       </label>
       <div id="linkageMsg" class="msg"></div>
+      </details>
 
       <details style="margin-top:10px"><summary>Filtering &amp; velocity</summary>
         <div class="grid3">
@@ -910,42 +1021,47 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
       </div>
     </div>
     <div class="card">
-      <h2>About the numbers</h2>
+      <details id="aboutNums"><summary>How the numbers are worked out</summary>
       <div class="muted">Sample rate is read from each file&#39;s time column (logger files: 1000&nbsp;Hz sampled, 4 averaged &rarr; 250 rows/s). Velocity uses a Savitzky-Golay derivative computed for the chosen window and order. Positive velocity is compression everywhere. Results differ from the old SD-card analyzer, whose velocities were about 12&times; too high (it assumed 1000&nbsp;Hz and its filter weights summed to 3.14 instead of 1).</div>
       <div class="muted" style="margin-top:8px"><b>Compare</b> lines the rides up in two stages: GPS first (tracks matched by position and heading), then the pots and frame/bar IMU together (coarse-to-fine DTW with a limited warp speed). The pots-only and IMU-only alignments are also run separately as a cross-check. <b>Speed difference</b> is the slope of the time gap: the gap is fused from the sensor timing (where trusted) and GPS, smoothed, and differentiated; its band comes from 100 simulated re-runs with each input&#39;s own noise, widened so it holds for the whole run at once. Frame and bar IMU readings are converted to g (logger files are already in g; older files in m/s&sup2; are detected).</div>
       <div class="muted" style="margin-top:8px"><b>Compare map</b>: the trail (from A&#39;s GPS, or B&#39;s carried over through the alignment) is coloured by the speed curve on the Speed tab, as the faster rider&#39;s lead in % (blue A, orange B, grey even). The colour scale is fixed per comparison at the 95th percentile of that difference while both riders are moving and the sensors are trusted, rounded up to 3, 5, 8, 10, 15, 20, 25 or 30%; stops (where the alignment has one rider at least 4&times; slower for 3&nbsp;s or more: one clock runs on while the other covers the same ground) are taken out of the comparison, drawn dark grey and left out of the scale, and anything beyond the scale is drawn at full colour and ringed. The two dots start the section together and move by the alignment&#39;s time gap (stops included), so a rider who stopped waits there. Everything in the comparison comes from the alignment; the GPS only places the trail on the map.</div>
       <div class="muted" style="margin-top:8px"><b>Without GPS</b> the rough alignment comes from the sensors themselves: front and rear travel and the frame and bar IMU are matched by shape (not size, so a different spring, shock or sag still matches) over the whole ride, then in 8&nbsp;s windows, and the windows are chained into one timeline. Only stretches where both riders are moving are matched, so waiting at the start doesn&#39;t count. <b>Independent check</b>: every comparison re-measures the timing a second way, by plain cross-correlation in 4&nbsp;s windows with no DTW, and says whether the bumps in the speed curve are real. On two real runs with different shocks (2000&nbsp;Hz, no GPS) the result agreed with it to about 25&ndash;30&nbsp;ms where trusted, and the speed to about &plusmn;1.5% over 5&nbsp;s. <b>Sample rate</b>: settings counted in rows mean rows at 250 a second and are scaled for files at other rates, so they always cover the same time.</div>
+      </details>
     </div>
   </section>
 </main>
 
 <script>
-// Served by the logger (http://datalogger.local/analyzer): the copy on its SD card
-// first, so charts work on the logger's own Wi-Fi with no internet. Then the CDNs.
-if (location.protocol === 'http:') document.write('<script src="plotly-2.27.0.min.js" charset="utf-8"><\/script>');
-</script>
-<script>
-if (!window.Plotly) document.write('<script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"><\/script>');
-</script>
-<script>
-if (!window.Plotly) document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.27.0/plotly.min.js" charset="utf-8"><\/script>');
-</script>
-<script>
-/* No charting library (offline?): a stand-in so everything except the charts still works */
-if (!window.Plotly) (function () {
-  var note = function (div) {
-    div = typeof div === 'string' ? document.getElementById(div) : div;
-    if (div) {
-      if (!div.on) div.on = function () {};
-      div.innerHTML = '<div style="padding:40px 10px;text-align:center;color:var(--muted)">Chart unavailable - the charting library could not load (no internet?).</div>';
-    }
-    return Promise.resolve(div);
-  };
-  window.Plotly = { react: note, newPlot: note, relayout: function () { return Promise.resolve(); }, restyle: function () { return Promise.resolve(); }, purge: function () {}, Plots: { resize: function () {} } };
-  document.addEventListener('DOMContentLoaded', function () {
+// The charting library (3.5 MB) loads in the background so the ride report shows
+// at once; charts wait for window.plotlyReady. Served by the logger
+// (http://datalogger.local/analyzer): the copy on its SD card first, so charts work
+// on the logger's own Wi-Fi with no internet. Then the CDNs.
+window.plotlyReady = new Promise(function (done) {
+  var srcs = [];
+  if (location.protocol === 'http:') srcs.push('plotly-2.27.0.min.js');
+  srcs.push('https://cdn.plot.ly/plotly-2.27.0.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.27.0/plotly.min.js');
+  function stub() {
+    /* No charting library (offline?): a stand-in so everything except the charts still works */
+    var note = function (div) {
+      div = typeof div === 'string' ? document.getElementById(div) : div;
+      if (div) {
+        if (!div.on) div.on = function () {};
+        div.innerHTML = '<div style="padding:40px 10px;text-align:center;color:var(--muted)">Chart unavailable - the charting library could not load (no internet?).</div>';
+      }
+      return Promise.resolve(div);
+    };
+    window.Plotly = { react: note, newPlot: note, relayout: function () { return Promise.resolve(); }, restyle: function () { return Promise.resolve(); }, purge: function () {}, Plots: { resize: function () {} } };
     var b = document.getElementById('noCharts'); if (b) b.classList.remove('hidden');
-  });
-})();
+  }
+  (function next(i) {
+    if (window.Plotly) return done(true);
+    if (i >= srcs.length) { stub(); return done(false); }
+    var s = document.createElement('script'); s.src = srcs[i]; s.charset = 'utf-8'; s.async = true;
+    s.onload = function () { if (window.Plotly) done(true); else next(i + 1); };
+    s.onerror = function () { next(i + 1); };
+    document.head.appendChild(s);
+  })(0);
+});
 </script>
 <script>
 /* ---- analysis.js ---- */
@@ -1123,6 +1239,34 @@ if (!window.Plotly) (function () {
   }
   // Robust "top-out" level (from the original analyzer): 2nd percentile, or
   // the 5th when the lowest 5% are spread out (noisy dips)
+  // Full extension ("top-out", 0 mm) of one sensor, from the ride itself.
+  // Riders sit in sag most of the time, so the old rule (2nd/5th percentile)
+  // landed between top-out and sag whenever full extension was rare, and cut
+  // real extension off as negative travel. Now: the 0.5th percentile of the
+  // cleaned (median-filtered) position - about 0.6 s of a 2 min ride at the
+  // most extended - plus checks that tell the rider when no zero from the ride
+  // can be right:
+  //   rail     the sensor reads its end-stop (ADC 0/4095) at full extension:
+  //            the real top-out is past what it can measure
+  //   reversed most of the spread is below the typical position: the sensor
+  //            direction looks flipped (zero then sits at bottom-out)
+  // pos: cleaned position (mm, not yet zeroed); adc: raw ADC after the invert
+  // setting (0 = top-out end), or null
+  function topOutZero(pos, adc, name) {
+    const n = pos.length, out = { zero: 0, how: 'none', warn: [] };
+    if (n < 50) { out.zero = n ? Math.min(...pos) : 0; return out; }
+    const v = Float64Array.from(pos).sort(), q = f => v[Math.min(n - 1, Math.max(0, Math.floor(f * (n - 1))))];
+    out.zero = q(0.005); out.how = '0.5th percentile';
+    const med = q(0.5), lo = med - q(0.01), hi = q(0.99) - med;
+    if (adc) {
+      let top = 0, bot = 0; for (let i = 0; i < adc.length; i++) { if (adc[i] <= 2) top++; else if (adc[i] >= 4093) bot++; }
+      const fTop = top / adc.length, fBot = bot / adc.length;
+      if (fTop >= 0.02) { out.how = 'sensor end-stop'; out.warn.push(name + ' sensor hits its end-stop at full extension (' + Math.round(fTop * 100) + '% of the ride), so full extension is past what it can read: zero and sag are approximate. Move the sensor so it has room at full extension.'); }
+      if (fBot >= 0.02) out.warn.push(name + ' sensor hits its end-stop when compressed (' + Math.round(fBot * 100) + '% of the ride): deep travel is cut off. Check the sensor length setting and mount.');
+    }
+    if (lo > 15 && hi < 0.6 * lo) out.warn.push(name + ' sensor direction looks reversed (the readings spread mostly below the typical position), so zero may be at bottom-out instead of full extension. Try "Flip ' + name.toLowerCase() + ' sensor direction" in Settings.');
+    return out;
+  }
   function robustBaseline(arr) {
     const n = arr.length; if (!n) return 0;
     const v = Float64Array.from(arr).sort();
@@ -1408,6 +1552,8 @@ if (!window.Plotly) (function () {
     frontPotStroke: 225, rearPotStroke: 85,
     rearA: 0, rearB: 2.8574, rearC: 0, rearD: 0,
     trimStart: 0, trimEnd: Infinity, invertFront: false, invertRear: false,
+    // Pot connected? 'auto' spots an unplugged one (it only picks up the other pot's signal)
+    frontPot: 'auto', rearPot: 'auto',
     medianFilterSize: 5, maxPosChange: 15, velocityWindow: 21, velocityOrder: 3,
     // Data filtering (as in the original analyzer)
     filterType: 'savgol', positionFilterWindow: 5, velocityFilterWindow: 11, autoZero: true, showRawData: false, autoReprocess: true,
@@ -1428,6 +1574,30 @@ if (!window.Plotly) (function () {
     pairTolerance: 0.25, pairMinCorr: 0.5, alpha: 0.05, jerkCutoff: 20, phaseThreshold: 50
   };
 
+  // Is each pot connected? Set by hand ('on' / 'off') or, on 'auto', judged
+  // from the raw ADC: an unplugged input floats and mostly copies the other
+  // pot (crosstalk), so it moves over a small range in step with it.
+  function potsConnected(parsed, a, b, p) {
+    const out = { front: p.frontPot !== 'off', rear: p.rearPot !== 'off', why: {} };
+    if (!out.front) out.why.front = 'set to not connected'; if (!out.rear) out.why.rear = 'set to not connected';
+    const n = b - a; if (n < 50) return out;
+    const step = Math.max(1, Math.floor(n / 20000)), F = [], R = [];
+    for (let i = a; i < b; i += step) { const f = parsed.front[i], r = parsed.rear[i]; if (isFinite(f) && isFinite(r)) { F.push(f); R.push(r); } }
+    if (F.length < 50) return out;
+    const span = x => { const v = x.slice().sort((u, w) => u - w); return v[Math.floor(0.95 * (v.length - 1))] - v[Math.floor(0.05 * (v.length - 1))]; };
+    let sx = 0, sy = 0, sxx = 0, syy = 0, sxy = 0; const m = F.length - 1;
+    for (let i = 0; i < m; i++) { const u = F[i + 1] - F[i], v = R[i + 1] - R[i]; sx += u; sy += v; sxx += u * u; syy += v * v; sxy += u * v; }
+    const vx = sxx - sx * sx / m, vy = syy - sy * sy / m, dc = vx > 0 && vy > 0 ? (sxy - sx * sy / m) / Math.sqrt(vx * vy) : 0;
+    const sF = span(F), sR = span(R);
+    const judge = (k, me, other) => {
+      if (p[k + 'Pot'] !== 'auto' && p[k + 'Pot'] != null) return;
+      if (me < 60) { out[k] = false; out.why[k] = 'looks unplugged (barely moves: ' + Math.round(me) + ' ADC counts)'; }
+      else if (me < 400 && me < 0.25 * other && Math.abs(dc) > 0.4) { out[k] = false; out.why[k] = 'looks unplugged (small range, ' + Math.round(me) + ' ADC counts, moving in step with the other pot: r ' + dc.toFixed(2) + ')'; }
+    };
+    judge('front', sF, sR); judge('rear', sR, sF);
+    return out;
+  }
+
   function analyze(parsed, params) {
     let p = Object.assign({}, DEFAULTS, params || {});
     const detected = detectRate(parsed.time);
@@ -1440,6 +1610,8 @@ if (!window.Plotly) (function () {
     while (b > a && parsed.time[b - 1] - t0 > end) b--;
     const n = b - a;
     const time = new Float64Array(n), fr = new Float64Array(n), rr = new Float64Array(n);
+    const fAdc = new Uint16Array(n), rAdc = new Uint16Array(n);      // after the invert setting: 0 = top-out end
+    const potOn = potsConnected(parsed, a, b, p);
     let fa0 = Infinity, fa1 = -Infinity, ra0 = Infinity, ra1 = -Infinity;
     for (let i = 0; i < n; i++) {
       time[i] = parsed.time[a + i] - t0;
@@ -1448,6 +1620,7 @@ if (!window.Plotly) (function () {
       // invert the pot reading before the linkage (a pot mounted the other way round)
       if (p.invertFront) fa = 4095 - fa;
       if (p.invertRear) ra = 4095 - ra;
+      fAdc[i] = fa; rAdc[i] = ra;
       fr[i] = toMM(fa, 'front', p); rr[i] = toMM(ra, 'rear', p);
     }
     // Row-based settings are "rows at 250 rows/s" (the logger's rate), so they
@@ -1462,11 +1635,18 @@ if (!window.Plotly) (function () {
     const smooth = x => type === 'none' || pw < 3 ? x : type === 'moving_average' ? movingAverage(x, pw) : sgSmooth(x, pw, 3);
     // median (spikes) → max change per row → smoothing, each gap-free segment on its own
     const clean = x => perSegment(x, segs, y => smooth(limitChange(medianFilter(y, p.medianFilterSize), p.maxPosChange)));
+    // an unplugged pot reads noise and the other pot's signal: treat it as flat
+    if (!potOn.front) fr.fill(0); if (!potOn.rear) rr.fill(0);
     const front = clean(fr), rear = clean(rr);
     // zero = the robust top-out level, so 0 mm is full extension
     // a part of a ride (a run, descents) uses the zero of the whole recording when it is given (fixedZero)
     const fz = p.fixedZero && isFinite(p.fixedZero.front) && isFinite(p.fixedZero.rear) ? p.fixedZero : null;
-    const zero = fz ? { front: fz.front, rear: fz.rear } : { front: p.autoZero ? robustBaseline(front) : 0, rear: p.autoZero ? robustBaseline(rear) : 0 };
+    const zf = potOn.front ? topOutZero(front, fAdc, 'Front') : { zero: 0, how: 'not connected', warn: [] };
+    const zr = potOn.rear ? topOutZero(rear, rAdc, 'Rear') : { zero: 0, how: 'not connected', warn: [] };
+    const zero = fz ? { front: fz.front, rear: fz.rear } : { front: p.autoZero ? zf.zero : 0, rear: p.autoZero ? zr.zero : 0 };
+    // the checks run on this part even when the zero comes from the whole recording
+    zero.warn = fz && fz.warn ? fz.warn.slice() : zf.warn.concat(zr.warn);
+    zero.how = { front: fz ? 'whole recording' : p.autoZero ? zf.how : 'off', rear: fz ? 'whole recording' : p.autoZero ? zr.how : 'off' };
     for (let i = 0; i < n; i++) { front[i] -= zero.front; rear[i] -= zero.rear; fr[i] -= zero.front; rr[i] -= zero.rear; }
     const vel = x => type === 'savgol' ? perSegment(x, segs, y => sgDerivative(y, rate, p.velocityWindow, p.velocityOrder))
                                        : diffVelocity(x, time, gapT, p.velocityFilterWindow, type);
@@ -1482,9 +1662,11 @@ if (!window.Plotly) (function () {
       'Time gaps > ' + f0(gapT * 1000) + ' ms: ' + (segs.length - 1) + (segs.length > 1 ? ' (filters do not smooth across them)' : ''),
       (Math.abs(k - 1) > 0.01 ? 'Row settings scaled ×' + k.toFixed(2) + ' for ' + f0(rate) + ' rows/s: median ' + p.medianFilterSize + ', position ' + p.positionFilterWindow + ', velocity ' + p.velocityWindow + ' / ' + p.velocityFilterWindow + ' rows, max change ' + p.maxPosChange.toFixed(2) + ' mm/row, min stroke ' + p.minStrokeSamples + ' rows' : 'Row settings used as set (file is 250 rows/s)'),
       'Front ADC ' + fa0 + '–' + fa1 + ' → ' + f1((fa1 - fa0) / 4095 * p.frontPotStroke) + ' of ' + p.frontPotStroke + ' mm pot stroke used',
+      ...['front', 'rear'].filter(k => !potOn[k]).map(k => (k === 'front' ? 'Front' : 'Rear') + ' pot: ' + (potOn.why[k] || 'not connected') + ' — ignored'),
       'Rear ADC ' + ra0 + '–' + ra1 + ' → ' + f1((ra1 - ra0) / 4095 * p.rearPotStroke) + ' of ' + p.rearPotStroke + ' mm pot stroke used',
       'Position: median ' + p.medianFilterSize + ', max ' + p.maxPosChange + ' mm/row, ' + (type === 'none' || pw < 3 ? 'no smoothing' : (type === 'savgol' ? 'Savitzky-Golay' : 'moving average') + ' ' + pw + ' rows'),
-      'Zero (top-out): ' + (fz ? 'from the whole recording: front ' + f1(zero.front) + ' mm, rear ' + f1(zero.rear) + ' mm' : p.autoZero ? 'front ' + f1(zero.front) + ' mm, rear ' + f1(zero.rear) + ' mm subtracted' : 'off'),
+      'Zero (top-out): ' + (fz ? 'from the whole recording: front ' + f1(zero.front) + ' mm, rear ' + f1(zero.rear) + ' mm' : p.autoZero ? 'front ' + f1(zero.front) + ' mm, rear ' + f1(zero.rear) + ' mm subtracted' : 'off') + (p.autoZero && !fz ? ' (' + zero.how.front + ' / ' + zero.how.rear + ')' : ''),
+      ...zero.warn.map(w => 'Zero check: ' + w),
       'Velocity: ' + (type === 'savgol' ? 'Savitzky-Golay derivative, ' + p.velocityWindow + ' rows, order ' + p.velocityOrder : type === 'moving_average' ? 'difference → median → ±5000 clamp → moving average ' + p.velocityFilterWindow + ' rows' : 'raw difference, ±5000 clamp'),
       'Velocity range: front ' + f0(fv[0]) + ' to ' + f0(fv[1]) + ' mm/s, rear ' + f0(rv[0]) + ' to ' + f0(rv[1]) + ' mm/s',
       'Strokes: front ' + strokes.front.compression.length + ' compression / ' + strokes.front.rebound.length + ' rebound, rear ' + strokes.rear.compression.length + ' / ' + strokes.rear.rebound.length
@@ -1494,9 +1676,10 @@ if (!window.Plotly) (function () {
     const events = { front: detectPacking(impacts.front, p, p.frontTravel), rear: detectPacking(impacts.rear, p, p.rearTravel) };
     const runTime = n > 1 ? time[n - 1] - time[0] : 0;
     const fi = packingIndex(impacts.front, events.front, runTime), ri = packingIndex(impacts.rear, events.rear, runTime);
-    const combined = Math.round((fi + ri) / 2);
+    const combined = potOn.front && potOn.rear ? Math.round((fi + ri) / 2) : potOn.rear ? ri : fi;
     return {
       params: p0, effective: scaled, rate, detectedRate: detected, rows: n, runTime,
+      potOn: { front: potOn.front, rear: potOn.rear }, potWhy: potOn.why,
       time, front, rear, frontVel, rearVel, frontRaw: fr, rearRaw: rr, zero, rowOffset: a, gaps: segs.length - 1, strokes, log, impacts, events,
       packingIndex: combined, frontPackingIndex: fi, rearPackingIndex: ri, rating: rating(combined),
       packedSeconds: packedSeconds(events),
@@ -1567,7 +1750,7 @@ if (!window.Plotly) (function () {
   const SA = { parseCSV, detectRate, medianFilter, limitChange, sgCoeffs, sgDerivative, sgSmooth, movingAverage, diffVelocity, robustBaseline,
                detectStrokes, strokeStats, wheelToShock, linkageRatio, toMM, detectImpacts,
                detectPacking, packingIndex, rating, posStats, velStats, travelHistogram, analyze, DEFAULTS,
-               autoOffset, parseWarpPath, warpTimes, packedSeconds };
+               autoOffset, parseWarpPath, warpTimes, packedSeconds, potsConnected };
   if (typeof module !== 'undefined' && module.exports) module.exports = SA;
   else root.SA = SA;
 })(typeof window !== 'undefined' ? window : this);
@@ -1635,6 +1818,8 @@ if (!window.Plotly) (function () {
     return interp(xs, ys, x);
   }
   const mapAtoB = (m, t) => interp(m.a, m.b, t);
+  // a pot that is unplugged in either ride takes no part in matching
+  const potUsed = (A, B, k) => !(A.potOn && A.potOn[k] === false) && !(B.potOn && B.potOn[k] === false);
   const mapBtoA = (m, t) => interp(m.b, m.a, t);
   function lowerIndex(t, x) { let lo = 0, hi = t.length; while (lo < hi) { const m = (lo + hi) >> 1; if (t[m] < x) lo = m + 1; else hi = m; } return lo; }
   function sampleAt(arr, j) {
@@ -2156,7 +2341,8 @@ if (!window.Plotly) (function () {
     const nA = Math.floor(endA * fs) + 1, nB = Math.floor(endB * fs) + 1;
     const fa = envelope(A, A.frontVel, fs, nA), ra = envelope(A, A.rearVel, fs, nA);
     const fb = envelope(B, B.frontVel, fs, nB), rb = envelope(B, B.rearVel, fs, nB);
-    const cost = (i, j) => { const d0 = fa[i] - fb[j], d1 = ra[i] - rb[j]; return d0 * d0 + d1 * d1; };
+    const uf = potUsed(A, B, 'front') ? 1 : 0, ur = potUsed(A, B, 'rear') ? 1 : 0;
+    const cost = (i, j) => { const d0 = fa[i] - fb[j], d1 = ra[i] - rb[j]; return uf * d0 * d0 + ur * d1 * d1; };
     // The bonus credited per matched step must beat what a match costs on
     // these rides: two different setups never match closely, so a fixed bonus
     // made every match "not worth it" and the path shrank to nothing. Use a
@@ -2238,7 +2424,7 @@ if (!window.Plotly) (function () {
   function sensorCoarse(A, B, p) {
     const fs = 10, W = 8 * fs, H = 2 * fs, thr = 0.3, kappa = 0.6;
     const FA = shapeChannels(A, fs, 2, p.alignUseImu !== false), FB = shapeChannels(B, fs, 2, p.alignUseImu !== false);
-    const keys = Object.keys(FA.ch).filter(k => FB.ch[k]);
+    const keys = Object.keys(FA.ch).filter(k => FB.ch[k] && (k.startsWith('imu_') || potUsed(A, B, k)));
     const minOv = Math.round(Math.min(30 * fs, 0.4 * Math.min(FA.n, FB.n)));
     const gl0 = -FA.n + minOv, gs = [];
     for (let L = gl0; L <= FB.n - minOv; L++) { const c = shapeCorr(FA, FB, keys, 0, FA.n, L); gs.push(c.n >= minOv ? c.r : NaN); }
@@ -2290,7 +2476,14 @@ if (!window.Plotly) (function () {
     const s = Float64Array.from(ss);
     return { ok: true, map: { a: Float64Array.from(a), b: Float64Array.from(b) },
              sigma: { t: Float64Array.from(st), s, slow: s.map(v => 0.7 * v), fast: s.map(v => 0.7 * v) },
-             keys, globalLag: best.global, windows: ch.length, meanR: ch.reduce((x, q) => x + q.r, 0) / ch.length };
+             keys, globalLag: best.global, windows: ch.length, score: best.score, chain: ch, meanR: ch.reduce((x, q) => x + q.r, 0) / ch.length };
+  }
+  // The ride played backwards: same sensors, same bumps, no shared timing
+  function reversedRide(R) {
+    const n = R.time.length, T = R.time[n - 1], rv = x => { const o = new Float64Array(n); for (let i = 0; i < n; i++) o[i] = x[n - 1 - i]; return o; };
+    const o = Object.assign({}, R, { time: Float64Array.from(R.time, (_, i) => T - R.time[n - 1 - i]), front: rv(R.front), rear: rv(R.rear), frontVel: rv(R.frontVel), rearVel: rv(R.rearVel) });
+    if (R.imu) { o.imu = {}; for (const k of Object.keys(R.imu)) if (R.imu[k] && R.imu[k].acc) o.imu[k] = Object.assign({}, R.imu[k], { acc: rv(R.imu[k].acc) }); }
+    return o;
   }
   function constantMap(A, B, offset) {             // B time = A time - offset
     const endA = A.time[A.time.length - 1], endB = B.time[B.time.length - 1];
@@ -2316,7 +2509,22 @@ if (!window.Plotly) (function () {
       else { out.notes.push(g.reason + ' Used the sensors (travel and IMU) for the rough alignment instead.'); mode = 'pots'; }
     }
     if (mode === 'pots') {
+      const nm = k => ({ front: 'front pot', rear: 'rear pot', imu_frame: 'frame IMU', imu_bar: 'bar IMU' })[k];
+      const off = ['front', 'rear'].filter(k => (A.potOn && !A.potOn[k]) || (B.potOn && !B.potOn[k]));
+      if (off.length) out.notes.push('The ' + off.join(' and ') + ' pot is not connected in ' + (off.every(k => A.potOn && !A.potOn[k] && B.potOn && !B.potOn[k]) ? 'either ride' : 'one of the rides') + ', so it was left out of the alignment.');
       const sc = sensorCoarse(A, B, p);
+      // Is the match real? The same search against ride B played backwards
+      // shows what chance alone scores on these sensors. Two runs of the same
+      // trail score many times that; unrelated riding does not.
+      let nul = null; try { nul = sensorCoarse(A, reversedRide(B), p); } catch (e) {}
+      const chance = nul && nul.ok ? nul.score : 0, need = Math.max(2 * chance, chance + 4);
+      out.sensorTest = { score: sc.ok ? sc.score : 0, chance, need };
+      if (!sc.ok || sc.score < need) {
+        const used = sc.keys && sc.keys.length ? sc.keys.map(nm).join(' and ') : 'sensors';
+        throw new Error('These rides cannot be lined up reliably. ' + (pa && pb && gpsFixes(pa, 0).length >= 10 && gpsFixes(pb, 0).length >= 10 ? '' : 'One ride has no GPS, so only the ' + used + ' can be used, and ') +
+          'the ' + used + (used.includes(' and ') ? ' show' : ' shows') + ' no stretch of trail that matches better than chance (match score ' + (sc.ok ? sc.score.toFixed(1) : '0') + ', chance ' + chance.toFixed(1) + ', needed ' + need.toFixed(1) + '). ' +
+          'Any speed comparison would be made up. Check both files are the same trail, or record with GPS locked on both rides.');
+      }
       if (sc.ok) {
         out.map = sc.map; out.sigma = sc.sigma; out.sensorCoarse = sc;
         out.method = 'sensors (' + sc.keys.map(k => ({ front: 'front', rear: 'rear', imu_frame: 'frame IMU', imu_bar: 'bar IMU' })[k]).join(', ') + ' matched by shape)';
@@ -2357,7 +2565,7 @@ if (!window.Plotly) (function () {
   function buildChannels(A, B, p) {
     const ch = [
       { key: 'front', label: 'Front pot', group: 'pots', a: A.frontVel, b: B.frontVel },
-      { key: 'rear', label: 'Rear pot', group: 'pots', a: A.rearVel, b: B.rearVel }];
+      { key: 'rear', label: 'Rear pot', group: 'pots', a: A.rearVel, b: B.rearVel }].filter(c => potUsed(A, B, c.key));
     if (p.alignUseImu !== false && A.imu && B.imu) for (const k of ['frame', 'bar', 'front', 'rear']) {
       const ca = A.imu[k], cb = B.imu[k];
       if (ca && cb) ch.push({ key: 'imu_' + k, label: IMU_LABEL[k], group: 'imu', a: ca.acc.map(v => v - 1), b: cb.acc.map(v => v - 1) });
@@ -3312,7 +3520,7 @@ if (!window.Plotly) (function () {
     return res;
   }
 
-  const ALIGN = { align, pace, sectors, coarse, gpsCoarse, potsCoarse, sensorCoarse, independentCheck, checkStats, constantMap, warpPathMap, dtwP1, dtwClassic,
+  const ALIGN = { align, pace, sectors, coarse, gpsCoarse, potsCoarse, sensorCoarse, reversedRide, independentCheck, checkStats, constantMap, warpPathMap, dtwP1, dtwClassic,
                   pathToMap, whittaker, lambdaFor, interp, mapAtoB, mapBtoA, resample, lowpass, median, quantile, pearson,
                   gpsFixes, rideStops, alignStops, stoppedBefore, timeLoss, runMedian, rateToPct, project, alongTrack, evidence, fineAlign, buildChannels };
   if (typeof module !== 'undefined' && module.exports) module.exports = ALIGN;
@@ -4512,7 +4720,7 @@ if (!window.Plotly) (function () {
   const CHUNK = 6, STEP = 4;              // coarse chain: 6 s chunks every 4 s
   const MLAT = 110540;
   const mlon = lat => 111320 * Math.cos(lat * Math.PI / 180);
-  const VERSION = 1;
+  const VERSION = 2;
 
   // ------------------------------------------------------------ small helpers
   function lowerIndex(t, x) { let lo = 0, hi = t.length; while (lo < hi) { const m = (lo + hi) >> 1; if (t[m] < x) lo = m + 1; else hi = m; } return lo; }
@@ -4582,6 +4790,9 @@ if (!window.Plotly) (function () {
     const mask = new Uint8Array(n); for (let i = 0; i < n; i++) mask[i] = actRaw[i] > thr ? 1 : 0;
     const ch = { F: robustZ(F, mask), R: robustZ(R, mask), V: robustZ(V, mask) };
     if (A) ch.A = robustZ(A, mask);
+    // an unplugged pot only copies the other one: leave it out of matching
+    if (r.potOn && !r.potOn.front) delete ch.F;
+    if (r.potOn && !r.potOn.rear) delete ch.R;
     // GPS: fixes as [t, lat, lon, kmh] (≥ 0.2 s apart), bounding box
     const g = []; let lat0 = Infinity, lat1 = -Infinity, lon0 = Infinity, lon1 = -Infinity;
     for (const f of ctx.fixes) { if (g.length && f.t - g[g.length - 1][0] < 0.19) continue; g.push([round(f.t, 2), f.lat, f.lon, round(isFinite(f.v) ? f.v : NaN, 1)]); lat0 = Math.min(lat0, f.lat); lat1 = Math.max(lat1, f.lat); lon0 = Math.min(lon0, f.lon); lon1 = Math.max(lon1, f.lon); }
@@ -4941,16 +5152,41 @@ if (!window.Plotly) (function () {
     cands.sort((a, b) => b.s - a.s);
     const picked = [];
     for (const c of cands) { if (picked.some(p => Math.abs(p.T - c.T) < 5)) continue; picked.push(c); if (picked.length >= 12) break; }
+    // Chance level: the same search on this ride played backwards. It has
+    // the same kind of bumps but none of the trail's order, so whatever it
+    // scores is what luck scores on these sensors. A real run must beat it.
+    const chance = opt.noNull ? -1 : nullBest(seg, dig, keys, offs, opt);
+    const need = Math.max(opt.minMean || 0.5, chance + 0.15);
     const out = [];
     for (const c of picked) {
       const ch = chainFrom(seg, dig, scs, keys, c.T, c.tau, offs);
-      if (ch.mean >= (opt.minMean || 0.5) && ch.good >= 0.75) out.push(Object.assign(ch, { method: 'sensor' }));
+      if (ch.mean >= need && ch.good >= 0.75) out.push(Object.assign(ch, { method: 'sensor', chance: round(chance, 2) }));
     }
     // keep the best of overlapping passes
     out.sort((a, b) => b.mean - a.mean);
     const keep = [];
     for (const p of out) if (!keep.some(k => p.tS < k.tE && p.tE > k.tS)) keep.push(p);
     return keep.sort((a, b) => a.tS - b.tS);
+  }
+  function reversedDigest(dig) {
+    const ch = {};
+    for (const k in dig.ch) { const a = dig.ch[k], o = new Float32Array(a.length); for (let i = 0; i < a.length; i++) o[i] = a[a.length - 1 - i]; ch[k] = o; }
+    return Object.assign({}, dig, { ch, gps: [] });
+  }
+  function nullBest(seg, dig, keys, offs, opt) {
+    const rv = reversedDigest(dig), scs = TAUS.map(tau => scaled(rv, keys, tau)), prep0 = chunkPrep(seg, keys, 0), cands = [];
+    for (const sc of scs) {
+      let prev = -2, prev2 = -2;
+      for (let j = 0; j < sc.m; j++) {
+        const s = chunkScore(prep0, sc, j);
+        if (prev > 0.3 && prev >= s && prev > prev2) cands.push({ T: (j - 1) * sc.tau / FSC, tau: sc.tau, s: prev });
+        prev2 = prev; prev = s;
+      }
+    }
+    cands.sort((a, b) => b.s - a.s);
+    let best = 0;
+    for (const c of cands.slice(0, 12)) best = Math.max(best, chainFrom(seg, rv, scs, keys, c.T, c.tau, offs).mean);
+    return best;
   }
   // How well the ride between two times matches the segment (chained chunks, pace free)
   function verify(seg, dig, tS, tE) {
@@ -5013,7 +5249,7 @@ if (!window.Plotly) (function () {
     // sensors too: rides without GPS, GPS dropouts, or a way onto the line the GPS check missed.
     // In a ride with GPS a sensor-found run must start where the GPS says the start gate is.
     {
-      const sp = sensorPasses(seg, dig);
+      const sp = sensorPasses(seg, dig, { noNull: gpsCovers });
       for (const p of sp) {
         if (passes.some(q => p.tS < q.tE && p.tE > q.tS)) continue;
         if (gpsCovers && seg.gates[0].lat != null) {
@@ -5077,11 +5313,13 @@ if (!window.Plotly) (function () {
   // ------------------------------------------------------------ numbers for one run
   function effortStats(parsed, p, e, seg, zero) {
     const SA = SAm();
-    const a = SA.analyze(parsed, Object.assign({}, p, { trimStart: e.t0, trimEnd: e.t1, fixedZero: zero || null }));
+    // pot connected or not is judged on the whole recording, not one short run
+    const on = SA.potsConnected ? SA.potsConnected(parsed, 0, parsed.rows, p) : { front: true, rear: true };
+    const a = SA.analyze(parsed, Object.assign({}, p, { trimStart: e.t0, trimEnd: e.t1, fixedZero: zero || null, frontPot: on.front ? 'on' : 'off', rearPot: on.rear ? 'on' : 'off' }));
     const F = a.stats.front, R = a.stats.rear, TF = p.frontTravel, TR = p.rearTravel;
     const ALIGN = ALm();
     let vmax = NaN; try { const fx = ALIGN.gpsFixes(parsed, parsed.time[0]).filter(f => f.t >= e.t0 && f.t <= e.t1 && isFinite(f.v)); if (fx.length) vmax = Math.max(...fx.map(f => f.v)); } catch (err) {}
-    return {
+    const out = {
       travelF: round(F.position.max / TF * 100, 1), travelR: round(R.position.max / TR * 100, 1),
       sagF: round(F.position.mean / TF * 100, 1), sagR: round(R.position.mean / TR * 100, 1),
       p95F: round(F.position.p95 / TF * 100, 1), p95R: round(R.position.p95 / TR * 100, 1),
@@ -5093,6 +5331,11 @@ if (!window.Plotly) (function () {
       packing: a.packingIndex, packingF: a.frontPackingIndex, packingR: a.rearPackingIndex,
       kmh: seg && seg.length ? round(seg.length / e.time * 3.6, 1) : null, kmhMax: isFinite(vmax) ? round(vmax, 1) : null
     };
+    // an unplugged pot has no numbers (not zeros)
+    for (const [k, sfx] of [['front', 'F'], ['rear', 'R']]) if (!on[k]) for (const key of Object.keys(out)) if (key.endsWith(sfx) && key !== 'kmh') out[key] = null;
+    out.potOff = !on.front ? 'front' : !on.rear ? 'rear' : null;
+    out.zeroWarn = zero && zero.warn ? zero.warn.slice(0, 3) : [];     // zero checks of the whole recording
+    return out;
   }
 
   // ------------------------------------------------------------ automatic segments
@@ -5269,7 +5512,7 @@ if (!window.Plotly) (function () {
   function riderName(id) { return (riders[id] && riders[id].name) || (id === 'me' ? 'Me (files)' : id); }
   const whenOf = r => r ? (r.recordedAt || r.importedAt || 0) : 0;
   const rideByKey = k => rides.find(r => r.key === k);
-  function pkey() { const p = A.params(); return JSON.stringify(['frontTravel', 'rearTravel', 'frontPotStroke', 'rearPotStroke', 'invertFront', 'invertRear', 'rearA', 'rearB', 'rearC', 'rearD', 'velocityFilterWindow', 'filterType'].map(k => p[k])); }
+  function pkey() { const p = A.params(); return JSON.stringify(['frontTravel', 'rearTravel', 'frontPotStroke', 'rearPotStroke', 'invertFront', 'invertRear', 'frontPot', 'rearPot', 'rearA', 'rearB', 'rearC', 'rearD', 'velocityFilterWindow', 'filterType'].map(k => p[k])); }
   function fmtT(s) { if (!isFinite(s)) return '–'; const neg = s < 0; s = Math.abs(s); const m = Math.floor(s / 60), r = s - m * 60; return (neg ? '−' : '') + m + ':' + (r < 10 ? '0' : '') + r.toFixed(2); }
   const fmtGap = g => !isFinite(g) ? '–' : Math.abs(g) < 0.005 ? '±0.00' : (g > 0 ? '+' : '−') + Math.abs(g).toFixed(2);
   const fmtDate = ms => { try { return new Date(ms).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }); } catch (e) { return ''; } };
@@ -5339,6 +5582,8 @@ if (!window.Plotly) (function () {
           (onSave ? Promise.resolve(onSave(o)) : saveSetup(r, o)).then(() => dlg.close());
         } }, 'Save')));
     if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
+    // phones: don't pop the keyboard up over the form on open
+    if (window.matchMedia && matchMedia('(pointer: coarse)').matches) setTimeout(() => { const a = document.activeElement; if (a && a !== document.body && dlg.contains(a) && /INPUT|TEXTAREA/.test(a.tagName)) a.blur(); }, 0);
   }
   function saveSetup(r, fields) {
     const rec = { rideKey: r.key, rider: riderOf(r), fields: fields || {}, deleted: !fields, updated: Date.now() };
@@ -5490,7 +5735,8 @@ if (!window.Plotly) (function () {
   // A session: one rider's recordings with less than 2 h between them (you can stop and start, or power off, between runs)
   function sessions() {
     const by = new Map();
-    for (const r of rides) { const k = riderOf(r); if (!by.has(k)) by.set(k, []); by.get(k).push(r); }
+    for (const r of rides) { if (A.boxShown && !A.boxShown(r)) continue;   // the box picked in Rides
+      const k = riderOf(r); if (!by.has(k)) by.set(k, []); by.get(k).push(r); }
     const out = [];
     for (const [rider, list] of by) {
       list.sort((a, b) => whenOf(a) - whenOf(b));
@@ -5512,18 +5758,64 @@ if (!window.Plotly) (function () {
     const st = SEG.effortStats(ctx.parsed, A.params(), { t0: d.t0, t1: d.t1, time: d.t1 - d.t0 }, null, ctx.r.zero);
     quick.set(k, st); return st;
   }
-  let reportSession = null;
+  let reportSession = null, reportGen = 0;
+  const pct = x => Math.round(x) + '%';
+  // Plain-language takeaways from the runs' numbers (the first 2–4 things a rider wants to know)
+  function takeaways(S, runs, stats, E) {
+    const out = [];                       // [kind, text, action?]
+    const lab = i => { const { r, d } = runs[i]; const e = E.find(x => x.rideKey === r.key && x.t0 < d.t1 && x.t1 > d.t0); const s = e && segs.find(x => x.id === e.segId); return s ? s.name : 'run ' + (i + 1); };
+    // personal bests / timed runs
+    const prs = E.filter(e => { const prior = efforts.filter(x => x.segId === e.segId && x.rider === e.rider && x.when < e.when); return prior.length && e.time < Math.min(...prior.map(x => x.time)) - 0.05; });
+    if (prs.length) out.push(['good', A.plural(prs.length, 'personal best') + ': ' + prs.map(e => { const s = segs.find(x => x.id === e.segId); return (s ? s.name : '?') + ' ' + fmtT(e.time); }).join(', ') + '.']);
+    else if (E.length) {
+      const near = E.map(e => { const prior = efforts.filter(x => x.segId === e.segId && x.rider === e.rider && x.when < e.when); return prior.length ? [e, e.time - Math.min(...prior.map(x => x.time))] : null; }).filter(Boolean).sort((a, b) => a[1] - b[1])[0];
+      if (near) { const s = segs.find(x => x.id === near[0].segId); out.push(['info', (s ? s.name : 'Segment') + ': ' + fmtT(near[0].time) + ', ' + near[1].toFixed(2) + ' s off your best.']); }
+    }
+    // zero (full extension) checks: sensor at its end-stop, direction reversed
+    { const zw = [...new Set(stats.filter(Boolean).flatMap(st => st.zeroWarn || []))];
+      zw.slice(0, 2).forEach(w => out.push(['warn', w, ['Check sensors', () => A.showView('setup')]])); }
+    // travel and bottom-outs, per end
+    const have = stats.map((st, i) => [st, i]).filter(([st]) => st);
+    for (const [k, name, setting] of [['F', 'Fork', 'Front travel'], ['R', 'Rear', 'Rear travel']]) {
+      const vals = have.filter(([st]) => st['travel' + k] != null);
+      if (!have.length) break;
+      // recordings where this end's sensor gave nothing on every run
+      const off = S.rides.filter(r => { const L = have.filter(([, i]) => runs[i].r === r); return L.length && L.every(([st]) => st['travel' + k] == null); });
+      if (off.length) out.push(['warn', (k === 'F' ? 'Front' : 'Rear') + ' sensor not connected on ' + (off.length === S.rides.length ? 'this ride' : off.map(r => r.name).join(', ')) + ', so its numbers are left out.', ['Check sensors', () => A.showView('setup')]]);
+      if (!vals.length) continue;
+      const [mx, iMax] = vals.reduce((b, [st, i]) => st['travel' + k] > b[0] ? [st['travel' + k], i] : b, [-1, 0]);
+      const bo = vals.reduce((a, [st]) => a + (st['bottom' + k] || 0), 0);
+      const boMost = vals.reduce((b, [st, i]) => (st['bottom' + k] || 0) > b[0] ? [st['bottom' + k] || 0, i] : b, [0, -1]);
+      if (mx > 105) out.push(['warn', name + ' reads ' + pct(mx) + ' of its travel, more than it has. Check ' + setting + ' and the sensor length in Settings.', ['Fix in Settings', () => A.showView('setup')]]);
+      else if (bo) out.push([bo >= 3 ? 'warn' : 'info', name + ' used ' + pct(mx) + ' of its travel and bottomed out ' + (bo === 1 ? 'once' : bo + '×') + (vals.length > 1 && boMost[1] >= 0 ? ', most on ' + lab(boMost[1]) : ' on ' + lab(iMax)) + '.']);
+      else out.push(['info', name + ' used up to ' + pct(mx) + ' of its travel' + (mx < 70 ? ', with plenty left over' : '') + ', no bottom-outs.']);
+    }
+    // packing (rebound too slow to recover between hits)
+    const pk = have.reduce((b, [st, i]) => st.packing > b[0] ? [st.packing, i] : b, [-1, -1]);
+    if (pk[0] >= 40) out.push(['warn', 'Suspension packed down on ' + lab(pk[1]) + ' (score ' + Math.round(pk[0]) + ' of 100): rebound may be too slow.']);
+    // missing GPS / IMU
+    const digs = S.rides.map(r => [r, digMem.get(r.key)]).filter(([, d]) => d);
+    const noGps = digs.filter(([, d]) => !d.bbox), noImu = digs.filter(([, d]) => d.hasImu === false);
+    const which = L => L.length === S.rides.length ? 'this ride' : L.map(([r]) => r.name).join(', ');
+    const same = noGps.length && noGps.length === noImu.length && noGps.every(([r], i) => noImu[i][0] === r);
+    if (same) out.push(['warn', 'No GPS and no motion sensor (IMU) on ' + which(noGps) + ': no map, no trail times. Check the logger\u2019s cables, and wait for the GPS light before you ride.']);
+    else {
+      if (noGps.length) out.push(['warn', 'No GPS on ' + which(noGps) + ': no map or trail times. Wait for the GPS light before you ride.']);
+      if (noImu.length) out.push(['warn', 'Motion sensor (IMU) missing on ' + which(noImu) + '. Check its cable.']);
+    }
+    // keep the problems, then the most useful others, max 4
+    const warn = out.filter(o => o[0] === 'warn'), rest = out.filter(o => o[0] !== 'warn');
+    return rest.slice(0, Math.max(1, 4 - warn.length)).concat(warn).slice(0, Math.max(4, warn.length));
+  }
   function renderReport() {
     const box = $('report'); if (!box || !ready) return;
     const all = sessions();
     if (!all.length) { box.textContent = ''; return; }
     const S = (reportSession && all.find(x => x.id === reportSession)) || all[0];
+    const gen = ++reportGen;
     box.textContent = '';
     const C = el('div', { class: 'card report' });
     box.append(C);
-    const sel = el('select', { 'aria-label': 'Session' });
-    all.slice(0, 30).forEach(x => sel.append(el('option', { value: x.id, selected: x === S ? true : null }, fmtDay(x.start) + ' · ' + riderName(x.rider) + ' · ' + A.plural(x.rides.length, 'recording'))));
-    sel.addEventListener('change', () => { reportSession = sel.value; renderReport(); });
     // runs: each timed run (its own gates), plus descents that no timed run covers
     const runs = [];
     for (const r of S.rides) {
@@ -5534,22 +5826,63 @@ if (!window.Plotly) (function () {
       for (const d of D) { const cov = wins.reduce((c, w) => c + Math.max(0, Math.min(w.t1, d.t1) - Math.max(w.t0, d.t0)), 0); if (cov < 0.3 * (d.t1 - d.t0)) wins.push({ t0: d.t0, t1: d.t1 }); }
       wins.sort((a, b) => a.t0 - b.t0).forEach(d => runs.push({ r, d }));
     }
-    const pending = S.rides.filter(r => !digMem.has(r.key)).length;
-    C.append(el('div', { class: 'row', style: 'justify-content:space-between' },
-      el('h2', { style: 'margin:0' }, all[0] === S ? 'Latest ride' : 'Ride'),
-      el('div', { style: 'min-width:200px;flex:0 1 320px' }, sel)),
-      el('div', { class: 'muted' }, fmtDay(S.start) + ' · ' + riderName(S.rider) + ' · ' + A.plural(S.rides.length, 'recording') + ' · ' + A.plural(runs.length, 'run') + (pending ? ' · reading ' + pending + ' more…' : '')));
+    const pendingR = S.rides.filter(r => !digMem.has(r.key)), pending = pendingR.length;
+    const ridden = runs.reduce((a, { d }) => a + d.t1 - d.t0, 0);
+    C.append(el('h2', { style: 'margin:0' }, all[0] === S ? 'Your latest ride' : 'Ride'),
+      el('div', { class: 'muted' }, [fmtDay(S.start) + ' ' + fmtClock(S.start), riderName(S.rider), A.plural(runs.length, 'downhill run') + (runs.length ? ' (' + A.fmtDur(ridden) + ')' : '')].join(' · ')));
+    // still reading: say what and how far, so a big ride doesn't look stuck
+    if (pending) {
+      const big = pendingR.reduce((a, r) => a + (r.size || 0), 0);
+      C.append(el('div', { class: 'working', role: 'status' }, el('span', { class: 'spin' }),
+        el('span', null, 'Reading ' + (pending === 1 ? pendingR[0].name : A.plural(pending, 'recording')) + (big > 20e6 ? ' (' + A.fmtBytes(big) + ', a big file: this can take a minute)' : '') + '…')));
+    }
     // battery over the session, from the logger's ride summaries (firmware 4.6.6+ with the divider on pin 11)
+    let battLow = null;
     const bs = S.rides.map(r => r.summary && r.summary.batt).filter(b => b && b.start_v > 0);
+    // takeaways (filled when the runs' numbers are ready)
+    const TK = el('ul', { class: 'takeaways' }, el('li', { class: 'info' }, pending ? 'Working out what happened…' : 'Adding up your runs…'));
+    C.append(TK);
     if (bs.length) {
       const v0 = bs[0].start_v, v1 = bs[bs.length - 1].end_v || bs[bs.length - 1].start_v, lo = Math.min(...bs.map(b => b.min_v || b.end_v || b.start_v));
-      C.append(el('div', { class: 'muted' }, 'Battery ' + v0.toFixed(2) + ' → ' + v1.toFixed(2) + ' V over this ride' + (lo < 3.4 ? ' · dipped to ' + lo.toFixed(2) + ' V: charge before the next ride' : '')));
+      const cells = bs[bs.length - 1].cells || 1;
+      if (lo / cells < 3.4) battLow = 'Logger battery dipped to ' + lo.toFixed(2) + ' V: charge it before the next ride.';
+      C.append(el('div', { class: 'muted' }, 'Logger battery ' + v0.toFixed(2) + ' → ' + v1.toFixed(2) + ' V' + (cells > 1 ? ' (' + cells + 'S)' : '')));
     }
+    // what next
+    const E = efforts.filter(e => S.rides.some(r => r.key === e.rideKey));
+    const acts = el('div', { class: 'nextacts' });
+    let lossRef = null;                   // the timed run with the most time lost to a best
+    for (const e of E) {
+      const prior = efforts.filter(x => x.segId === e.segId && x.rider === e.rider && x.when < e.when);
+      const ref = prior.length ? prior.reduce((b, x) => x.time < b.time ? x : b) : null;
+      if (ref && (!lossRef || e.time - ref.time > lossRef[0].time - lossRef[1].time)) lossRef = [e, ref];
+    }
+    if (lossRef) {
+      const [e, ref] = lossRef, s = segs.find(x => x.id === e.segId), r = rideByKey(e.rideKey), ro = rideByKey(ref.rideKey);
+      if (s && r && ro) {
+        const lbl = s.name + ': your best ' + fmtT(ref.time) + ' (A) vs this run ' + fmtT(e.time) + ' (B)';
+        acts.append(el('button', { class: 'btn primary', onclick: () => A.openCompare(ro.id, [ref.t0, ref.t1], r.id, [e.t0, e.t1], lbl, 'loss') }, 'Where did I lose time?'),
+          el('button', { class: 'btn', onclick: () => A.openCompare(ro.id, [ref.t0, ref.t1], r.id, [e.t0, e.t1], lbl, 'speed') }, 'Compare with my best'));
+      }
+    } else if (runs.length >= 2) {
+      // two runs of about the same length are most likely the same trail
+      let best = null;
+      for (let i = 0; i < runs.length; i++) for (let j = i + 1; j < runs.length; j++) {
+        const a = runs[i].d.t1 - runs[i].d.t0, b = runs[j].d.t1 - runs[j].d.t0, q = Math.abs(a - b) / Math.max(a, b);
+        if (!best || q < best[0]) best = [q, i, j];
+      }
+      if (best && best[0] < 0.3) {
+        const [, i, j] = best, x = runs[i], y = runs[j];
+        acts.append(el('button', { class: 'btn primary', onclick: () => A.openCompare(x.r.id, [x.d.t0, x.d.t1], y.r.id, [y.d.t0, y.d.t1], 'Run ' + (i + 1) + ' (A) vs run ' + (j + 1) + ' (B)', 'loss') }, 'Compare run ' + (i + 1) + ' with run ' + (j + 1)));
+      }
+    }
+    if (runs.length) acts.append(el('button', { class: 'btn' + (acts.childNodes.length ? '' : ' primary'), onclick: () => A.openAnalyzeParts(runs.map(({ r, d }) => ({ id: r.id, t0: d.t0, t1: d.t1 })), 'all ' + A.plural(runs.length, 'run') + ' of ' + fmtDay(S.start), 'charts') }, 'See the charts'));
+    if (acts.childNodes.length) C.append(acts);
     // setup: one tap
     C.append(setupPrompt(S));
     // runs
-    const E = efforts.filter(e => S.rides.some(r => r.key === e.rideKey));
     const list = el('div', { class: 'runlist' });
+    const statP = [];
     runs.forEach(({ r, d }, i) => {
       const mine = E.filter(e => e.rideKey === r.key && e.t0 < d.t1 && e.t1 > d.t0);
       const row = el('div', { class: 'runrow' });
@@ -5572,22 +5905,34 @@ if (!window.Plotly) (function () {
         }
       }
       const stats = mine.length && mine[0].stats ? mine[0].stats : null;
-      const nums = el('div', { class: 'runnums muted' });
-      const fill = st => { nums.textContent = st ? 'Travel used front ' + Math.round(st.travelF) + '% · rear ' + Math.round(st.travelR) + '% · bottom-outs ' + (st.bottomF + st.bottomR) + ' · packing ' + st.packing + (st.kmh ? ' · ' + st.kmh + ' km/h avg' : '') : ''; };
-      if (stats) fill(stats); else quickStats(r, d).then(fill).catch(() => {});
+      const nums = el('div', { class: 'runnums muted' }, 'Adding up…');
+      const fill = st => { nums.textContent = st ? ['Fork ' + (st.travelF == null ? 'no sensor' : pct(st.travelF) + ' travel'), 'rear ' + (st.travelR == null ? 'no sensor' : pct(st.travelR) + ' travel'), A.plural((st.bottomF || 0) + (st.bottomR || 0), 'bottom-out'), 'packing ' + Math.round(st.packing) + '/100', st.kmh ? st.kmh + ' km/h avg' : ''].filter(Boolean).join(' · ') : ''; return st; };
+      statP.push(stats ? Promise.resolve(fill(stats)) : quickStats(r, d).then(fill).catch(() => { nums.textContent = ''; return null; }));
       row.append(nums, el('div', { class: 'row', style: 'margin-top:4px' },
-        el('button', { class: 'btn small', onclick: () => A.openAnalyze(r.id, d.t0, d.t1, 'stats', 'Run ' + (i + 1) + ' (' + r.name + ')') }, 'Stats'),
+        el('button', { class: 'btn small', onclick: () => A.openAnalyze(r.id, d.t0, d.t1, 'stats', 'Run ' + (i + 1) + ' (' + r.name + ')') }, 'Numbers'),
         el('button', { class: 'btn small', onclick: () => A.openAnalyze(r.id, d.t0, d.t1, 'charts', 'Run ' + (i + 1) + ' (' + r.name + ')') }, 'Charts')));
       list.append(row);
     });
-    if (!runs.length) list.append(el('div', { class: 'muted' }, pending ? 'Working out your runs…' : 'No descents in these recordings (no riding at speed).'));
-    C.append(list);
-    // highlights
-    const hl = highlights(S, runs, E);
-    if (hl.length) C.append(el('ul', { class: 'insights' }, ...hl.map(h => el('li', null, h))));
-    C.append(el('div', { class: 'row', style: 'margin-top:8px' },
-      runs.length ? el('button', { class: 'btn primary', onclick: () => A.openAnalyzeParts(runs.map(({ r, d }) => ({ id: r.id, t0: d.t0, t1: d.t1 })), 'all ' + A.plural(runs.length, 'run') + ' of ' + fmtDay(S.start), 'stats') }, runs.length > 1 ? 'Analyze all runs together' : 'Analyze this run') : null,
-      el('button', { class: 'btn', onclick: () => A.showView('trails') }, 'Trails & leaderboards')));
+    if (!runs.length) list.append(el('div', { class: 'muted' }, pending ? 'Working out your runs…' : 'No downhill runs in these recordings (no riding at speed). Open the ride in Analyze to see all of it.'));
+    C.append(el('h3', null, 'Runs'), list);
+    // other highlights (segments made, changes vs your usual)
+    const hl = highlights(S, runs, E).filter(h => !/personal best|timed run/.test(h));
+    if (hl.length) C.append(el('ul', { class: 'insights plain' }, ...hl.map(h => el('li', null, h))));
+    // older rides
+    const sel = el('select', { 'aria-label': 'Show another ride' });
+    all.slice(0, 30).forEach(x => sel.append(el('option', { value: x.id, selected: x === S ? true : null }, fmtDay(x.start) + ' · ' + riderName(x.rider) + ' · ' + A.plural(x.rides.length, 'recording'))));
+    sel.addEventListener('change', () => { reportSession = sel.value; renderReport(); });
+    C.append(el('div', { class: 'row otherride' }, el('label', { class: 'f', style: 'margin:0' }, 'Show another day'), el('div', { class: 'grow', style: 'min-width:180px' }, sel)),
+      el('div', { class: 'row', style: 'margin-top:8px' }, el('button', { class: 'btn small', onclick: () => A.showView('trails') }, 'Trails & leaderboards')));
+    // fill the takeaways once the numbers are in
+    Promise.all(statP).then(stats => {
+      if (gen !== reportGen) return;
+      const items = takeaways(S, runs, stats, E);
+      if (battLow) items.push(['warn', battLow]);
+      TK.textContent = '';
+      if (!items.length) { TK.append(el('li', { class: 'info' }, pending ? 'Working out what happened…' : runs.length ? 'Nothing stood out on this ride.' : 'No riding at speed in these recordings.')); return; }
+      for (const [kind, text, act] of items) TK.append(el('li', { class: kind }, el('span', null, text), act ? el('button', { class: 'btn small', onclick: act[1] }, act[0]) : null));
+    });
   }
   function highlights(S, runs, E) {
     const out = [];
@@ -5599,7 +5944,7 @@ if (!window.Plotly) (function () {
       const s = segs.find(x => x.id === sid); if (!s) continue;
       const now = E.filter(e => e.segId === sid && e.stats), before = efforts.filter(e => e.segId === sid && e.rider === S.rider && e.stats && !E.includes(e));
       if (!now.length || before.length < 2) continue;
-      const m = (L, f) => L.reduce((a, e) => a + f(e.stats), 0) / L.length;
+      const m = (L, f) => L.reduce((a, e) => { const v = f(e.stats); return a + (v == null ? NaN : v); }, 0) / L.length;   // NaN when a pot is unplugged
       const dR = m(now, x => x.travelR) - m(before, x => x.travelR), dF = m(now, x => x.travelF) - m(before, x => x.travelF), dB = m(now, x => x.bottomF + x.bottomR) - m(before, x => x.bottomF + x.bottomR);
       if (Math.abs(dR) >= 5 || Math.abs(dF) >= 5) out.push(s.name + ': ' + (Math.abs(dR) >= Math.abs(dF) ? 'rear' : 'front') + ' used ' + Math.abs(Math.round(Math.abs(dR) >= Math.abs(dF) ? dR : dF)) + '% ' + ((Math.abs(dR) >= Math.abs(dF) ? dR : dF) > 0 ? 'more' : 'less') + ' travel than your usual' + (Math.abs(dB) >= 1 ? ', ' + (dB > 0 ? '+' : '') + dB.toFixed(1) + ' bottom-outs per run' : '') + '.');
     }
@@ -5684,7 +6029,7 @@ if (!window.Plotly) (function () {
     if (mapP) return mapP;
     return (mapP = loadLeaflet().then(Lx => {
       L = Lx;
-      map = L.map('trMap', { zoomControl: true, preferCanvas: true, tap: true });
+      map = L.map('trMap', { zoomControl: true, preferCanvas: true, tap: true, dragging: !L.Browser.mobile });   // phones: one finger scrolls the page, two fingers move/zoom the map
       const v = A.LS.get('trView', null);
       if (v && v.c) map.setView(v.c, v.z); else map.setView([49.3, -123.0], 12);
       map.on('moveend', () => A.LS.set('trView', { c: map.getCenter(), z: map.getZoom() }));
@@ -5787,7 +6132,7 @@ if (!window.Plotly) (function () {
     $('trMapTitle').textContent = 'Trails';
     const box = $('trList'); box.textContent = '';
     if (!segs.length) {
-      box.append(el('div', { class: 'empty' }, 'No segments yet. Ride a trail twice (with GPS) and it becomes a segment by itself: gates on features the logger finds again (a jump landing, a drop, a big hit), every run timed. Or make one by hand from a run.'));
+      box.append(el('div', { class: 'empty' }, 'No segments yet. Ride the same trail twice with GPS and it becomes a timed segment by itself, with a leaderboard. Or make one by hand from a run.'));
     }
     const groups = new Map();
     for (const s of segs) { const k = s.trail || 'Other segments'; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(s); }
@@ -5815,6 +6160,7 @@ if (!window.Plotly) (function () {
     view = 'new';
     $('trHome').classList.add('hidden'); $('trSeg').classList.add('hidden');
     const C = $('trNew'); C.classList.remove('hidden'); C.textContent = '';
+    requestAnimationFrame(() => { if (window.innerWidth < 900) C.scrollIntoView({ block: 'start', behavior: 'smooth' }); });
     $('trMapTitle').textContent = editSeg ? 'Change gates · ' + editSeg.name : 'New segment';
     nw = { editing: editSeg || null, splits: new Set() };
     const sel = el('select', { id: 'trRide' });
@@ -5987,6 +6333,7 @@ if (!window.Plotly) (function () {
     const E = efforts.filter(e => e.segId === s.id);
     curEffort = (effortId && E.find(e => e.id === effortId)) || (curEffort && curEffort.segId === s.id && E.find(e => e.id === curEffort.id)) || null;
     renderSeg(true);
+    requestAnimationFrame(() => { const P = $('trSeg'); if (P && window.innerWidth < 900) P.scrollIntoView({ block: 'start', behavior: 'smooth' }); });
   }
   function bestOf(list) { return list.reduce((b, e) => !b || e.time < b.time ? e : b, null); }
   function renderSeg(fit) {
@@ -6002,8 +6349,7 @@ if (!window.Plotly) (function () {
       el('div', { class: 'row', style: 'justify-content:space-between' }, el('button', { class: 'btn small', onclick: renderHome }, '← All segments'), el('div', { class: 'row' },
         el('button', { class: 'btn small', onclick: () => editMeta(s) }, 'Rename'),
         el('button', { class: 'btn small', onclick: () => renderNew(s) }, 'Change gates'),
-        el('button', { class: 'btn small', onclick: () => rescanSeg(s) }, 'Re-check rides'),
-        el('button', { class: 'btn small danger', onclick: () => deleteSeg(s) }, 'Delete'))),
+        el('button', { class: 'btn small', onclick: () => rescanSeg(s) }, 'Re-check rides'))),
       el('h2', { style: 'margin:10px 0 2px' }, s.name), s.trail ? el('div', { class: 'muted' }, 'Trail: ' + s.trail) : null,
       el('div', { class: 'tiles', style: 'margin-top:10px' },
         tile(best ? fmtT(best.time) : '–', 'Best', best ? riderName(best.rider) + ' · ' + fmtDate(best.when) : 'no runs yet'),
@@ -6042,6 +6388,8 @@ if (!window.Plotly) (function () {
     if (E.length >= 2) P.append(historyCard(s, E));
     if (s.splits.length && E.length) P.append(splitsCard(s, E));
     if (E.length) P.append(setupsCard(s, E));
+    // destructive action at the bottom, away from navigation
+    P.append(el('div', { class: 'row', style: 'justify-content:flex-end;margin:4px 0 14px' }, el('button', { class: 'btn small danger', onclick: () => deleteSeg(s) }, 'Delete segment')));
     ensureMap().then(() => { drawSegOnMap(s, fit); if (curEffort) drawEffortTrack(curEffort); }).catch(() => {});
   }
   function tile(v, l, s) { return el('div', { class: 'tile' }, el('div', { class: 'v' }, v), el('div', { class: 'l' }, l), s ? el('div', { class: 's' }, s) : null); }
@@ -6069,7 +6417,10 @@ if (!window.Plotly) (function () {
     if (!s.splits.length || !E.length) return '–';
     const n = s.splits.length + 1, best = new Array(n).fill(Infinity);
     for (const e of E) sectorTimes(s, e).forEach((d, i) => { if (d != null && d < best[i]) best[i] = d; });
-    return best.every(isFinite) ? fmtT(best.reduce((a, b) => a + b, 0)) : '–';
+    if (!best.every(isFinite)) return '–';
+    // a run whose split wasn't found has no time for the sectors either side of
+    // it, so the sum can miss the fastest run: the ideal is never slower than it
+    return fmtT(Math.min(best.reduce((a, b) => a + b, 0), Math.min(...E.map(e => e.time))));
   }
   const STAT_ROWS = [
     ['Time', e => e.time, 2, -1, fmtT], ['Average speed (km/h)', e => e.stats && e.stats.kmh, 1, 1], ['Top GPS speed (km/h)', e => e.stats && e.stats.kmhMax, 1, 1],
@@ -6170,7 +6521,7 @@ if (!window.Plotly) (function () {
     }
     tbl.append(tb);
     return el('div', { class: 'card' }, el('h2', null, 'Setups on this segment'), el('div', { class: 'tbl' }, tbl),
-      el('div', { class: 'muted' }, groups.size < 2 ? 'Add a setup to your rides (Rides → Setup) to compare setups here.' : 'Averages per setup over all riders. Few runs per setup = rough numbers: lap-to-lap differences are often bigger than setup effects.'));
+      el('div', { class: 'muted' }, groups.size < 2 ? 'Add a setup to your rides (Rides → Bike setup) to compare setups here.' : 'Averages per setup over all riders. Few runs per setup = rough numbers: lap-to-lap differences are often bigger than setup effects.'));
   }
   function editMeta(s) {
     const nm = prompt('Segment name', s.name); if (nm == null) return;
@@ -6326,6 +6677,9 @@ if (!window.Plotly) (function () {
   const fmtBytes = b => b > 1e6 ? (b / 1e6).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1e3)) + ' KB';
   const fmtDur = s => { if (!isFinite(s)) return '–'; s = Math.round(s); const m = Math.floor(s / 60); return m ? m + ' min ' + (s % 60) + ' s' : s + ' s'; };
   function msg(id, text, kind) { const m = $(id); m.textContent = text || ''; m.className = 'msg' + (kind ? ' ' + kind : ''); }
+  // A message with a spinner, painted before heavy work starts (the spinner keeps turning while the work runs)
+  const paint = () => new Promise(res => requestAnimationFrame(() => setTimeout(res, 0)));
+  function busyMsg(id, text) { msg(id, text, 'busy'); return paint(); }
   const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
   // ======================================================= state
@@ -6355,16 +6709,47 @@ if (!window.Plotly) (function () {
   // Plotly needs a resize when a hidden chart becomes visible (only visible ones can be resized)
   function resizeIn(root) {
     setTimeout(() => (root ? root.querySelectorAll('.js-plotly-plot') : []).forEach(p => {
-      if (p.offsetParent !== null) Promise.resolve(Plotly.Plots.resize(p)).catch(() => {});
+      if (p.offsetParent !== null && window.Plotly) Promise.resolve(Plotly.Plots.resize(p)).catch(() => {});
     }), 30);
   }
-  function showView(v) {
+  // Every view change is a history step, so the phone's Back gesture goes to
+  // the previous view (and its scroll position) instead of leaving the app.
+  const VIEW_NAME = { rides: 'Rides', trails: 'Trails', analyze: 'Analyze', compare: 'Compare', setup: 'Settings' };
+  let curView = null;
+  function showView(v, opt) {
+    opt = opt || {};
+    if (curView !== v && !opt.pop) {
+      try {
+        if (curView) { history.replaceState(Object.assign({}, history.state, { v: curView, y: window.scrollY }), ''); history.pushState({ v, from: opt.from || null }, ''); }
+        else history.replaceState(Object.assign({}, history.state, { v }), '');
+      } catch (e) {}
+    }
+    const changed = curView !== v; curView = v;
     document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('on', b.dataset.view === v));
     document.querySelectorAll('section.view').forEach(s => s.classList.toggle('on', s.id === 'view-' + v));
     LS.set('view', v);
+    backBar(v, opt.pop ? (history.state && history.state.from) : opt.from);
+    if (changed && !opt.pop && !opt.keepScroll) window.scrollTo(0, 0);
     resizeIn($('view-' + v));
   }
+  // "← Back to …" at the top of a view opened from somewhere else (a ride report, a segment)
+  function backBar(v, from) {
+    document.querySelectorAll('.backbar').forEach(b => b.remove());
+    if (!from) return;
+    const sec = $('view-' + v); if (!sec) return;
+    const b = el('div', { class: 'backbar' }, el('button', { class: 'btn small', type: 'button', onclick: () => history.back() }, '\u2190 Back to ' + from));
+    sec.prepend(b);
+  }
+  window.addEventListener('popstate', e => {
+    const st = e.state; if (!st || !st.v || !$('view-' + st.v)) return;
+    showView(st.v, { pop: true });
+    const y = st.y || 0; requestAnimationFrame(() => setTimeout(() => window.scrollTo(0, y), 40));
+  });
   document.querySelectorAll('nav.tabs button').forEach(b => b.addEventListener('click', () => showView(b.dataset.view)));
+  const hdrH = () => { const h = document.querySelector('header'); if (h) document.documentElement.style.setProperty('--hdrH', h.offsetHeight + 'px'); };
+  hdrH(); window.addEventListener('resize', hdrH);
+  // Scroll a card into view below the sticky header
+  function scrollToEl(node) { if (node) requestAnimationFrame(() => node.scrollIntoView({ block: 'start', behavior: 'smooth' })); }
 
   // ======================================================= parameters
   const PKEYS = Object.keys(SA.DEFAULTS).filter(k => k !== 'trimStart' && k !== 'trimEnd');
@@ -6397,7 +6782,8 @@ if (!window.Plotly) (function () {
     const p = r ? r.params : params, t = p.filterType;
     return 'Filtering: ' + (t === 'savgol' ? 'Savitzky-Golay' : t === 'moving_average' ? 'moving average' : 'none (raw)') +
       (t !== 'none' ? ' · position ' + p.positionFilterWindow + ' rows · velocity ' + (t === 'savgol' ? p.velocityWindow : p.velocityFilterWindow) + ' rows' : '') +
-      ' · zero ' + (p.autoZero ? 'on' : 'off') + (p.invertFront || p.invertRear ? ' · inverted: ' + [p.invertFront ? 'front' : '', p.invertRear ? 'rear' : ''].filter(Boolean).join(' & ') : '');
+      ' · zero ' + (p.autoZero ? 'on' : 'off') + (p.invertFront || p.invertRear ? ' · inverted: ' + [p.invertFront ? 'front' : '', p.invertRear ? 'rear' : ''].filter(Boolean).join(' & ') : '') +
+      (r && r.potOn && (!r.potOn.front || !r.potOn.rear) ? ' · ' + (!r.potOn.front ? 'front' : 'rear') + ' pot not connected' : '');
   }
   let reTimer = 0;
   document.querySelectorAll('[id^="p_"]').forEach(i => i.addEventListener('change', () => {
@@ -6447,7 +6833,36 @@ if (!window.Plotly) (function () {
   });
 
   // ======================================================= library
-  function rideLabel(r) { return r.name + (r.duration ? ' · ' + fmtDur(r.duration) : ''); }
+  // ---- boxes: each logger has its own name in the cloud (shokiq-2, shokiq-3f2a; older firmware: datalogger)
+  function rideHost(r) {
+    if (r.host) return r.host;
+    const m = /^logger:([a-z0-9-]{1,31}):/i.exec(r.key || '');
+    return m && !/^https?$/i.test(m[1]) ? m[1].toLowerCase() : '';
+  }
+  function boxName(host) {
+    if (!host) return '';
+    const known = LS.get('boxLabels', {})[host];
+    if (known) return known;
+    const m = /^shokiq-(.+)$/.exec(host);
+    return m ? 'Box ' + m[1].toUpperCase() : host === 'datalogger' ? 'Logger (before box numbers)' : host;
+  }
+  const boxShort = host => { const n = boxName(host); return n.startsWith('Box ') ? n : n === 'Logger (before box numbers)' ? 'Old logger' : n; };
+  // which box the ride list shows (and which box's rides the cloud downloads): '' = all, '-' = opened files
+  function boxFilter() { return LS.get('boxFilter', ''); }
+  function boxShown(r) { const f = boxFilter(); return !f || (f === '-' ? !rideHost(r) : rideHost(r) === f); }
+  function renderBoxFilter() {
+    const sel = $('boxFilter'); if (!sel) return;
+    const hosts = new Set(rides.map(rideHost).filter(Boolean));
+    for (const h of Object.keys(LS.get('boxLabels', {}))) hosts.add(h);
+    const cur = boxFilter(); if (cur && cur !== '-') hosts.add(cur);
+    const opts = [['', 'All boxes']].concat([...hosts].sort((a, b) => boxName(a).localeCompare(boxName(b), undefined, { numeric: true })).map(h => [h, boxName(h)]));
+    if (rides.some(r => !rideHost(r))) opts.push(['-', 'Files I opened']);
+    sel.textContent = '';
+    for (const [v, t] of opts) sel.append(el('option', { value: v }, t));
+    sel.value = cur;
+    $('boxFilterRow').classList.toggle('hidden', opts.length <= 2 && !cur);
+  }
+  function rideLabel(r) { const h = rideHost(r); return (h ? boxShort(h) + ' · ' : '') + r.name + (r.duration ? ' · ' + fmtDur(r.duration) : ''); }
   function refreshLibrary() {
     return Store.list().then(list => {
       rides = list;
@@ -6460,9 +6875,23 @@ if (!window.Plotly) (function () {
   }
   function renderLibrary() {
     const ul = $('rideList'); ul.textContent = '';
-    if (!rides.length) { ul.append(el('li', { class: 'empty' }, 'No rides yet. Tap Get new rides, or open a CSV file.')); return; }
-    for (const r of rides) {
+    const oldBar = $('abBar'); if (oldBar) oldBar.remove();
+    const ra = rides.find(r => r.id === selA), rb = rides.find(r => r.id === selB);
+    if (ra && rb) ul.after(el('div', { id: 'abBar', class: 'abbar' },
+      el('span', { class: 'muted' }, el('span', { class: 'tag a' }, 'A'), ' ' + ra.name + '  ', el('span', { class: 'tag b' }, 'B'), ' ' + rb.name),
+      el('button', { class: 'btn primary', type: 'button', onclick: () => { showView('compare', { from: 'Rides' }); runCompare(); } }, 'Compare A vs B \u2192')));
+    renderBoxFilter();
+    // first run: a 3-step start instead of empty cards and settings
+    const none = !rides.length;
+    $('start').classList.toggle('hidden', !none);
+    $('libCard').classList.toggle('hidden', none);
+    $('loggerCard').classList.toggle('hidden', none && !loggerCardWanted);
+    if (none) { ul.append(el('li', { class: 'empty' }, 'No rides yet. Tap Get new rides, or open a ride file.')); return; }
+    const shown = rides.filter(boxShown);
+    if (!shown.length) ul.append(el('li', { class: 'empty' }, 'No rides from ' + (boxFilter() === '-' ? 'opened files' : boxName(boxFilter())) + ' yet.'));
+    for (const r of shown) {
       const tags = el('span');
+      const bh = rideHost(r); if (bh) tags.append(el('span', { class: 'pill box', title: 'Logger ' + bh }, boxShort(bh)));
       if (r.id === selA) tags.append(el('span', { class: 'tag a' }, 'A'));
       if (r.id === selB) tags.append(el('span', { class: 'tag b' }, 'B'));
       ul.append(el('li', { class: 'item' },
@@ -6472,20 +6901,37 @@ if (!window.Plotly) (function () {
           window.SegUI ? window.SegUI.rideChips(r) : null),
         el('div', { class: 'row' },
           r.summary ? el('button', { class: 'btn small', onclick: () => showQuickLook(r.summary, r.name, r.id) }, 'Quick look') : null,
-          el('button', { class: 'btn small primary', onclick: () => { anJob = null; $('anRide').value = r.id; $('anPart').dataset.ride = ''; showView('analyze'); runAnalyze(); } }, 'Analyze'),
+          el('button', { class: 'btn small primary', onclick: () => { anJob = null; $('anRide').value = r.id; $('anPart').dataset.ride = ''; showView('analyze', { from: 'Rides' }); runAnalyze(); } }, 'Analyze'),
           el('button', { class: 'btn small', 'aria-pressed': r.id === selA ? 'true' : 'false', onclick: () => { selA = r.id; if (selB === r.id) selB = null; clearCmpWin(); LS.set('selA', selA); LS.set('selB', selB); renderLibrary(); fillSelects(); } }, 'A'),
           el('button', { class: 'btn small', 'aria-pressed': r.id === selB ? 'true' : 'false', onclick: () => { selB = r.id; if (selA === r.id) selA = null; clearCmpWin(); LS.set('selA', selA); LS.set('selB', selB); renderLibrary(); fillSelects(); } }, 'B'),
-          window.SegUI ? el('button', { class: 'btn small', onclick: () => window.SegUI.editSetup(r) }, 'Setup') : null,
+          window.SegUI ? el('button', { class: 'btn small', onclick: () => window.SegUI.editSetup(r) }, 'Bike setup') : null,
           el('button', { class: 'btn small', onclick: () => downloadRide(r.id) }, 'Save'),
           el('button', { class: 'btn small danger', onclick: () => deleteRide(r) }, 'Delete'))));
     }
   }
+  $('boxFilter').addEventListener('change', e => {
+    LS.set('boxFilter', e.target.value); refreshLibrary().then(() => fillSelects()); devStatus();
+    if (e.target.value && e.target.value !== '-' && cloudOn()) cloudSync(false);
+  });
+  let loggerCardWanted = false;
+  function showLoggerCard() { loggerCardWanted = true; $('loggerCard').classList.remove('hidden'); }
+  $('stGetNew').addEventListener('click', () => { showLoggerCard(); $('btnGetNew').click(); scrollToEl($('loggerCard')); });
+  $('stCloud').addEventListener('click', () => {
+    msg('stMsg', 'Checking for uploaded rides…', 'busy');
+    cloudSync(true).then(() => { const c = $('cloudLine'); msg('stMsg', c.textContent || (cloudOn() ? 'No rides uploaded yet.' : 'Cloud isn\u2019t set up: see Settings.'), /err/.test(c.className) ? 'err' : ''); });
+  });
+  // offline: say so once, at the top (rides on the phone still work)
+  function offlineBar(off) { $('offlineBar').classList.toggle('hidden', !off); }
+  window.addEventListener('offline', () => offlineBar(true));
+  window.addEventListener('online', () => { offlineBar(false); cloudSync(false); devStatus(); });
+  if (!navigator.onLine) offlineBar(true);
   function fillSelects() {
     const fill = (sel, value) => {
       const cur = value != null ? String(value) : sel.value;
       sel.textContent = '';
       sel.append(el('option', { value: '' }, rides.length ? 'Choose a ride…' : 'No rides yet'));
-      for (const r of rides) sel.append(el('option', { value: r.id }, rideLabel(r)));
+      // the box picked in Rides limits these lists too (a ride already chosen stays listed)
+      for (const r of rides) if (boxShown(r) || String(r.id) === cur) sel.append(el('option', { value: r.id }, rideLabel(r)));
       if (cur && rides.some(r => String(r.id) === cur)) sel.value = cur;
     };
     fill($('anRide'), null); fill($('cmpA'), selA); fill($('cmpB'), selB);
@@ -6508,7 +6954,8 @@ if (!window.Plotly) (function () {
   }
   function downloadRide(id) {
     Store.get(id).then(r => {
-      const a = el('a', { href: URL.createObjectURL(new Blob([r.text], { type: 'text/csv' })), download: r.name });
+      const h = rideHost(r), tag = h ? boxShort(h).replace(/^Box /, 'box').replace(/\s+/g, '').toLowerCase() + '_' : '';
+      const a = el('a', { href: URL.createObjectURL(new Blob([r.text], { type: 'text/csv' })), download: tag && r.name.indexOf(tag) !== 0 ? tag + r.name : r.name });
       document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
     });
   }
@@ -6588,7 +7035,8 @@ if (!window.Plotly) (function () {
     };
   }
 
-  function showQuickLook(sum, name, id) {
+  function showQuickLook(sum, name, id) { qlShown = true; return (window.plotlyReady || Promise.resolve()).then(() => showQuickLook0(sum, name, id)); }
+  function showQuickLook0(sum, name, id) {
     qlShown = true; qlName = name; qlId = id; qlUploading = false;
     const box = $('quickLook'); box.textContent = ''; box.classList.remove('hidden');
     const F = qlSide(sum, 'front'), Rr = qlSide(sum, 'rear'), g = sum.gps || {}, imu = sum.imu || {};
@@ -6695,9 +7143,13 @@ if (!window.Plotly) (function () {
     return cfetch('/list').then(res => {
       if (res.status === 401) throw new Error('Cloud: wrong read key (Setup → Cloud).');
       if (!res.ok) throw new Error('Cloud: HTTP ' + res.status);
+      offlineBar(false);
       return res.json();
     }).then(list => {
       const have = new Set(rides.map(r => r.key));
+      // A box picked in Rides: only that box's rides come down (a ride you tapped in a notification always does)
+      const bf = boxFilter();
+      if (bf && bf !== '-') list = list.filter(r => r.host === bf || (focus && focus.name === r.name && (!focus.host || focus.host === r.host)));
       if (focus && focus.name) list.sort((a, b) => (b.name === focus.name) - (a.name === focus.name));
       // newest ride that is only partly uploaded: quick look now, full ride later
       const partial = list.filter(r => r.summary && !r.complete);
@@ -6722,7 +7174,7 @@ if (!window.Plotly) (function () {
           const s = (performance.now() - t0) / 1000;
           speed = fmtBytes(text.length) + (r.enc === 'gzip' ? ' (' + fmtBytes(r.stored) + ' sent)' : '') + ' in ' + s.toFixed(1) + ' s';
           const extra = sum ? rideExtra(sum) : (r.time ? { recordedAt: r.time * 1000 } : {});
-          extra.cloud = true;
+          extra.cloud = true; extra.host = r.host;
           return importText(r.name, text, 'logger', 'logger:' + r.host + ':' + r.name + ':' + text.length, extra);
         })).then(() => { imported++; }, e => { errs.push(r.name + ': ' + e.message); }).then(() => refreshLibrary()).then(next);
       };
@@ -6736,7 +7188,7 @@ if (!window.Plotly) (function () {
         const lib = rides.find(x => x.name === focus.name && x.source === 'logger' && (!focus.host || x.key.indexOf('logger:' + focus.host + ':') === 0));
         if (lib && lib.summary) showQuickLook(lib.summary, lib.name, lib.id);
       }
-    }).catch(e => msg('cloudLine', e.message, 'err')).finally(() => { cloudBusy = false; });
+    }).catch(e => { const off = !navigator.onLine || /fetch|network|load failed/i.test(e.message || ''); if (off) offlineBar(true); msg('cloudLine', off ? '' : e.message, off ? '' : 'err'); }).finally(() => { cloudBusy = false; });
   }
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') cloudSync(false); });
 
@@ -6819,7 +7271,7 @@ if (!window.Plotly) (function () {
   // Every button opens the logger's /bridge page for one trip (see link.js):
   // it sends the list and/or recordings, then closes itself.
   const addrIn = $('loggerAddr');
-  addrIn.value = LS.get('loggerAddr', 'http://datalogger.local');
+  addrIn.value = LS.get('loggerAddr', 'http://shokiq-1.local');
   addrIn.addEventListener('change', () => LS.set('loggerAddr', addrIn.value.trim()));
   let loggerFiles = [], loggerPick = new Set(), linkBusy = false;
   const LINK_BTNS = ['btnGetNew', 'btnList', 'btnImport', 'btnRefresh'];
@@ -6845,32 +7297,43 @@ if (!window.Plotly) (function () {
       if (!list) { setChip('off', 'Logger via cloud', 'Update the Worker (cloud/worker.js) to see the logger’s battery and status here'); return; }
       // the newest ride also counts as "heard from" (older firmware sends no status)
       const lastRide = rides.filter(r => r.source === 'logger').reduce((b, r) => Math.max(b, r.importedAt || 0), 0);
-      const d = list[0];
+      const lbl = LS.get('boxLabels', {}); let ch = false;
+      for (const x of list) if (x.host && x.box_label && lbl[x.host] !== x.box_label) { lbl[x.host] = x.box_label; ch = true; }
+      if (ch) { LS.set('boxLabels', lbl); renderLibrary(); fillSelects(); }
+      const bf = boxFilter(), mine = bf && bf !== '-' ? list.filter(x => x.host === bf) : list;
+      const d = mine[0];
+      const others = list.filter(x => x !== d);
       const box = $('devStatus');
       if (!d) {
         setChip(lastRide ? 'warn' : 'off', lastRide ? 'Logger · ride ' + ago(lastRide) : 'No logger yet', 'No status from the logger yet: it sends one from firmware 4.7.1, when it joins your hotspot');
         box.classList.add('hidden'); return;
       }
       const age = Date.now() - d.seen, fresh = age < 20 * 60e3;
-      const batt = d.batt && isFinite(d.batt.v) ? d.batt.v.toFixed(2) + ' V (' + d.batt.pct + '%)' : null;
-      setChip(fresh ? 'on' : 'warn', (fresh ? 'Logger · ' : 'Logger seen ') + ago(d.seen) + (batt ? ' · ' + d.batt.pct + '%' : ''),
+      const batt = d.batt && isFinite(d.batt.v) ? d.batt.v.toFixed(2) + ' V (' + (d.batt.cells > 1 ? d.batt.cells + 'S, ' : '') + d.batt.pct + '%)' : null;
+      const who = list.length > 1 || d.box_label ? boxName(d.host) : 'Logger';
+      setChip(fresh ? 'on' : 'warn', (fresh ? who + ' · ' : who + ' seen ') + ago(d.seen) + (batt ? ' · ' + d.batt.pct + '%' : ''),
         'Last status from ' + d.host + ' through the cloud, ' + ago(d.seen) + '. It only reports while on your hotspot.');
       box.textContent = ''; box.classList.remove('hidden');
       const line = (k, v, bad) => box.append(el('div', null, el('b', null, k + ': '), bad ? el('span', { class: 'bad' }, v) : v));
       line('Last heard', ago(d.seen) + ' through the cloud' + (fresh ? '' : ' (it reports only while it is on your hotspot)'));
-      line('Battery', batt || 'not measured (no divider on pin 11)', d.batt && d.batt.v < 3.4);
+      line('Battery', batt || 'not measured (no divider on pin 11)', d.batt && d.batt.v / (d.batt.cells || 1) < 3.4);
       const gps = d.gps || {};
       line('GPS', !gps.hz ? 'no data from the GPS module — check its wiring' : gps.fix ? 'locked (' + gps.hz.toFixed(1) + ' Hz)' : 'searching for satellites (' + gps.hz.toFixed(1) + ' Hz)', !gps.hz);
       if (d.pending) line('Waiting to upload', plural(d.pending, 'ride'));
       const lr = d.last_rec || {}, miss = [!lr.summary && 'ride summary', !lr.compress && 'compression', !lr.preroll && 'auto-pause'].filter(Boolean);
       if (lr.min_free && miss.length) line('Last recording ran without', miss.join(', ') + ' (not enough memory)', true);
       if (d.sd === false) line('SD card', 'not found', true);
+      if (d.last_crash) line('Last restart', d.last_crash, /while/.test(d.last_crash));
       line('Firmware', d.fw + ' · ' + d.host + (isFinite(d.rssi) ? ' · WiFi ' + d.rssi + ' dBm' : ''));
-    }).catch(() => setChip('off', 'Logger: no internet', 'Can’t reach the cloud right now'))
+      if (others.length) line('Other boxes', others.map(x => boxName(x.host) + ' ' + ago(x.seen) + (x.batt && isFinite(x.batt.pct) ? ' (' + x.batt.pct + '%)' : '')).join(' · '));
+    }).catch(() => setChip('off', 'No signal', 'Can’t reach the cloud right now, so the logger’s status is unknown'))
       .finally(() => { if (document.visibilityState === 'visible') devTimer = setTimeout(devStatus, 60000); });
   }
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') devStatus(); });
-  $('linkChip').addEventListener('click', () => { showView('rides'); $('devStatus').closest('.card').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+  $('linkChip').addEventListener('click', () => {
+    if (direct) { location.href = '/'; return; }                // served by the logger: back to its page
+    showView('rides'); $('devStatus').closest('.card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
   function fileNum(n) { const m = /data_(\d+)\.csv$/i.exec(n); return m ? +m[1] : -1; }
   // Same recording = same logger, name and size (size changes if a file number is reused)
   function loggerKey(f) { return 'logger:' + ((LoggerLink.info && LoggerLink.info.host) || LoggerLink.origin) + ':' + f.name + ':' + f.size; }
@@ -6965,14 +7428,26 @@ if (!window.Plotly) (function () {
   }
   function detectDirect() {
     if (location.protocol !== 'http:') return Promise.resolve(null);
-    return dfetch('/api/status', 2500).then(r => r.ok ? r.json() : null).then(s => (s && s.fw && s.host) ? s : null).catch(() => null);
+    // the logger can be slow to answer while the page loads: one retry before deciding it isn't the logger
+    const once = ms => dfetch('/api/status', ms).then(r => r.ok ? r.json() : null).then(s => (s && s.fw && s.host) ? s : null).catch(() => null);
+    return once(4000).then(s => s || new Promise(res => setTimeout(res, 1500)).then(() => once(6000)));
   }
   function directKey(name, size) { return 'logger:' + direct.host + ':' + name + ':' + size; }
   function enterDirect() {
     const row = addrIn.closest('.row'); if (row) row.classList.add('hidden');
     const note = $('btnGetNew').parentElement.nextElementSibling;
     if (note) note.textContent = 'This page is served by the logger: new rides are copied into your library automatically when it opens (summary first, then the full file).';
-    setChip('on', 'Logger v' + direct.fw);
+    directChip(direct);
+    // a way back to the logger's own page (the analyzer has no logger tab bar)
+    const back = el('a', { class: 'btn', href: '/', style: 'margin:0 0 10px;display:inline-block' }, '← Logger page');
+    $('devStatus').parentElement.insertBefore(back, $('devStatus'));
+    setInterval(() => { if (document.visibilityState === 'visible' && !linkBusy) dfetch('/api/status', 3000).then(r => r.json()).then(st => { direct = st; directChip(st); }).catch(() => {}); }, 15000);
+  }
+  // header chip when served by the logger: tap it to go back to the logger page
+  function directChip(st) {
+    const b = st && st.batt;
+    setChip('on', '← Logger' + (b ? ' · ' + b.pct + '%' : '') + (st && st.recording ? ' · recording' : ''),
+      'Logger v' + (st && st.fw) + (b ? ' · battery ' + b.v.toFixed(2) + ' V' + (b.cells > 1 ? ' (' + b.cells + 'S)' : '') : '') + ' — tap to go back to the logger page');
   }
   // names: import these (if missing); otherwise every ride not in the library yet (newest 20)
   function directSync(manual, names) {
@@ -6981,7 +7456,7 @@ if (!window.Plotly) (function () {
     const bar = $('importBar');
     msg('linkMsg', 'Checking the logger for new rides…');
     return dfetch('/api/status').then(r => r.json()).then(st => {
-      direct = st; setChip('on', 'Logger v' + st.fw + (st.recording ? ' · recording' : ''));
+      direct = st; directChip(st);
       if (st.recording) throw new Error('The logger is recording - new rides come in after it stops.');
       return dfetch('/api/files').then(r => r.json());
     }).then(files => {
@@ -7077,10 +7552,11 @@ if (!window.Plotly) (function () {
   }
 
   // ======================================================= charts
-  // Phones: no toolbar (it covered the legend), pinch/drag to zoom, double-tap to reset.
-  // Mouse: toolbar on hover and wheel zoom, as in the original analyzer.
+  // Phones: no toolbar (it covered the legend). A swipe over a chart scrolls the
+  // page; tap "Zoom" on a chart to drag across the part you want; "Full view"
+  // (or a double-tap) goes back. Mouse: toolbar on hover and wheel zoom.
   const TOUCH = !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
-  const PLOT_CFG = { responsive: true, displaylogo: false, displayModeBar: TOUCH ? false : 'hover', scrollZoom: !TOUCH, doubleClick: 'reset',
+  const PLOT_CFG = { responsive: true, displaylogo: false, displayModeBar: TOUCH ? false : 'hover', scrollZoom: !TOUCH, doubleClick: 'reset', showTips: false,
                      modeBarButtonsToRemove: ['lasso2d', 'select2d', 'autoScale2d', 'toggleSpikelines'] };
   function baseLayout(yTitle, xTitle) {
     const ink = cssVar('--ink2'), grid = cssVar('--grid'), axis = cssVar('--axis');
@@ -7096,6 +7572,103 @@ if (!window.Plotly) (function () {
       dragmode: 'zoom'
     };
   }
+  // ---- every chart: zoom controls (wraps Plotly.react / newPlot once)
+  // Charts where zooming adds nothing (bars, tables drawn as charts): fixed.
+  const NOZOOM = new Set(['chEffects', 'chCmpHF', 'chCmpHR', 'chHist', 'chHistF', 'chHistR', 'hCD', 'hCV', 'hRD', 'hRV', 'chQual', 'chBalance', 'trHist']);
+  const zoomOn = new Set();                       // chart ids with drag-to-zoom on (touch)
+  const axesOf = L => Object.keys(L || {}).filter(k => /^[xy]axis\d*$/.test(k));
+  const mapLike = L => !!(L && (L.dragmode === 'pan' || L.mapbox || L.map || L.geo));
+  function prepLayout(gd, L) {
+    if (!gd || !L || mapLike(L)) return L;
+    L = Object.assign({}, L);
+    const fix = (k, on) => { L[k] = Object.assign({}, L[k], { fixedrange: on }); };
+    if (NOZOOM.has(gd.id)) { for (const k of axesOf(L).concat(['xaxis', 'yaxis'])) fix(k, true); L.dragmode = false; return L; }
+    if (TOUCH) {
+      L.dragmode = zoomOn.has(gd.id) ? 'zoom' : false;
+      for (const k of axesOf(L).concat(['yaxis'])) if (k[0] === 'y') fix(k, true);   // drag zooms time only
+    }
+    return L;
+  }
+  function fullView(gd) {
+    const u = {}; for (const k of axesOf(gd._fullLayout)) u[k + '.autorange'] = true;
+    gd.__userZoom = false;
+    return Plotly.relayout(gd, u);
+  }
+  // y range that fits the traces inside x range r (so a zoomed stretch isn't flat)
+  function fitY(gd, r) {
+    let lo = Infinity, hi = -Infinity;
+    for (const t of gd.data || []) {
+      if (!t.x || !t.y || (t.yaxis && t.yaxis !== 'y') || t.visible === false || t.visible === 'legendonly') continue;
+      for (let i = 0; i < t.x.length; i++) { const x = t.x[i], y = t.y[i]; if (x >= r[0] && x <= r[1] && isFinite(y)) { if (y < lo) lo = y; if (y > hi) hi = y; } }
+    }
+    if (!(hi > lo)) return {};
+    const pad = 0.08 * (hi - lo);
+    return { 'yaxis.range': [lo - pad, hi + pad] };
+  }
+  // an extra one-off button in a chart's control row (removed when used or on Full view)
+  function ctlButton(gd, key, label, fn) {
+    const bar = gd && gd.parentNode && gd.parentNode.querySelector(':scope > .chartctl'); if (!bar) return;
+    const old = bar.querySelector('[data-k="' + key + '"]'); if (old) old.remove();
+    const b = document.createElement('button'); b.type = 'button'; b.dataset.k = key; b.textContent = label;
+    b.addEventListener('click', () => { b.remove(); fn(); });
+    bar.prepend(b);
+  }
+  function chartControls(gd, L) {
+    if (!gd || mapLike(L) || NOZOOM.has(gd.id) || !gd.on) return;
+    if (!gd.__ctl) {
+      gd.__ctl = true;
+      const wrap = document.createElement('div'); wrap.className = 'chartwrap';
+      gd.parentNode.insertBefore(wrap, gd); wrap.appendChild(gd);
+      const bar = document.createElement('div'); bar.className = 'chartctl';
+      const reset = document.createElement('button'); reset.type = 'button'; reset.className = 'reset hidden'; reset.textContent = '↺ Full view';
+      reset.title = 'Zoom back out'; reset.addEventListener('click', () => fullView(gd));
+      bar.append(reset);
+      if (TOUCH) {
+        const z = document.createElement('button'); z.type = 'button'; z.className = 'zoom'; z.textContent = 'Zoom';
+        z.setAttribute('aria-pressed', 'false'); z.title = 'Turn on drag-to-zoom (swipes then zoom instead of scrolling)';
+        z.addEventListener('click', () => {
+          const on = !zoomOn.has(gd.id); on ? zoomOn.add(gd.id) : zoomOn.delete(gd.id);
+          z.setAttribute('aria-pressed', on ? 'true' : 'false'); wrap.classList.toggle('zoomon', on);
+          Plotly.relayout(gd, { dragmode: on ? 'zoom' : false });
+        });
+        bar.append(z);
+      }
+      wrap.insertBefore(bar, gd);
+      gd.__showReset = () => reset.classList.toggle('hidden', !gd.__userZoom);
+      gd.on('plotly_relayout', ev => {
+        if (!ev) return;
+        const ks = Object.keys(ev);
+        if (ks.some(k => /^xaxis\d*\.range/.test(k))) {
+          gd.__userZoom = true;
+          // zoomed in time only: fit y to what's visible, so a short stretch isn't flat
+          // (skipped on very big charts: a second redraw of 300k+ points stalls a phone)
+          if (!ks.some(k => /^yaxis/.test(k)) && (gd.data || []).reduce((n, t) => n + ((t.x && t.x.length) || 0), 0) < 150000) {
+            const r = ev['xaxis.range'] || [ev['xaxis.range[0]'], ev['xaxis.range[1]']];
+            if (r && isFinite(+r[0]) && isFinite(+r[1])) { const u = fitY(gd, [+r[0], +r[1]]); if (Object.keys(u).length) setTimeout(() => Plotly.relayout(gd, u), 0); }
+          }
+        }
+        else if (ks.some(k => /^xaxis\d*\.autorange/.test(k))) gd.__userZoom = false;
+        gd.__showReset();
+      });
+      gd.on('plotly_doubleclick', () => { gd.__userZoom = false; gd.__showReset(); });
+    } else if (gd.__showReset) {
+      // redrawn with new data: a zoom set by the layout itself is not the user's
+      const fl = gd._fullLayout; if (fl && fl.xaxis && fl.xaxis.autorange) { gd.__userZoom = false; gd.__showReset(); }
+    }
+  }
+  const plotlyReady = window.plotlyReady || Promise.resolve(!!window.Plotly);
+  plotlyReady.then(function wrapPlotly() {
+    if (!window.Plotly || !Plotly.version || Plotly.__wrapped) return;
+    Plotly.__wrapped = true;
+    for (const fn of ['react', 'newPlot']) {
+      const orig = Plotly[fn];
+      Plotly[fn] = function (gd, data, layout, cfg) {
+        const node = typeof gd === 'string' ? document.getElementById(gd) : gd;
+        const L = prepLayout(node, layout);
+        return Promise.resolve(orig.call(Plotly, node || gd, data, L, cfg)).then(r => { try { chartControls(node, L); } catch (e) {} return r; });
+      };
+    }
+  });
   function line(name, x, y, color) {
     return { type: x.length > 4000 ? 'scattergl' : 'scatter', mode: 'lines', name, x, y,
              line: { color, width: 1.5 }, hovertemplate: '%{y:.1f}<extra>' + name + '</extra>' };
@@ -7149,7 +7722,7 @@ if (!window.Plotly) (function () {
   function fillParts(id, list) {
     const sel = $('anPart'), cur = sel.value || 'desc';
     sel.textContent = '';
-    sel.append(el('option', { value: 'desc' }, list && list.length > 1 ? 'Descents (all ' + list.length + ' runs)' : 'Descents'));
+    sel.append(el('option', { value: 'desc' }, list && list.length > 1 ? 'All ' + list.length + ' downhill runs' : 'Downhill run'));
     (list || []).forEach((d, i) => sel.append(el('option', { value: 'run' + i }, partLabel(d, i))));
     sel.append(el('option', { value: 'whole' }, 'Whole recording'));
     sel.value = [...sel.options].some(o => o.value === cur) ? cur : 'desc';
@@ -7166,22 +7739,21 @@ if (!window.Plotly) (function () {
       if ($('anPart').dataset.ride !== String(id)) fillParts(id, list);
       const part = $('anPart').value;
       $('trimBox').classList.toggle('hidden', part !== 'whole');
-      if (part === 'whole' || !list.length) { if (!list.length && part !== 'whole') { $('anPart').value = 'whole'; $('trimBox').classList.remove('hidden'); } return Object.assign(whole(), { note: list.length ? '' : 'No descents found (no riding at speed), so the whole recording is shown.' }); }
+      if (part === 'whole' || !list.length) { if (!list.length && part !== 'whole') { $('anPart').value = 'whole'; $('trimBox').classList.remove('hidden'); } return Object.assign(whole(), { note: list.length ? '' : 'No downhill runs found (no riding at speed), so the whole recording is shown.' }); }
       if (part === 'desc' && list.length > 1) {
         const comb = window.SEG.combineParts(list.map(d => ({ parsed, t0: d.t0, t1: d.t1, name: parsed.name })));
         comb.name = parsed.name + ' (descents)';
-        return { parsed: comb, p: Object.assign(base, { fixedZero: z }), note: 'Descents only: ' + plural(list.length, 'run') + ' joined (standing, climbs and lifts cut out). Pick one run or the whole recording under Part.' };
+        return { parsed: comb, p: Object.assign(base, { fixedZero: z }), note: plural(list.length, 'downhill run') + ' joined (standing, climbs and lifts cut out). Pick one run or the whole recording under Which part.' };
       }
       const d = part === 'desc' ? list[0] : list[+part.slice(3)] || list[0];
-      return { parsed, p: Object.assign(base, { trimStart: d.t0, trimEnd: d.t1, fixedZero: z }), note: (part === 'desc' ? 'Descent only' : partLabel(d, list.indexOf(d))) + ' (standing and climbing cut out).' };
+      return { parsed, p: Object.assign(base, { trimStart: d.t0, trimEnd: d.t1, fixedZero: z }), note: (part === 'desc' ? 'Downhill run only' : partLabel(d, list.indexOf(d))) + ' (standing and climbing cut out).' };
     });
   }
   function runAnalyze() {
     readParamInputs();
     if (anJob && anJob.parts) {                     // several rides' descents together
-      msg('anMsg', 'Analyzing ' + anJob.label + '…');
       const job = anJob;
-      return Promise.all(job.parts.map(q => getParsed(q.id).then(parsed => ({ parsed, t0: q.t0, t1: q.t1, name: parsed.name }))))
+      return Promise.all([busyMsg('anMsg', 'Analyzing ' + job.label + '…'), plotlyReady]).then(() => Promise.all(job.parts.map(q => getParsed(q.id).then(parsed => ({ parsed, t0: q.t0, t1: q.t1, name: parsed.name })))))
         .then(parts => (segOK() ? window.SegUI.zero(job.parts[0].id) : Promise.resolve(null)).then(z => {
           const comb = window.SEG.combineParts(parts); comb.name = job.label;
           return showAnalysis(comb, Object.assign({}, params, { fixedZero: z }), job.note || ('Analyzed ' + job.label + ': ' + plural(parts.length, 'run') + ' joined.'));
@@ -7189,14 +7761,17 @@ if (!window.Plotly) (function () {
     }
     const id = +$('anRide').value;
     if (!id) { msg('anMsg', 'Choose a ride first.', 'err'); return Promise.resolve(null); }
-    msg('anMsg', 'Analyzing…');
-    return getParsed(id).then(parsed => jobFor(id, parsed)).then(j => showAnalysis(j.parsed, j.p, j.note))
+    const big = (rides.find(r => r.id === id) || {}).size > 20e6;
+    return Promise.all([busyMsg('anMsg', big ? 'Analyzing a big ride… this can take a few seconds.' : 'Analyzing…'), plotlyReady]).then(() => getParsed(id)).then(parsed => jobFor(id, parsed)).then(j => showAnalysis(j.parsed, j.p, j.note))
       .catch(e => { console.error(e); msg('anMsg', e.message, 'err'); return null; });
   }
   function showAnalysis(parsed, p, note) {
     const t0 = performance.now();
     const r = SA.analyze(parsed, p);
     r.name = parsed.name;
+    const tk = r.potOn && (!r.potOn.front || !r.potOn.rear) ? (!r.potOn.front ? 'Front' : 'Rear') + ' sensor not connected on this ride, so its numbers are left out. ' : '';
+    const zw = (r.zero && r.zero.warn) || [];
+    const tkAll = tk + (zw.length ? zw.join(' ') + ' ' : '');
     if (r.rows < 10) { msg('anMsg', 'Not enough data after trimming (' + r.rows + ' rows).', 'err'); return null; }
     Object.defineProperty(r, '_parsed', { value: parsed, enumerable: false });
     try { r.track = TRACK.build(parsed, r); } catch (e) { console.warn(e); r.track = { ok: false, reason: 'The GPS track could not be read (' + e.message + ').' }; }
@@ -7205,7 +7780,8 @@ if (!window.Plotly) (function () {
     $('anRate').textContent = Math.round(r.rate) + ' Hz' + (params.rateOverride > 0 ? ' (override)' : '');
     $('trimEnd').placeholder = fmt(parsed.time[parsed.rows - 1] - parsed.time[0], 1);
     renderAnalysis(r);
-    msg('anMsg', (note ? note + ' ' : '') + 'Analyzed ' + r.rows.toLocaleString() + ' rows in ' + Math.round(performance.now() - t0) + ' ms.', 'ok');
+    msg('anMsg', tkAll + (note ? note + ' ' : '') + 'Done in ' + ((performance.now() - t0) / 1000).toFixed(1) + ' s.', tkAll ? 'warn' : 'ok');
+    const lg = $('procLogText'); if (lg) lg.textContent = 'Analyzed ' + r.rows.toLocaleString() + ' rows in ' + Math.round(performance.now() - t0) + ' ms.\n' + lg.textContent;
     return r;
   }
   function clockS(t) { t = Math.max(0, Math.round(t)); return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0'); }
@@ -7246,7 +7822,7 @@ if (!window.Plotly) (function () {
       tile(r.runTime > 0 ? (r.packedSeconds / r.runTime * 100).toFixed(1) + '%' : '–', 'Time packed', 'front or rear · ' + fmtDur(r.runTime) + ' analyzed'),
       tile(String(ev.length), 'Packing events', 'front ' + r.events.front.length + ' · rear ' + r.events.rear.length),
       tile(String(impacts), 'Total impacts', 'front ' + r.impacts.front.length + ' · rear ' + r.impacts.rear.length),
-      tile(fmt(r.stats.rear.velocity.compression.max, 0), 'Rear max comp. (mm/s)', 'front ' + fmt(r.stats.front.velocity.compression.max, 0)));
+      (r.potOn && !r.potOn.rear ? tile(fmt(r.stats.front.velocity.compression.max, 0), 'Front max comp. (mm/s)', 'rear pot not connected') : tile(fmt(r.stats.rear.velocity.compression.max, 0), 'Rear max comp. (mm/s)', 'front ' + fmt(r.stats.front.velocity.compression.max, 0))));
     $('filterStatus').textContent = filterStatus(r);
     $('procLogText').textContent = r.log.join('\n');
     prepareMap(r);
@@ -7285,15 +7861,18 @@ if (!window.Plotly) (function () {
     Lp.shapes.push({ type: 'line', xref: 'paper', x0: 0, x1: 1, y0: rb, y1: rb, line: { color: cssVar('--muted'), width: 1, dash: 'dash' } });
     Lp.annotations = [{ xref: 'paper', x: 1, y: rb, xanchor: 'right', yanchor: 'bottom', text: 'rear sag', showarrow: false, font: { size: 11, color: cssVar('--muted') } }];
     Lp.shapes.push(cursorShape());
-    const tp = [line('Front', r.time, r.front, s1), line('Rear', r.time, r.rear, s2)];
+    const on = r.potOn || { front: true, rear: true };
+    // rear first, front on top (front is usually the busier trace); an unplugged pot isn't drawn
+    const tp = [on.rear ? line('Rear', r.time, r.rear, s2) : null, on.front ? line('Front', r.time, r.front, s1) : null].filter(Boolean);
     if (params.showRawData) {
       const raw = (name, y, c) => Object.assign(line(name, r.time, y, c), { line: { color: c, width: 0.6 }, opacity: 0.35 });
-      tp.push(raw('Front raw', r.frontRaw, s1), raw('Rear raw', r.rearRaw, s2));
+      if (on.front) tp.push(raw('Front raw', r.frontRaw, s1)); if (on.rear) tp.push(raw('Rear raw', r.rearRaw, s2));
     }
+    if (!on.rear) { Lp.shapes = Lp.shapes.filter(sh => !(sh.xref === 'paper' && sh.y0 === rb && sh.y1 === rb)); Lp.annotations = []; }
     Plotly.react('chPos', tp, Lp, PLOT_CFG);
     const Lv = baseLayout('Velocity (mm/s)'); Lv.uirevision = rideKey(r);
     Lv.shapes = [{ type: 'line', xref: 'paper', x0: 0, x1: 1, y0: 0, y1: 0, line: { color: cssVar('--muted'), width: 1, dash: 'dot' } }, cursorShape()];
-    Plotly.react('chVel', [line('Front', r.time, r.frontVel, s1), line('Rear', r.time, r.rearVel, s2)], Lv, PLOT_CFG);
+    Plotly.react('chVel', [on.rear ? line('Rear', r.time, r.rearVel, s2) : null, on.front ? line('Front', r.time, r.frontVel, s1) : null].filter(Boolean), Lv, PLOT_CFG);
     linkZoom('chPos'); linkZoom('chVel'); linkCharts();
     const bl = $('bandLegend'); bl.textContent = '';
     bl.append(el('span', null, 'Packing zones:'));
@@ -7349,10 +7928,21 @@ if (!window.Plotly) (function () {
         ['Total movement', fmt(P.totalMovement / 1000, 1) + ' m', '95th % vel', fmt(C.p95, 0) + ' mm/s', '95th % vel', fmt(R.p95, 0) + ' mm/s'],
         ['', '', 'Bottom-outs', C.bottomOutCount, 'Top-outs', R.topOutCount]
       ];
+      if (window.innerWidth < 640) {
+        // phone: one metric per row, grouped (6 columns don't fit)
+        t.textContent = ''; const tb2 = el('tbody');
+        [[0, 'Position'], [2, 'Compression'], [4, 'Rebound']].forEach(([c, h]) => {
+          tb2.append(el('tr', null, el('th', { colspan: 2, class: 'l' }, label + ' ' + h.toLowerCase())));
+          rows.forEach(rw => { if (rw[c] !== '') tb2.append(el('tr', null, el('td', null, rw[c]), el('td', { style: 'text-align:right;white-space:nowrap' }, rw[c + 1]))); });
+        });
+        t.append(tb2); return;
+      }
       const tb = el('tbody'); rows.forEach(c => tb.append(el('tr', null, ...c.map(x => el('td', null, x))))); t.append(tb);
     };
-    side('statsFront', 'Front', r.stats.front, r.params.frontTravel);
-    side('statsRear', 'Rear', r.stats.rear, r.params.rearTravel);
+    const on = r.potOn || { front: true, rear: true };
+    const noPot = (id, label, k) => { const t = $(id); t.textContent = ''; t.append(el('tbody', null, el('tr', null, el('td', null, label + ' pot not connected — ' + ((r.potWhy && r.potWhy[k]) || 'no data') + '. Change it in Settings → Sensors.')))); };
+    if (on.front) side('statsFront', 'Front', r.stats.front, r.params.frontTravel); else noPot('statsFront', 'Front', 'front');
+    if (on.rear) side('statsRear', 'Rear', r.stats.rear, r.params.rearTravel); else noPot('statsRear', 'Rear', 'rear');
     const st = $('anStats'); st.textContent = '';
     const F = r.stats.front, R = r.stats.rear;
     const rows = [
@@ -7370,13 +7960,15 @@ if (!window.Plotly) (function () {
       ['Impacts', r.impacts.front.length, r.impacts.rear.length, 0],
       ['Packing index', r.frontPackingIndex, r.rearPackingIndex, 0]
     ];
-    st.append(el('thead', null, el('tr', null, el('th', null, ''), el('th', null, 'Front'), el('th', null, 'Rear'))));
-    const tb = el('tbody'); rows.forEach(([n, a, b, d]) => tb.append(el('tr', null, el('td', null, n), el('td', null, fmt(a, d)), el('td', null, fmt(b, d))))); st.append(tb);
+    st.append(el('thead', null, el('tr', null, el('th', null, ''), el('th', null, 'Front' + (on.front ? '' : ' (not connected)')), el('th', null, 'Rear' + (on.rear ? '' : ' (not connected)')))));
+    const tb = el('tbody'); rows.forEach(([n, a, b, d]) => tb.append(el('tr', null, el('td', null, n), el('td', null, on.front ? fmt(a, d) : '–'), el('td', null, on.rear ? fmt(b, d) : '–')))); st.append(tb);
   }
 
   // ---- events: tap a row to zoom the charts to it (±1.5 s), as in the original
   function zoomToEvent(e) {
+    const backY = window.scrollY;
     showSub('charts');
+    setTimeout(() => ctlButton($('chPos'), 'evback', '\u2039 Back to events', () => { showSub('events'); fullView($('chPos')); requestAnimationFrame(() => window.scrollTo(0, backY)); }), 60);
     const range = [e.start_time - 1.5, e.end_time + 1.5];
     setTimeout(() => { zoomAll({ 'xaxis.range': range, 'xaxis.autorange': false }); setCursor(e.start_time, 'event'); }, 40);
     $('anTabs').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -7385,13 +7977,13 @@ if (!window.Plotly) (function () {
     const et = $('anEvents'); et.textContent = '';
     const all = r.events.front.map(e => Object.assign({ loc: 'Front' }, e)).concat(r.events.rear.map(e => Object.assign({ loc: 'Rear' }, e))).sort((a, b) => a.start_time - b.start_time);
     if (!all.length) { et.append(el('tbody', null, el('tr', null, el('td', null, 'No packing events detected')))); return; }
-    et.append(el('thead', null, el('tr', null, ...['#', 'Time', 'Location', 'Severity', 'Hits', 'Duration', 'Max depth', 'Phases'].map(h => el('th', null, h)))));
+    et.append(el('thead', null, el('tr', null, ...['#', 'Time', 'Location', 'Severity', 'Hits', 'Duration', 'Max depth', 'Phases'].map((h, i) => el('th', { class: i === 0 || i === 5 || i === 7 ? 'wide' : null }, h)))));
     const b = el('tbody');
     all.forEach((e, i) => {
       const tr = el('tr', { tabindex: 0, role: 'button', title: 'Zoom the charts to this event', 'aria-label': 'Event ' + (i + 1) + ', ' + e.loc + ' at ' + fmt(e.start_time, 2) + ' s: zoom the charts to it' },
-        el('td', null, i + 1), el('td', null, fmt(e.start_time, 2) + ' s'), el('td', null, e.loc),
+        el('td', { class: 'wide' }, i + 1), el('td', null, fmt(e.start_time, 2) + ' s'), el('td', null, e.loc === 'Front' ? 'F' : e.loc === 'Rear' ? 'R' : e.loc),
         el('td', null, el('span', { class: 'sw', style: 'background:' + cssVar('--' + BAND[e.category]) }), el('span', { class: 'status-lbl' }, e.severity + ' (' + e.category + ')')),
-        el('td', null, e.hit_count), el('td', null, fmt(e.duration, 2) + ' s'), el('td', null, fmt(e.max_depth, 1) + ' mm'), el('td', { class: 'l' }, e.phases_present.join(', ')));
+        el('td', null, e.hit_count), el('td', { class: 'wide' }, fmt(e.duration, 2) + ' s'), el('td', null, fmt(e.max_depth, 1) + ' mm'), el('td', { class: 'l wide' }, e.phases_present.join(', ')));
       tr.addEventListener('click', () => zoomToEvent(e));
       tr.addEventListener('keydown', k => { if (k.key === 'Enter' || k.key === ' ') { k.preventDefault(); zoomToEvent(e); } });
       b.append(tr);
@@ -7429,7 +8021,7 @@ if (!window.Plotly) (function () {
     const add = (name, L, c) => {
       if (!L.length) return;
       const x = L.map(s => s.depth), y = L.map(s => s.maxVelocity);
-      traces.push({ type: 'scatter', mode: 'markers', name, x, y, marker: { color: c, size: 7, opacity: 0.5 },
+      traces.push({ type: 'scatter', mode: 'markers', name, x, y, marker: { color: c, size: x.length > 1000 ? 5 : 7, opacity: x.length > 1000 ? 0.35 : 0.5 },
                     hovertemplate: 'Depth %{x:.1f} mm<br>Velocity %{y:.0f} mm/s<extra>' + name + '</extra>' });
       const g = regression(x, y);
       if (g) {
@@ -7438,7 +8030,8 @@ if (!window.Plotly) (function () {
         lines.push(el('div', null, el('b', null, name + ': '), g.eq + ', R² = ' + g.r2.toFixed(3)));
       }
     };
-    add('Front', F, s1); add('Rear', R, s2);
+    const onB = r.potOn || { front: true, rear: true };
+    if (onB.rear) add('Rear', R, s2); if (onB.front) add('Front', F, s1);
     lines.forEach(l => box.append(l));
     box.append(el('div', { class: 'muted' }, 'Front: ' + F.length + ' strokes (' + speed + ', ' + fT + ' mm/s wheel) · Rear: ' + R.length + ' strokes (' + speed + ', ' + rT + ' mm/s shock)'));
     const L = baseLayout('Max velocity (mm/s)', 'Stroke depth (mm)');
@@ -7458,26 +8051,30 @@ if (!window.Plotly) (function () {
       Plotly.react(id, [{ type: 'bar', name, x, y: cnt.map(c2 => n ? c2 / n * 100 : 0), marker: { color: c }, customdata: cnt.map((c2, i) => [Math.round(x[i] / travel * 100), c2]),
         hovertemplate: '%{x:.0f} mm (%{customdata[0]}% travel)<br>%{y:.1f}% of time · %{customdata[1]} samples<extra></extra>' }], L, PLOT_CFG);
     };
-    axle('chHistF', r.front, r.params.frontTravel, s1, 'Front');
-    axle('chHistR', r.rear, r.params.rearTravel, s2, 'Rear');
-    Plotly.react('chHist', [histTrace('Front', r.stats.front.histogram, s1), histTrace('Rear', r.stats.rear.histogram, s2)], histLayout(), PLOT_CFG);
-    const hist = (id, data, xl, c) => {
-      const d = $(id);
-      if (!data.length) { Plotly.purge(d); d.textContent = ''; d.append(el('div', { class: 'empty' }, 'No strokes')); return; }
+    const onX = r.potOn || { front: true, rear: true };
+    const noAxle = (id, nm) => { const d = $(id); Plotly.purge(d); d.textContent = ''; d.append(el('div', { class: 'empty' }, nm + ' pot not connected')); };
+    if (onX.front) { if ($('chHistF').firstChild && !$('chHistF').data) $('chHistF').textContent = ''; axle('chHistF', r.front, r.params.frontTravel, s1, 'Front'); } else noAxle('chHistF', 'Front');
+    if (onX.rear) { if ($('chHistR').firstChild && !$('chHistR').data) $('chHistR').textContent = ''; axle('chHistR', r.rear, r.params.rearTravel, s2, 'Rear'); } else noAxle('chHistR', 'Rear');
+    const onH = r.potOn || { front: true, rear: true };
+    Plotly.react('chHist', [onH.front ? histTrace('Front', r.stats.front.histogram, s1) : null, onH.rear ? histTrace('Rear', r.stats.rear.histogram, s2) : null].filter(Boolean), histLayout(), PLOT_CFG);
+    // stroke histograms: front and rear on the same bins, overlaid, one chart per metric
+    const onA = r.potOn || { front: true, rear: true };
+    const hist2 = (id, f, rr, xl) => {
+      const d = $(id), sets = [onA.front ? ['Front', f, s1] : null, onA.rear ? ['Rear', rr, s2] : null].filter(q => q && q[1].length);
+      if (!sets.length) { Plotly.purge(d); d.textContent = ''; d.append(el('div', { class: 'empty' }, 'No strokes')); return; }
       if (d.firstChild && !d.data) d.textContent = '';
-      const L = baseLayout('Count', xl); L.margin = { t: 10, r: 10, b: 40, l: 46 }; L.xaxis.showspikes = false; L.hovermode = 'closest'; L.bargap = 0.06; L.showlegend = false;
-      Plotly.react(d, [{ type: 'histogram', x: data, marker: { color: c }, nbinsx: Math.min(20, Math.max(5, Math.ceil(data.length / 5))),
-        hovertemplate: '%{x}<br>%{y} strokes<extra></extra>' }], L, PLOT_CFG);
+      let lo = Infinity, hi = -Infinity, n = 0; for (const q of sets) for (const v of q[1]) { if (v < lo) lo = v; if (v > hi) hi = v; n++; }
+      const nb = Math.min(24, Math.max(6, Math.ceil(n / 8))), size = (hi - lo) / nb || 1;
+      const L = baseLayout('Strokes', xl); L.margin = { t: 26, r: 10, b: 40, l: 46 }; L.xaxis.showspikes = false; L.hovermode = 'closest'; L.barmode = 'overlay'; L.bargap = 0.04;
+      L.legend = { orientation: 'h', x: 0, y: 1.16, font: { color: cssVar('--ink') } };
+      Plotly.react(d, sets.map(([name, data, c]) => ({ type: 'histogram', name, x: data, opacity: sets.length > 1 ? 0.55 : 0.9, marker: { color: c }, xbins: { start: lo, end: hi + size * 0.001, size },
+        hovertemplate: '%{x}<br>%{y} strokes<extra>' + name + '</extra>' })), L, PLOT_CFG);
     };
     const S = r.strokes;
-    hist('hFCD', S.front.compression.map(s => s.depth), 'Stroke depth (mm)', s1);
-    hist('hFCV', S.front.compression.map(s => s.maxVelocity), 'Max velocity (mm/s)', s1);
-    hist('hFRD', S.front.rebound.map(s => s.depth), 'Stroke depth (mm)', s1);
-    hist('hFRV', S.front.rebound.map(s => s.maxVelocity), 'Max velocity (mm/s)', s1);
-    hist('hRCD', S.rear.compression.map(s => s.depth), 'Stroke depth (mm)', s2);
-    hist('hRCV', S.rear.compression.map(s => s.maxVelocity), 'Max velocity (mm/s)', s2);
-    hist('hRRD', S.rear.rebound.map(s => s.depth), 'Stroke depth (mm)', s2);
-    hist('hRRV', S.rear.rebound.map(s => s.maxVelocity), 'Max velocity (mm/s)', s2);
+    hist2('hCD', S.front.compression.map(s => s.depth), S.rear.compression.map(s => s.depth), 'Stroke depth (mm)');
+    hist2('hCV', S.front.compression.map(s => s.maxVelocity), S.rear.compression.map(s => s.maxVelocity), 'Max velocity (mm/s)');
+    hist2('hRD', S.front.rebound.map(s => s.depth), S.rear.rebound.map(s => s.depth), 'Stroke depth (mm)');
+    hist2('hRV', S.front.rebound.map(s => s.maxVelocity), S.rear.rebound.map(s => s.maxVelocity), 'Max velocity (mm/s)');
   }
 
   // ---- export (as in the original: full results as JSON, short summary to the clipboard)
@@ -7806,11 +8403,15 @@ if (!window.Plotly) (function () {
   function cursorShape() {
     return { type: 'line', xref: 'x', yref: 'paper', x0: 0, x1: 0, y0: 0, y1: 1, visible: false, line: { color: cssVar('--ink'), width: 1.5 } };
   }
+  let cursorTap = 0;
   function linkCharts() {
     for (const id of ['chPos', 'chVel']) {
       const d = $(id); if (!d.on || d.__cursor) continue;
       d.__cursor = true;
-      d.on('plotly_click', e => { const p = e && e.points && e.points[0]; if (p && isFinite(+p.x)) setCursor(+p.x, 'chart'); });
+      // the cursor redraw waits out a possible second tap (redrawing at once
+      // swallowed the double-tap that zooms back out)
+      d.on('plotly_click', e => { const p = e && e.points && e.points[0]; if (!(p && isFinite(+p.x))) return; clearTimeout(cursorTap); const x = +p.x; cursorTap = setTimeout(() => setCursor(x, 'chart'), TOUCH ? 340 : 0); });
+      d.on('plotly_doubleclick', () => { clearTimeout(cursorTap); resetZoom(); });
       d.on('plotly_hover', e => { const p = e && e.points && e.points[0]; if (p && isFinite(+p.x)) cursorSoon(+p.x, 'hover'); });
     }
   }
@@ -7906,7 +8507,9 @@ if (!window.Plotly) (function () {
   function runCompare() {
     if (!selA || !selB) { msg('cmpMsg', 'Choose ride A and ride B (on this tab or in the Rides list).', 'err'); return; }
     readParamInputs();
-    msg('cmpMsg', 'Aligning (GPS or sensors, then pots + IMU) and matching hits…');
+    const big = [selA, selB].some(id => (rides.find(r => r.id === id) || {}).size > 20e6);
+    msg('cmpMsg', 'Lining up the two rides and comparing them…' + (big ? ' Big rides take a few seconds; the screen may pause.' : ''), 'busy');
+    cmpRefused(null);
     $('btnCompare').disabled = true;
     const mode = $('alignMode').value;
     const opts = { mode, refine: $('alignRefine').checked };
@@ -7917,7 +8520,7 @@ if (!window.Plotly) (function () {
     const zeroOf = id => cmpWin && window.SegUI && window.SegUI.ready() ? window.SegUI.zero(id).catch(() => null) : Promise.resolve(null);
     const cut = (p, w, name) => { if (!w || !window.SEG) return p; const c = window.SEG.combineParts([{ parsed: p, t0: w[0], t1: w[1], name }]); c.name = name; return c; };
     let zA = null, zB = null;
-    Promise.all([getParsed(selA), getParsed(selB), pathFile ? pathFile.text() : null, zeroOf(selA), zeroOf(selB)])
+    Promise.all([getParsed(selA), getParsed(selB), pathFile ? pathFile.text() : null, zeroOf(selA), zeroOf(selB), plotlyReady, paint()])
       .then(([pa, pb, pathText, za, zb]) => { zA = za; zB = zb; return new Promise(res => setTimeout(() => res([cmpWin ? cut(pa, cmpWin.A, pa.name) : pa, cmpWin ? cut(pb, cmpWin.B, pb.name) : pb, pathText]), 30)); })   // let the message paint
       .then(([pa, pb, pathText]) => {
         if (pathText != null) {
@@ -7942,11 +8545,33 @@ if (!window.Plotly) (function () {
         lastCompare = R;
         renderCompare(R);
         msg('cmpMsg', 'Done in ' + (R.ms / 1000).toFixed(1) + ' s.', 'ok');
+        if (curView === 'compare') scrollToEl($('cmpResults'));
       })
-      .catch(e => { console.error(e); msg('cmpMsg', e.message, 'err'); })
+      .catch(e => {
+        console.error(e);
+        if (/cannot be lined up reliably/.test(e.message)) { msg('cmpMsg', ''); $('cmpResults').classList.add('hidden'); cmpRefused(e.message); }
+        else msg('cmpMsg', e.message, 'err');
+      })
       .finally(() => { $('btnCompare').disabled = false; });
   }
 
+  // "These rides cannot be lined up reliably": say it plainly, with what to try
+  function cmpRefused(text) {
+    let box = $('cmpRefused');
+    if (!text) { if (box) box.remove(); return; }
+    if (!box) { box = el('div', { id: 'cmpRefused', class: 'card refused', role: 'alert' }); $('cmpMsg').closest('.card').after(box); }
+    box.textContent = '';
+    const noGps = /no GPS/.test(text);
+    box.append(el('h2', null, 'These two rides can\u2019t be lined up'),
+      el('p', null, noGps ? 'One ride has no GPS, and the suspension and motion sensors don\u2019t show a stretch of trail that matches in both rides. Rather than guess, no comparison is shown.'
+        : 'The sensors don\u2019t show a stretch of trail that matches in both rides. Rather than guess, no comparison is shown.'),
+      el('b', null, 'Things to try'),
+      el('ul', null, el('li', null, 'Pick two runs of the same trail (from a ride report or Trails, each run is cut gate to gate).'),
+        el('li', null, 'Record with GPS locked on both rides: wait for the logger\u2019s GPS light before you drop in.'),
+        el('li', null, 'If you know the rides start at the same spot, open Line-up options and choose \u201cBy hand: shift ride B\u201d.')),
+      el('details', { class: 'help' }, el('summary', null, 'Details'), el('div', { class: 'muted' }, text)));
+    scrollToEl(box);
+  }
   const sideName = s => s === 'front' ? 'Front' : 'Rear';
   const fmtP = p => !isFinite(p) ? '–' : p < 0.0001 ? '< 0.0001' : p < 0.001 ? p.toFixed(4) : p.toFixed(3);
   const signed = (x, d) => !isFinite(x) ? '–' : (x > 0 ? '+' : x < 0 ? '−' : '') + Math.abs(x).toFixed(d);
@@ -7966,8 +8591,15 @@ if (!window.Plotly) (function () {
 
     // ---- tiles
     const T = $('cmpTiles'); T.textContent = '';
+    const T2 = $('cmpTiles2'); T2.textContent = '';
     const O = R.pace.overall;
     const bFaster = O.gap < 0, pctW = bFaster ? O.pct : (O.TB / O.TA - 1) * 100;
+    // ---- the answer in one line
+    const H = $('cmpHead'); H.textContent = '';
+    const nmA = (R.A.name || 'A').replace(/\.csv$/i, ''), nmB = (R.B.name || 'B').replace(/\.csv$/i, '');
+    H.append(el('div', { class: 'big' }, O.sig ? el('span', { class: 'tag ' + (bFaster ? 'b' : 'a') }, bFaster ? 'B' : 'A') : null, ' ',
+      O.sig ? (bFaster ? nmB : nmA) + ' was ' + fmtSec(Math.abs(O.gap)) + ' s faster' : 'No clear difference in speed'),
+      el('div', { class: 'muted' }, (O.sig ? Math.abs(pctW).toFixed(1) + '% quicker over the ' : 'Over the ') + fmtDur(O.TA) + ' both rides cover' + ((O.stopA || 0) + (O.stopB || 0) > 0 ? ' (stops taken out)' : '') + '. Open Time lost to see where.'));
     const riding = (O.stopA || 0) + (O.stopB || 0) > 0;
     T.append(tile(O.sig ? (bFaster ? 'B ' : 'A ') + Math.abs(pctW).toFixed(1) + '%' : 'Even', O.sig ? (riding ? 'faster riding' : 'faster overall') : 'No clear overall difference',
       'B ' + (O.gap >= 0 ? '+' : '−') + fmtSec(O.gap) + ' s ± ' + fmtSec(1.96 * O.gapSd) + ' over ' + fmtDur(O.TA) + (riding ? ' of riding' : '')));
@@ -7981,20 +8613,21 @@ if (!window.Plotly) (function () {
     const secLen = R.section.a1 - R.section.a0;
     T.append(tile(fmtDur(secLen), 'Aligned section', 'A ' + fmt(R.section.a0, 0) + '–' + fmt(R.section.a1, 0) + ' s · B ' + fmt(R.section.b0, 0) + '–' + fmt(R.section.b1, 0) + ' s'));
     const tc = tile('–', 'Independent check', ' '), ta = tile('–', 'Timing where trusted', ' '); tc.id = 'tileCheck'; ta.id = 'tileAcc';
-    T.append(tc, ta);
-    T.append(tile(Math.round(O.sensorFrac * 100) + '%', 'Speed from pots/IMU', 'the rest from ' + (R.gps && R.gps.ok ? 'GPS (wider band)' : 'the rough alignment')));
+    T2.append(tc, ta);
+    T2.append(tile(Math.round(O.sensorFrac * 100) + '%', 'Speed from pots/IMU', 'the rest from ' + (R.gps && R.gps.ok ? 'GPS (wider band)' : 'the rough alignment')));
     const al = R.align;
-    if (al.conf && al.groups && al.conf.crossChecked) T.append(tile(Math.round(al.conf.agreed / al.conf.crossChecked * 100) + '%', al.groups[0] + ' vs ' + al.groups[1] + ' agree', 'within 60 ms, on ' + Math.round(al.conf.crossChecked * al.conf.step) + ' s both could check'));
-    if (R.gps && R.gps.ok) T.append(tile(fmt(R.gps.medianErr, 1) + ' m', 'GPS track match', '90% within ' + fmt(R.gps.p90Err, 1) + ' m · ' + R.gps.fixesA + ' / ' + R.gps.fixesB + ' fixes'));
-    else { const m0 = R.coarseMethod.split(' ')[0]; T.append(tile(m0.charAt(0).toUpperCase() + m0.slice(1), 'Rough alignment', R.coarseMethod)); }
+    if (al.conf && al.groups && al.conf.crossChecked) T2.append(tile(Math.round(al.conf.agreed / al.conf.crossChecked * 100) + '%', al.groups[0] + ' vs ' + al.groups[1] + ' agree', 'within 60 ms, on ' + Math.round(al.conf.crossChecked * al.conf.step) + ' s both could check'));
+    if (R.gps && R.gps.ok) T2.append(tile(fmt(R.gps.medianErr, 1) + ' m', 'GPS track match', '90% within ' + fmt(R.gps.p90Err, 1) + ' m · ' + R.gps.fixesA + ' / ' + R.gps.fixesB + ' fixes'));
+    else { const m0 = R.coarseMethod.split(' ')[0]; T2.append(tile(m0.charAt(0).toUpperCase() + m0.slice(1), 'Rough alignment', R.coarseMethod)); }
     const used = R.pairs.filter(p => p.used).length;
-    T.append(tile(String(used), 'Hit pairs used', 'front ' + R.counts.front.used + ' · rear ' + R.counts.rear.used));
+    T2.append(tile(String(used), 'Hit pairs used', 'front ' + R.counts.front.used + ' · rear ' + R.counts.rear.used));
     const sig = R.stats.filter(s => s.sig);
-    T.append(tile(String(sig.length), 'Significant hit changes', 'of ' + R.stats.length + ' metrics · q < ' + params.alpha));
+    T2.append(tile(String(sig.length), 'Significant hit changes', 'of ' + R.stats.length + ' metrics · q < ' + params.alpha));
 
     $('alignInfo').textContent = 'Rough: ' + R.coarseMethod + (R.fine ? ' → refined with ' + (al.channels || []).filter(c => c.weight > 0).map(c => c.label).join(', ') + ' (10 Hz, then ' + R.fine.rate + ' Hz).' : '.');
 
     fillCheckTiles(R);
+    { const tcv = $('tileCheck'); $('cmpSure').querySelector('summary').textContent = 'How sure is this?' + (tcv && !tcv.classList.contains('hidden') ? ' Checked a second way: ' + tcv.querySelector('.v').textContent.toLowerCase() + '.' : ''); }
     // each tab draws when it is first shown (hidden Plotly charts size badly)
     if (fly.R !== R) { flyStop(); fly.R = R; fly.F = null; fly.e = 0; lossWho = null; lossSel = null; }
     cDirty = new Set(CSUBS);
@@ -8632,8 +9265,8 @@ if (!window.Plotly) (function () {
       const tr2 = el('tr', { class: 'whyrow' }, why);
       const zoom = () => {
         tb.querySelectorAll('tr.sel').forEach(r => r.classList.remove('sel')); tr.classList.add('sel'); tr2.classList.add('sel');
-        const r = [X[S.k0], X[S.k1]]; Plotly.relayout('chPace', { 'xaxis.range': r }); Plotly.relayout('chGap', { 'xaxis.range': r });
-        $('chPace').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const r = [X[S.k0], X[S.k1]]; Plotly.relayout('chPace', Object.assign({ 'xaxis.range': r }, fitY($('chPace'), r))); Plotly.relayout('chGap', Object.assign({ 'xaxis.range': r }, fitY($('chGap'), r)));
+        scrollToEl($('chPace').closest('.chartwrap') || $('chPace'));
       };
       [tr, tr2].forEach(x => { x.addEventListener('click', zoom); x.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); zoom(); } }); });
       tb.append(tr, tr2);
@@ -8775,7 +9408,8 @@ if (!window.Plotly) (function () {
       const pa = peaks(side, 'A'), pb = peaks(side, 'B');
       const L = baseLayout(title, 'Time in A (s)');
       L.xaxis.range = [R.section.a0, R.section.a1];
-      Plotly.react(div, [line(nameA, A.time, A[side], s1), line(nameB, bx, by, s2),
+      const lb = line(TOUCH || window.innerWidth < 640 ? 'B' : nameB, bx, by, s2); lb.opacity = 0.75;
+      Plotly.react(div, [line(TOUCH || window.innerWidth < 640 ? 'A' : nameA, A.time, A[side], s1), lb,
         { type: 'scattergl', mode: 'markers', name: 'A hit peaks', x: pa.x, y: pa.y, marker: { color: s1, size: 6, line: { color: cssVar('--surface'), width: 1 } }, showlegend: false, hoverinfo: 'skip' },
         { type: 'scattergl', mode: 'markers', name: 'B hit peaks', x: pb.x, y: pb.y, marker: { color: s2, size: 6, line: { color: cssVar('--surface'), width: 1 } }, showlegend: false, hoverinfo: 'skip' }], L, PLOT_CFG);
     }
@@ -8802,9 +9436,16 @@ if (!window.Plotly) (function () {
       const pick = () => { b.querySelectorAll('tr.sel').forEach(r => r.classList.remove('sel')); tr.classList.add('sel'); showHit(R, p, i); };
       tr.addEventListener('click', pick);
       tr.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
+      if (i >= 30) tr.classList.add('more', 'hidden');
       b.append(tr);
     });
     h.append(b);
+    const old = $('cmpHitsMore'); if (old) old.remove();
+    if (R.pairs.length > 30) {
+      const btn = el('button', { class: 'btn small', id: 'cmpHitsMore', type: 'button', style: 'margin-top:6px' }, 'Show all ' + R.pairs.length + ' hits');
+      btn.addEventListener('click', () => { b.querySelectorAll('tr.more').forEach(r => r.classList.remove('hidden')); btn.remove(); });
+      h.closest('.tbl').after(btn);
+    }
     const first = R.pairs.findIndex(p => p.used);
     if (first >= 0) { b.children[first].classList.add('sel'); showHit(R, R.pairs[first], first); }
   }
@@ -8820,14 +9461,19 @@ if (!window.Plotly) (function () {
     $('hitTitle').textContent = 'Hit ' + (i + 1) + ' · ' + sideName(side) + ' position';
     const Lp = baseLayout('Position (mm)', 'Time in A (s)'), Lv = baseLayout('Velocity (mm/s)', 'Time in A (s)');
     Plotly.react('chHitP', [line('A', ax, Array.from(A[side].subarray(ia0, ia1)), s1), line('B', bx, Array.from(B[side].subarray(ib0, ib1)), s2)], Lp, PLOT_CFG);
-    Plotly.react('chHitV', [line('A', ax, Array.from(A[side + 'Vel'].subarray(ia0, ia1)), s1), line('B', bx, Array.from(B[side + 'Vel'].subarray(ib0, ib1)), s2)], Lv, PLOT_CFG);
+    Promise.resolve(Plotly.react('chHitV', [line('A', ax, Array.from(A[side + 'Vel'].subarray(ia0, ia1)), s1), line('B', bx, Array.from(B[side + 'Vel'].subarray(ib0, ib1)), s2)], Lv, PLOT_CFG))
+      .then(() => { if (!$('chHitP').__synced && $('chHitP').on) { syncZoom([$('chHitP'), $('chHitV')]); $('chHitP').__synced = true; } });
   }
   function lowerIdx(t, x) { let lo = 0, hi = t.length; while (lo < hi) { const m = (lo + hi) >> 1; if (t[m] < x) lo = m + 1; else hi = m; } return lo; }
 
   function renderWhole(R) {
     const { A, B } = R, s1 = cssVar('--s1'), s2 = cssVar('--s2');
-    Plotly.react('chCmpHF', [histTrace('A', A.stats.front.histogram, s1), histTrace('B', B.stats.front.histogram, s2)], histLayout(), PLOT_CFG);
-    Plotly.react('chCmpHR', [histTrace('A', A.stats.rear.histogram, s1), histTrace('B', B.stats.rear.histogram, s2)], histLayout(), PLOT_CFG);
+    // same y scale front and rear, so the two can be compared at a glance
+    const hf = [histTrace('A', A.stats.front.histogram, s1), histTrace('B', B.stats.front.histogram, s2)], hr = [histTrace('A', A.stats.rear.histogram, s1), histTrace('B', B.stats.rear.histogram, s2)];
+    let yMax = 0; for (const t of hf.concat(hr)) for (const v of t.y || []) if (isFinite(v) && v > yMax) yMax = v;
+    const hl = () => { const L = histLayout(); if (yMax > 0) L.yaxis.range = [0, yMax * 1.08]; return L; };
+    Plotly.react('chCmpHF', hf, hl(), PLOT_CFG);
+    Plotly.react('chCmpHR', hr, hl(), PLOT_CFG);
     const rows = [];
     const add = (n, a, b, dp) => rows.push([n, a, b, dp]);
     const ev = r => r.events.front.length + r.events.rear.length;
@@ -8910,29 +9556,29 @@ if (!window.Plotly) (function () {
 
   // ======================================================= API for the Trails tab (trails.js)
   window.SA_APP = {
-    getParsed, rides: () => rides, params: () => params, el, fmt, fmtDur, fmtWhen, fmtBytes, msg, cssVar, LS, showView, plural,
+    getParsed, rides: () => rides, params: () => params, boxShown, boxName, rideHost, el, fmt, fmtDur, fmtWhen, fmtBytes, msg, cssVar, LS, showView, plural,
     cloud: { on: () => cloudOn(), fetch: (path, opts) => cfetch(path, opts) },
     refreshLibrary: () => refreshLibrary(),
     // Analyze one run: the ride cut to t0..t1, on a given sub-tab (e.g. 'stats')
     openAnalyze(id, t0, t1, sub, note) {
       anJob = { id, window: [t0, t1], label: note || '' };
       $('anRide').value = id; $('trimStart').value = (Math.round(t0 * 100) / 100).toString(); $('trimEnd').value = (Math.round(t1 * 100) / 100).toString();
-      showView('analyze');
-      return runAnalyze().then(r => { if (r && sub) showSub(sub); return r; });
+      showView('analyze', { from: VIEW_NAME[curView] || null });
+      return runAnalyze().then(r => { if (r && sub) { showSub(sub); scrollToEl($('anTabs').closest('.card') || $('anTabs')); } return r; });
     },
     // Several runs (from one or more rides) analyzed as one: parts [{id, t0, t1}]
     openAnalyzeParts(parts, label, sub, note) {
       anJob = { parts, label, note };
       $('anRide').value = parts[0].id;
-      showView('analyze');
-      return runAnalyze().then(r => { if (r && sub) showSub(sub); return r; });
+      showView('analyze', { from: VIEW_NAME[curView] || null });
+      return runAnalyze().then(r => { if (r && sub) { showSub(sub); scrollToEl($('anTabs').closest('.card') || $('anTabs')); } return r; });
     },
     // Compare two runs, each ride cut to its own window
     openCompare(idA, wA, idB, wB, label, csub) {
       selA = idA; selB = idB; LS.set('selA', selA); LS.set('selB', selB);
       renderLibrary(); fillSelects();
       cmpWin = { A: wA, B: wB, label }; showCmpWin();
-      showView('compare');
+      showView('compare', { from: VIEW_NAME[curView] || null });
       if (csub && CSUBS.includes(csub)) showCsub(csub);      // e.g. 'loss': where time was gained and lost
       runCompare();
     }
