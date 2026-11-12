@@ -2922,9 +2922,11 @@ if (!window.Plotly) (function () {
     const Y = new Float64Array(N); fuse(yF, yG, Y);
     const biasMain = Float64Array.from(bias);
     const z = smooth(Y), dz = deriv(z), lr = new Float64Array(N), pct = new Float64Array(N);
-    // The time gap is a sum, not a rate: it gets its own light 1 s smoothing so
-    // it (and the total) doesn't move when the speed window is changed
-    const solveG = T > 1 ? whittaker(Wn, lambdaFor(1, fs)) : solve;
+    // The time gap is a sum, not a rate: where the timing is measured (hit
+    // anchors, trusted sensors) it is read off the map, with only 0.4 s of
+    // smoothing, so hit-to-hit differences keep their ms precision and the
+    // total doesn't move when the speed window is changed
+    const solveG = whittaker(Wn, lambdaFor(0.4, fs));
     const smoothG = y => { const r = new Float64Array(N); for (let k = 0; k < N; k++) r[k] = Wn[k] * y[k]; return solveG(r); };
     const zG = smoothG(Y);
     for (let k = 0; k < N; k++) { lr[k] = toLr(dz[k]); pct[k] = lrPct(lr[k]); }
@@ -2937,7 +2939,9 @@ if (!window.Plotly) (function () {
     const dz2 = deriv(solve2(rhs)), biasL = new Float64Array(N);
     for (let k = 0; k < N; k++) biasL[k] = Math.abs(lr[k] - toLr(dz2[k]));
     // Residual check: if inputs scatter more than their σ says, widen the noise
-    const res = []; for (let k = 0; k < N; k++) if (W[k] > 0) res.push(Math.abs(Y[k] - z[k]) * Math.sqrt(W[k]));
+    // (against the light gap fit: scatter around the 5 s curve is mostly real
+    // speed changes, which the smoothing-bias term above already covers)
+    const res = []; for (let k = 0; k < N; k++) if (W[k] > 0) res.push(Math.abs(Y[k] - zG[k]) * Math.sqrt(W[k]));
     const scale = clamp(1.4826 * median(res), 1, 5);
     // Monte Carlo: correlated noise for each source — sensors (τ 0.4 s),
     // GPS drift (τ 40 s) and GPS scatter (τ 2 s) — pushed through the same
@@ -3907,7 +3911,14 @@ if (!window.Plotly) (function () {
     out.map = al.map;
     out.quality = matchQuality(A, B, out.map);
     out.qualityCoarse = matchQuality(A, B, out.coarse);
-    const hp = pairHits(A, B, out.map, p);
+    let hp = pairHits(A, B, out.map, p);
+    // Hit-to-hit timing: every clearly paired hit is a sharp event in both
+    // rides, timed to a few ms at the logger rate. They pin the map down and
+    // set the confidence where they are (see hitAnchors).
+    try {
+      out.anchors = al.refined ? hitAnchors(A, B, al, hp.pairs, p) : null;
+      if (out.anchors && out.anchors.used) { out.map = al.map; hp = pairHits(A, B, out.map, p); }
+    } catch (e) { console.warn('Hit anchors:', e); out.anchors = null; }
     out.pairs = hp.pairs; out.counts = hp.counts;
     out.stats = compareStats(hp.pairs, p);
     out.section = { a0: out.map.a[0], a1: out.map.a[out.map.a.length - 1], b0: out.map.b[0], b1: out.map.b[out.map.b.length - 1] };
@@ -3927,6 +3938,111 @@ if (!window.Plotly) (function () {
     } catch (e) { al.stops = null; }
     updatePace(out, A, B, p);
     return out;
+  }
+
+  // ============================================================ hit anchors
+  // Each hit found in both rides (shape match >= 0.5) is cross-correlated at
+  // the logger rate (pot position, hit +-0.1 s, lag +-80 ms, sub-sample peak).
+  // Anchors that disagree with their neighbours (> 15 ms or 3 MAD from the
+  // local median) are dropped. The rest:
+  //  1. correct the map: the residual lag, linear between anchors <= 3 s
+  //     apart, fading out (1 s) beyond the first / last of a run;
+  //  2. set the confidence at each hit: fully trusted, timing sigma = the
+  //     anchors' own scatter (neighbour differences);
+  //  3. widen the compared section to the first / last anchor.
+  function hitAnchors(A, B, al, pairs, p) {
+    const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+    const fs = A.rate || 250, map = al.map, list = [], L = Math.round(0.08 * fs);
+    const pear = (x, y) => { const n = x.length; let sx = 0, sy = 0; for (let i = 0; i < n; i++) { sx += x[i]; sy += y[i]; }
+      const mx = sx / n, my = sy / n; let a = 0, b = 0, c = 0; for (let i = 0; i < n; i++) { const u = x[i] - mx, v = y[i] - my; a += u * v; b += u * u; c += v * v; } return b > 0 && c > 0 ? a / Math.sqrt(b * c) : NaN; };
+    for (const r of pairs) {
+      if (r.src !== 'both' || !(r.corr >= 0.5)) continue;
+      const side = r.side, ya = A[side], yb = B[side]; if (!ya || !yb) continue;
+      const t0 = r.a.start - 0.1, t1 = Math.min(r.a.end + 0.1, t0 + 1.2), n = Math.round((t1 - t0) * fs);
+      if (n < 20) continue;
+      const xa = new Float64Array(n), tb = new Float64Array(n); let ok = true;
+      // B is shifted rigidly around the hit (slope 1), NOT resampled along the
+      // warp: a warp bent inside the window would make any shape fit and the
+      // hit would just confirm the DTW's own jitter
+      const bc = mapAtoB(map, r.a.peak); if (!isFinite(bc)) continue;
+      for (let i = 0; i < n; i++) { const t = t0 + i / fs; xa[i] = interp(A.time, ya, t); tb[i] = bc + (t - r.a.peak); if (!isFinite(xa[i])) { ok = false; break; } }
+      if (!ok) continue;
+      const cs = new Float64Array(2 * L + 1), yy = new Float64Array(n);
+      for (let l = -L; l <= L; l++) { for (let i = 0; i < n; i++) yy[i] = interp(B.time, yb, tb[i] + l / fs); cs[l + L] = pear(xa, yy); }
+      let k = 0; for (let i = 1; i < cs.length; i++) if (cs[i] > cs[k] || !isFinite(cs[k])) k = i;
+      if (k === 0 || k === cs.length - 1 || !(cs[k] >= 0.7)) continue;
+      // distinct: a bump 0.15–0.5 s away mustn't match about as well (evenly
+      // spaced bumps would let a map one bump off "confirm" itself)
+      let far = -1; const l0 = Math.round(0.15 * fs), l1 = Math.round(0.5 * fs);
+      for (let l = l0; l <= l1; l += 2) for (const sg of [-1, 1]) { for (let i = 0; i < n; i++) yy[i] = interp(B.time, yb, tb[i] + sg * l / fs); const v = pear(xa, yy); if (v > far) far = v; }
+      if (cs[k] - far < 0.1) continue;
+      const d = cs[k - 1] - 2 * cs[k] + cs[k + 1], f = d < 0 ? clamp(0.5 * (cs[k - 1] - cs[k + 1]) / d, -0.5, 0.5) : 0;
+      list.push({ t: r.a.peak, side, lag: (k - L + f) / fs, r: cs[k], margin: cs[k] - far });
+    }
+    list.sort((x, y) => x.t - y.t);
+    const mid = arr => median(arr);
+    // neighbour consistency (+-2 s, needs 2 others)
+    for (const a of list) {
+      const nb = list.filter(b => b !== a && Math.abs(b.t - a.t) <= 2).map(b => b.lag);
+      if (nb.length < 2) { a.ok = Math.abs(a.lag) < 0.02; continue; }
+      const m = mid(nb), mad = 1.4826 * mid(nb.map(v => Math.abs(v - m)));
+      a.ok = Math.abs(a.lag - m) <= Math.max(0.015, 3 * mad);
+    }
+    const good = list.filter(a => a.ok);
+    const res = { list, used: good.length, n: list.length };
+    if (good.length < 4) { res.used = 0; return res; }
+    // timing noise of one anchor, from neighbour differences
+    const dd = []; for (let i = 1; i < good.length; i++) if (good[i].t - good[i - 1].t < 2) dd.push(Math.abs(good[i].lag - good[i - 1].lag) / Math.SQRT2);
+    const sA = Math.max(0.002, dd.length >= 3 ? 1.4826 * mid(dd) : 0.005);
+    res.sigma = sA;
+    // 1. corrected map
+    const corr = t => {
+      let j = 0; while (j < good.length && good[j].t < t) j++;
+      const l = good[j - 1], r = good[j];
+      if (l && r && r.t - l.t <= 3) return l.lag + (r.lag - l.lag) * (t - l.t) / (r.t - l.t);
+      const nearA = !l ? r : !r ? l : (t - l.t < r.t - t ? l : r);
+      return nearA.lag * Math.exp(-Math.abs(t - nearA.t) / 1);
+    };
+    const nb = new Float64Array(map.a.length);
+    for (let i = 0; i < map.a.length; i++) nb[i] = map.b[i] + corr(map.a[i]);
+    for (let i = 1; i < nb.length; i++) if (nb[i] < nb[i - 1]) nb[i] = nb[i - 1];    // stays monotone
+    const newMap = { a: map.a, b: nb };
+    al.map = newMap; if (al.maps) al.maps.all = newMap;
+    // 2. confidence
+    const c = al.conf; if (c) {
+      const near = t => { let m = Infinity; for (const a of good) { const d = Math.abs(a.t - t); if (d < m) m = d; } return m; };
+      let nT = 0;
+      for (let g = 0; g < c.n; g++) {
+        // only at the hit itself: between hits the map is the DTW's, which can
+        // wander through flat stretches (fork topped out); the smoother bridges
+        // from hit to hit there unless the sensors are trusted on their own
+        const d = near(c.t0 + g * c.step); if (!(d <= 0.15)) continue;
+        const sg = sA, q = 1;
+        if (!(c.sigma[g] < sg && c.qAll[g] >= q)) { c.sigma[g] = Math.min(c.sigma[g] > 0 ? c.sigma[g] : Infinity, sg); c.qAll[g] = Math.max(c.qAll[g], q); }
+        c.wF[g] = c.qAll[g] / (c.sigma[g] * c.sigma[g]); nT++;
+      }
+      // Between two hits under 2 s apart the hits are the better measurement:
+      // the DTW in between jitters by ~20–150 ms (its own lags at the hits show
+      // it), while a straight line between hits misses by ≤ 15–35 ms (checked
+      // leaving one hit out). So the DTW counts as ±0.1 s there and the gap is
+      // carried from hit to hit.
+      for (let g = 0; g < c.n; g++) {
+        const t = c.t0 + g * c.step; let l = null, r = null;
+        for (const a of good) { if (a.t <= t) l = a; else { r = a; break; } }
+        if (!l || !r || r.t - l.t > 2 || Math.min(t - l.t, r.t - t) <= 0.15) continue;
+        if (c.sigma[g] < 0.1) { c.sigma[g] = 0.1; c.wF[g] = c.qAll[g] / 0.01; }
+      }
+      res.trusted = nT * c.step;
+    }
+    // 3. section: first to last anchor (every time gap is measured from the
+    //    start, so the start should be a hit, timed to a few ms); without
+    //    enough span, first to last trusted stretch
+    if (good[good.length - 1].t - good[0].t >= 10) al.paceSection = { a0: good[0].t, a1: good[good.length - 1].t };
+    else if (c) {
+      let g0 = 0, g1 = c.n - 1; while (g0 < c.n && !(c.wF[g0] > 0 && c.qAll[g0] > 0.3)) g0++; while (g1 > g0 && !(c.wF[g1] > 0 && c.qAll[g1] > 0.3)) g1--;
+      if (g1 - g0 >= 10 / c.step) al.paceSection = { a0: c.t0 + g0 * c.step, a1: c.t0 + g1 * c.step };
+    }
+    return res;
   }
   const LOSS_WINDOW = 4;
   // Speed difference and sectors; cheap enough to redo when the window changes
@@ -4075,7 +4191,7 @@ if (!window.Plotly) (function () {
   const pctTxt = v => v >= 100 ? 'full travel' : v.toFixed(0) + '% of travel';
 
   const CMP = { run, updatePace, explainLosses, interp, mapAtoB, mapBtoA, detectHits, hitMetrics, pairHits, pairedStats, compareStats,
-                wilcoxon, bh, tTwoSided, tQuantile, matchQuality, attachImu, imuChannel, METRICS, median, pearson, resample };
+                wilcoxon, bh, tTwoSided, tQuantile, matchQuality, hitAnchors, attachImu, imuChannel, METRICS, median, pearson, resample };
   if (typeof module !== 'undefined' && module.exports) module.exports = CMP;
   else root.CMP = CMP;
 })(typeof window !== 'undefined' ? window : this);
@@ -8952,6 +9068,12 @@ if (!window.Plotly) (function () {
     if (v) { tc.querySelector('.v').textContent = v[0]; tc.querySelector('.s').textContent = (isFinite(ck.r) && ['confirmed', 'partly', 'disagree'].includes(ck.verdict) ? 'r = ' + ck.r.toFixed(2) + ' \u00b7 ' : '') + v[1]; }
     const okAcc = ck && isFinite(ck.tMed) && !['noisy', 'few'].includes(ck.verdict);
     ta.classList.toggle('hidden', !okAcc);
+    if (R.anchors && R.anchors.used) {          // hit to hit: the direct measurement wins over the coarse check
+      ta.classList.remove('hidden');
+      ta.querySelector('.v').textContent = '\u00b1' + Math.max(1, Math.round(1.96 * Math.SQRT2 * R.anchors.sigma * 1000)) + ' ms';
+      ta.querySelector('.s').textContent = 'hit to hit (95%), ' + R.anchors.used + ' hits timed in both rides';
+      return;
+    }
     if (okAcc) { ta.querySelector('.v').textContent = '\u00b1' + Math.round(ck.tMed * 1000) + ' ms'; ta.querySelector('.s').textContent = isFinite(ck.speedErr) ? 'speed \u00b1' + ck.speedErr.toFixed(1) + '% over ' + R.pace.window + ' s' : 'median, vs independent check'; }
   }
   function renderPace(R) {
@@ -9010,10 +9132,19 @@ if (!window.Plotly) (function () {
     const G = baseLayout('B behind (+) / ahead (−) s', xTitle);
     G.shapes = L.shapes.filter(s => s.type === 'rect');
     G.showlegend = false;
+    const xAtT = t => useDist ? CMP.interp(pc.t, pc.dist, t) : t;
     Plotly.react('chGap', [
       { type: 'scatter', mode: 'lines', x: X, y: Array.from(pc.gapHi), line: { width: 0 }, hoverinfo: 'skip' },
       { type: 'scatter', mode: 'lines', x: X, y: Array.from(pc.gapLo), fill: 'tonexty', fillcolor: alpha(cssVar('--accent'), 0.16), line: { width: 0 }, hoverinfo: 'skip' },
-      { type: 'scatter', mode: 'lines', x: X, y: Array.from(pc.gap), line: { color: cssVar('--accent'), width: 2 }, hovertemplate: '%{y:+.2f} s<extra>time gap</extra>' }
+      { type: 'scatter', mode: 'lines', x: X, y: Array.from(pc.gap), line: { color: cssVar('--accent'), width: 2 }, hovertemplate: '%{y:+.2f} s<extra>time gap</extra>' },
+      // hits timed in both rides: the gap between any two of these is measured, not smoothed
+      ...(() => {
+        const H = R.anchors && R.anchors.used ? R.anchors.list.filter(a => a.ok && a.t >= pc.t[0] && a.t <= pc.t[pc.t.length - 1]) : [];
+        if (!H.length) return [];
+        const e = 1.96 * Math.SQRT2 * R.anchors.sigma;
+        return [{ type: 'scatter', mode: 'markers', x: H.map(a => xAtT(a.t)), y: H.map(a => CMP.interp(pc.t, pc.gap, a.t)), marker: { size: 5, color: cssVar('--ink'), line: { color: cssVar('--surface'), width: 1 } },
+                  hovertemplate: '%{y:+.3f} s \u00b1' + Math.round(e * 1000) + ' ms<extra>hit</extra>' }];
+      })()
     ], G, PLOT_CFG);
     if (!$('chPace').__synced) { syncZoom([$('chPace'), $('chGap')]); $('chPace').__synced = true; }
     const nStops = (pc.stops || []).filter(St => !St.edge).length;
