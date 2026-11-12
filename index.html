@@ -2776,11 +2776,18 @@ if (!window.Plotly) (function () {
     // Without GPS the rough map is only a guess at the ends, so the speed
     // curve covers the span between the first and last trusted sensor match
     out.paceSection = { a0: tA0, a1: tA1 };
-    if (co.method !== 'GPS') {
-      let g0 = 0, g1 = nG - 1; while (g0 < nG && !(wF[g0] > 0)) g0++; while (g1 > g0 && !(wF[g1] > 0)) g1--;
+    // With GPS too: the ends of the shared section are often a standing start
+    // or one rider braking to a stop (one file ending early). There the GPS
+    // can't place either rider to within seconds, and every time difference
+    // is measured from the start, so an untrusted end shifts the whole gap
+    // curve and makes it depend on the smoothing window. The comparison runs
+    // from the first to the last stretch the sensors lock on (≥ 1 s of trust).
+    {
+      const firm = g => { let c = 0; for (let q = g; q < Math.min(nG, g + 5); q++) if (qAll[q] > 0.3) c++; return c >= 5; };
+      let g0 = 0, g1 = nG - 1; while (g0 < nG && !firm(g0)) g0++; while (g1 > g0 && !firm(g1 - 4)) g1--;
       if (g1 - g0 >= 10 / gridStep) {
         out.paceSection = { a0: tA0 + g0 * gridStep, a1: tA0 + g1 * gridStep };
-        if (g0 * gridStep > 2 || (nG - 1 - g1) * gridStep > 2) out.notes.push('Without GPS the speed comparison covers ' + out.paceSection.a0.toFixed(0) + '\u2013' + out.paceSection.a1.toFixed(0) + ' s of ride A, where the sensors lock on.');
+        if (g0 * gridStep > 2 || (nG - 1 - g1) * gridStep > 2) out.notes.push('The speed comparison and time gaps cover ' + out.paceSection.a0.toFixed(0) + '\u2013' + out.paceSection.a1.toFixed(0) + ' s of ride A, from the first to the last place the pots and IMU lock on' + (co.method === 'GPS' ? ' (outside that, e.g. a standing start or one rider stopping, GPS alone can\u2019t time it to better than seconds)' : '') + '.');
       }
     }
     return out;
@@ -2871,6 +2878,12 @@ if (!window.Plotly) (function () {
       const s = sigmaAt(sg, tt);
       sSlow[k] = interpClamp(sg.t, sg.slow, tt); sFast[k] = interpClamp(sg.t, sg.fast, tt);
       yG[k] = isFinite(gq) ? gq : (k ? yG[k - 1] : 0); wG[k] = isFinite(gq) ? 1 / (s * s) : 1e-4;
+      // A stop at the very start or end (waiting, or the alignment running out
+      // where one file ends early) is only bridged where the sensors don't
+      // lock on: a trusted sensor match there is still a good measurement, and
+      // bridging the last second extrapolates the curve and shifts the total.
+      let inner = false; for (const S of stops) if (!S.edge && tt >= S.tA0 - 1 && tt <= S.tA1 + 1) inner = true;
+      if (stopMask[k] && !inner && wF[k] > 0) stopMask[k] = 0;
       if (stopMask[k]) { wF[k] = 0; wG[k] = 1e-6; }   // at a stop: bridged by the smoother
     }
     const W = new Float64Array(N), Wn = new Float64Array(N), info = new Float32Array(N);
@@ -2909,6 +2922,11 @@ if (!window.Plotly) (function () {
     const Y = new Float64Array(N); fuse(yF, yG, Y);
     const biasMain = Float64Array.from(bias);
     const z = smooth(Y), dz = deriv(z), lr = new Float64Array(N), pct = new Float64Array(N);
+    // The time gap is a sum, not a rate: it gets its own light 1 s smoothing so
+    // it (and the total) doesn't move when the speed window is changed
+    const solveG = T > 1 ? whittaker(Wn, lambdaFor(1, fs)) : solve;
+    const smoothG = y => { const r = new Float64Array(N); for (let k = 0; k < N; k++) r[k] = Wn[k] * y[k]; return solveG(r); };
+    const zG = smoothG(Y);
     for (let k = 0; k < N; k++) { lr[k] = toLr(dz[k]); pct[k] = lrPct(lr[k]); }
     // Smoothing bias: the band covers the noise of the smoothed curve, not
     // what smoothing rounds off (sharp changes, and the longer effective window
@@ -2938,8 +2956,8 @@ if (!window.Plotly) (function () {
         yg[k] = yG[k] + scale * (eS * sSlow[k] + eQ * sFast[k]);
       }
       fuse(yf, yg, ys);
-      const zs = smooth(ys), ds = deriv(zs), ps = new Float32Array(N), zz = new Float32Array(N);
-      for (let k = 0; k < N; k++) { ps[k] = toLr(ds[k]); zz[k] = zs[k] - zs[0]; const e = ps[k] - lr[k]; sum[k] += e; sq[k] += e * e; const ge = zz[k] - (z[k] - z[0]); gsum[k] += ge; gsq[k] += ge * ge; }
+      const zs = smooth(ys), ds = deriv(zs), ps = new Float32Array(N), zz = new Float32Array(N), zg = smoothG(ys);
+      for (let k = 0; k < N; k++) { ps[k] = toLr(ds[k]); zz[k] = zs[k] - zs[0]; const e = ps[k] - lr[k]; sum[k] += e; sq[k] += e * e; const ge = (zg[k] - zg[0]) - (zG[k] - zG[0]); gsum[k] += ge; gsq[k] += ge * ge; }
       drawsP.push(ps); drawsZ.push(zz);
     }
     const sdL = new Float64Array(N), gsd = new Float64Array(N);
@@ -2952,7 +2970,7 @@ if (!window.Plotly) (function () {
     const gapLo = new Float64Array(N), gapHi = new Float64Array(N), sig = new Uint8Array(N), sd = new Float64Array(N);
     let nSig = 0;
     for (let k = 0; k < N; k++) {
-      gap[k] = z[k] - z[0];
+      gap[k] = zG[k] - zG[0];
       lo[k] = lrPct(lr[k] - 1.96 * sdL[k]); hi[k] = lrPct(lr[k] + 1.96 * sdL[k]);
       slo[k] = lrPct(lr[k] - c * sdL[k] - biasL[k]); shi[k] = lrPct(lr[k] + c * sdL[k] + biasL[k]);
       sd[k] = (hi[k] - lo[k]) / 3.92;
