@@ -271,44 +271,6 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
 .gainloss{font-size:13px;color:var(--ink2);margin:3px 0 4px}
 .report ul.insights{margin:10px 0 0}
 .report ul.insights li:first-child{font-size:15px}
-/* ---- UX pass: first run, report takeaways, busy states, plain help */
-.h1sub{font-weight:500;color:var(--ink2)}
-@media(max-width:380px){.h1sub{display:none}}
-.start h2{font-size:18px}
-ol.startsteps{list-style:none;counter-reset:st;margin:10px 0 0;padding:0;display:grid;gap:12px}
-ol.startsteps>li{counter-increment:st;position:relative;padding:0 0 0 40px;min-height:30px}
-ol.startsteps>li::before{content:counter(st);position:absolute;left:0;top:0;width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--accentInk);display:grid;place-items:center;font-weight:700;font-size:14px}
-ol.startsteps>li>b{display:block;font-size:15px;margin:2px 0}
-label.btn{cursor:pointer}
-details.help{margin-top:6px}
-details.help>summary{font-weight:600;color:var(--ink2);font-size:14px}
-.msg.busy::before,.spin{content:"";display:inline-block;width:14px;height:14px;margin-right:8px;vertical-align:-2px;border-radius:50%;border:2px solid var(--grid);border-top-color:var(--accent);animation:spin .8s linear infinite;will-change:transform}
-.msg.warn{color:var(--ink)}
-@keyframes spin{to{transform:rotate(360deg)}}
-@media(prefers-reduced-motion:reduce){.msg.busy::before,.spin{animation-duration:2.4s}}
-.working{display:flex;align-items:center;gap:0;margin:10px 0 0;padding:10px 12px;border-radius:10px;background:var(--chip);font-size:14px}
-ul.takeaways{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:8px}
-ul.takeaways li{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:10px 12px 10px 14px;border-radius:10px;background:var(--surface);border:1px solid var(--ring);border-left:5px solid var(--s1);font-size:15px;line-height:1.4}
-ul.takeaways li>span{flex:1 1 200px}
-ul.takeaways li.good{border-left-color:var(--good)}
-ul.takeaways li.warn{border-left-color:var(--warn)}
-ul.takeaways li.info{border-left-color:var(--s1)}
-.nextacts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-.nextacts .btn{flex:1 1 160px}
-.report h3{font-size:15px;color:var(--ink);margin:16px 0 4px}
-.report ul.insights.plain li:first-child{font-weight:400;list-style:disc;margin-left:0;font-size:14px}
-.report ul.insights.plain{font-size:14px;color:var(--ink2)}
-.otherride{margin-top:14px;padding-top:10px;border-top:1px solid var(--ring)}
-.banner.offline{background:var(--card);border-left:5px solid var(--warn)}
-.headline{margin:0 0 10px}
-.headline .big{font-size:20px;font-weight:700;line-height:1.3}
-.headline .tag{font-size:13px;vertical-align:3px;margin:0 2px 0 0}
-#cmpSure{margin-top:8px}#cmpSure>summary{font-size:15px;font-weight:600;color:var(--ink2)}
-.notes{margin-top:8px;padding:10px 12px;border-radius:10px;background:var(--chip);font-size:14px;display:grid;gap:4px}
-.card.refused{border-left:5px solid var(--warn)}
-.card.refused h2{font-size:17px}
-.card.refused ul{margin:4px 0 0;padding-left:20px}.card.refused li{margin:3px 0}
-.btn.wide1{flex:1 1 auto;max-width:360px}
 /* ---- phone */
 .alignpick{width:210px}
 .abbar{position:sticky;bottom:10px;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--card);border:1px solid var(--accent);box-shadow:0 4px 14px rgba(0,0,0,.18)}
@@ -335,7 +297,7 @@ ul.takeaways li.info{border-left-color:var(--s1)}
 <body>
 <header>
   <div class="top">
-    <h1>ShokIQ <span class="h1sub">Analyzer</span> <span class="appver" id="appVer" title="Analyzer version">v2026.11.08b</span></h1>
+    <h1>Suspension Analyzer <span class="appver" id="appVer" title="Analyzer version">v2026.11.07e</span></h1>
     <span class="chip" id="linkChip"><span class="dot" id="linkDot"></span><span id="linkText">No logger</span></span>
   </div>
   <nav class="tabs" role="tablist">
@@ -350,28 +312,12 @@ ul.takeaways li.info{border-left-color:var(--s1)}
 <main>
   <div id="noCharts" class="banner hidden">Charts can&#39;t load right now (no internet?). Rides, numbers and tables still work; reload when you&#39;re back online to see the charts.</div>
   <div id="incoming" class="banner hidden"></div>
-  <div id="offlineBar" class="banner offline hidden" role="status"><b>You&#39;re offline.</b> Rides on this phone still open. New rides, maps and trail names come in when you have signal again.</div>
 
   <!-- ============================== RIDES ============================== -->
   <section class="view on" id="view-rides">
-    <div id="start" class="card start hidden">
-      <h2>Let&#39;s get your first ride in</h2>
-      <p class="muted" style="margin:0 0 4px">Three steps. After that, every ride shows up here with a short report.</p>
-      <ol class="startsteps">
-        <li><b>Connect your logger</b>
-          <div class="muted">Turn on your phone&#39;s hotspot, then switch the logger on. It joins your hotspot by itself. Flip the toggle to record a ride, flip it back to stop.</div></li>
-        <li><b>Get your rides</b>
-          <div class="muted">With the hotspot on, finished rides upload by themselves and appear here. Next to the logger without signal? Get them straight from it.</div>
-          <div class="row" style="margin-top:6px"><button class="btn primary" id="stGetNew" type="button">Get rides from the logger</button><button class="btn" id="stCloud" type="button">Check for uploaded rides</button></div></li>
-        <li><b>Or open a ride file</b>
-          <div class="muted">Have a CSV from the logger&#39;s SD card? Open it from this phone.</div>
-          <div class="row" style="margin-top:6px"><label class="btn" for="fileInput" id="stOpen">Open a ride file</label></div></li>
-      </ol>
-      <div id="stMsg" class="msg" role="status"></div>
-    </div>
     <div id="report"></div>
     <div class="card hidden" id="quickLook"></div>
-    <div class="card" id="loggerCard" style="scroll-margin-top:110px">
+    <div class="card" style="scroll-margin-top:110px">
       <h2>Logger</h2>
       <div id="devStatus" class="devstatus hidden" role="status"></div>
       <div class="row">
@@ -382,11 +328,9 @@ ul.takeaways li.info{border-left-color:var(--s1)}
       </div>
       <div class="row" style="margin-top:8px">
         <button class="btn primary" id="btnGetNew">Get new rides</button>
-        <button class="btn" id="btnList">See what&#39;s on the logger</button>
+        <button class="btn" id="btnList">Show recordings</button>
       </div>
-      <details class="help"><summary>How getting rides works</summary>
-        <div class="muted">A logger tab opens for a moment: it hands the recordings to this page and closes by itself. Your phone must be on the same network as the logger (your hotspot). Android: use the logger&#39;s IP if <code>.local</code> doesn't work.</div>
-      </details>
+      <div class="muted" style="margin-top:6px">Opens a logger tab for a moment: it hands the recordings to this page and closes by itself. Your phone must be on the same network as the logger (your hotspot). Android: use the logger&#39;s IP if <code>.local</code> doesn't work.</div>
       <div id="linkMsg" class="msg" role="status"></div>
       <div id="cloudLine" class="msg" role="status"></div>
       <div class="progress hidden" id="importBar"><div></div></div>
@@ -400,9 +344,9 @@ ul.takeaways li.info{border-left-color:var(--s1)}
       </div>
     </div>
 
-    <div class="card" id="libCard">
+    <div class="card">
       <div class="row" style="justify-content:space-between">
-        <h2 style="margin:0">All rides</h2>
+        <h2 style="margin:0">Ride library</h2>
         <span class="muted" id="storageInfo"></span>
       </div>
       <div class="muted" style="margin:4px 0 10px">Saved in this browser on this device. Tap <b>A</b> and <b>B</b> to pick two rides to compare.</div>
@@ -412,9 +356,9 @@ ul.takeaways li.info{border-left-color:var(--s1)}
         <span class="muted" style="font-size:13px">Picking one box also limits cloud downloads to it.</span>
       </div>
       <ul class="list" id="rideList"></ul>
-      <input type="file" id="fileInput" accept=".csv,text/csv" multiple class="hidden">
-      <label class="drop" id="drop" for="fileInput" style="display:block;margin-top:10px">
-        &#128193; Open ride files (CSV) from this phone
+      <label class="drop" id="drop" style="display:block;margin-top:10px">
+        <input type="file" id="fileInput" accept=".csv,text/csv" multiple class="hidden">
+        &#128193; Open CSV files from this device (or drop them here)
       </label>
     </div>
   </section>
@@ -438,7 +382,7 @@ ul.takeaways li.info{border-left-color:var(--s1)}
     <div id="trHome">
       <div class="card">
         <div class="row" style="justify-content:space-between"><h2 style="margin:0">Segments</h2><button class="btn small" id="trNewBtn">Make one by hand</button></div>
-        <label class="row" style="gap:6px;margin-top:6px;font-size:14px"><input type="checkbox" id="trAuto" checked> Make segments by themselves from runs I ride more than once</label>
+        <label class="row" style="gap:6px;margin-top:6px;font-size:14px"><input type="checkbox" id="trAuto" checked> Make segments automatically from descents I ride more than once</label>
         <div id="trStatus" class="msg" role="status"></div>
         <div id="trList"></div>
       </div>
@@ -461,10 +405,10 @@ ul.takeaways li.info{border-left-color:var(--s1)}
           <label class="f" for="anRide">Ride</label>
           <select id="anRide"></select>
         </div>
-        <span class="rate-badge" id="anRate" title="Readings per second in this file">&ndash; Hz</span>
+        <span class="rate-badge" id="anRate" title="Rows per second in this file">&ndash; Hz</span>
       </div>
       <div class="row" style="margin-top:8px">
-        <div style="min-width:200px;flex:1 1 200px"><label class="f" for="anPart">Which part</label><select id="anPart"><option value="desc">Downhill runs</option><option value="whole">Whole recording</option></select></div>
+        <div style="min-width:200px;flex:1 1 200px"><label class="f" for="anPart">Part</label><select id="anPart"><option value="desc">Descents</option><option value="whole">Whole recording</option></select></div>
         <span id="trimBox" class="row hidden">
         <div style="width:130px"><label class="f" for="trimStart">Trim start (s)</label><input id="trimStart" type="number" min="0" step="0.1" value="0"></div>
         <div style="width:130px"><label class="f" for="trimEnd">Trim end (s)</label><input id="trimEnd" type="number" min="0" step="0.1" placeholder="end"></div>
@@ -472,7 +416,8 @@ ul.takeaways li.info{border-left-color:var(--s1)}
         <button class="btn primary" id="btnAnalyze" style="align-self:flex-end">Analyze</button>
       </div>
       <div id="anMsg" class="msg"></div>
-      <details id="procLog"><summary>Technical details</summary><div class="muted" id="filterStatus" style="margin-top:4px"></div><pre id="procLogText" class="log"></pre></details>
+      <div class="muted" id="filterStatus" style="margin-top:4px"></div>
+      <details id="procLog"><summary>Processing log</summary><pre id="procLogText" class="log"></pre></details>
     </div>
 
     <div id="anResults" class="hidden">
@@ -485,7 +430,7 @@ ul.takeaways li.info{border-left-color:var(--s1)}
         <nav class="subtabs" id="anTabs" role="tablist" aria-label="Analysis views">
           <button type="button" role="tab" data-sub="charts" class="on">Charts</button>
           <button type="button" role="tab" data-sub="map">Map</button>
-          <button type="button" role="tab" data-sub="imu">Motion</button>
+          <button type="button" role="tab" data-sub="imu">IMU</button>
           <button type="button" role="tab" data-sub="stats">Statistics</button>
           <button type="button" role="tab" data-sub="events">Events</button>
           <button type="button" role="tab" data-sub="balance">Balance</button>
@@ -634,18 +579,15 @@ ul.takeaways li.info{border-left-color:var(--s1)}
         <div><label class="f" for="cmpA"><span class="tag a">A</span> Reference ride</label><select id="cmpA"></select></div>
         <div><label class="f" for="cmpB"><span class="tag b">B</span> Comparison ride</label><select id="cmpB"></select></div>
       </div>
-      <div class="row" style="margin-top:12px"><button class="btn primary wide1" id="btnCompare" type="button">Compare these rides</button></div>
-      <div id="cmpMsg" class="msg" role="status"></div>
-      <details id="cmpOpts" style="margin-top:4px"><summary>Line-up options</summary>
-        <div class="muted" style="margin-bottom:6px">To compare, the two rides are lined up so the same spot on the trail matches in both. Automatic works for most rides.</div>
+      <h3>Line up B with A</h3>
       <div class="row">
-        <div class="alignpick"><label class="f" for="alignMode">Line up by</label>
+        <div class="alignpick"><label class="f" for="alignMode">Rough alignment</label>
           <select id="alignMode">
-            <option value="gps">Automatic (GPS, or sensors if no GPS)</option>
-            <option value="pots">Sensors only (ignore GPS)</option>
-            <option value="manual">By hand: shift ride B</option>
-            <option value="path">From a mapping file</option>
-            <option value="none">Starts of the files</option>
+            <option value="gps">GPS track (recommended; uses the sensors when there is no GPS)</option>
+            <option value="pots">Sensors only (travel + IMU, no GPS)</option>
+            <option value="manual">Manual offset</option>
+            <option value="path">Mapping file (time pairs or warp path)</option>
+            <option value="none">Start of file</option>
           </select></div>
         <div id="offBox" class="hidden" style="width:150px"><label class="f" for="offset">B offset (s)</label><input id="offset" type="number" step="0.05" value="0"></div>
         <div id="dtwBox" class="hidden row">
@@ -653,9 +595,10 @@ ul.takeaways li.info{border-left-color:var(--s1)}
           <div style="width:170px"><label class="f" for="dtwRate">Index rate (Hz, index pairs only)</label><input id="dtwRate" type="number" min="1" step="1" placeholder="250"></div>
           <div class="muted" style="flex-basis:100%">A file with a <code>time1,time2</code> header (or decimal numbers) is read as seconds in ride A and ride B; whole-number pairs are sample indices at the index rate.</div>
         </div>
-        <label class="row" style="gap:6px;align-self:flex-end;min-height:42px"><input type="checkbox" id="alignRefine" checked> Fine-tune with the suspension and motion sensors</label>
+        <label class="row" style="gap:6px;align-self:flex-end;min-height:42px"><input type="checkbox" id="alignRefine" checked> Refine with pots + IMU</label>
+        <button class="btn primary" id="btnCompare" style="align-self:flex-end">Compare</button>
       </div>
-      <details style="margin-top:8px"><summary>Expert settings</summary>
+      <details style="margin-top:8px"><summary>Alignment settings</summary>
         <div class="grid3">
           <div><label class="f" for="p_alignBand">Sensor search window, max (&plusmn; s)</label><input id="p_alignBand" type="number" min="0.5" max="20" step="0.1"></div>
           <div><label class="f" for="p_alignRate">Fine alignment rate (Hz)</label><input id="p_alignRate" type="number" min="10" max="250" step="5"></div>
@@ -666,17 +609,13 @@ ul.takeaways li.info{border-left-color:var(--s1)}
         </div>
         <div class="muted" style="margin-top:6px">GPS matches the two tracks by position and heading (resampled every 2&nbsp;m) and trims both rides to the section they share; every point gets a timing uncertainty from the GPS drift, speed and gaps between fixes. The pots and IMU then fine-tune the timing in two passes (10&nbsp;Hz inside that uncertainty, then the fine rate within &plusmn;0.35&nbsp;s), with the warp speed limited to 0.5&ndash;2&times; so it can&#39;t jitter on noise. The search window caps how far the sensors may move the timing from GPS. GPS drift: about 3.5&nbsp;m for a 1&nbsp;Hz receiver; lower it for a 10&nbsp;Hz or RTK unit.</div>
       </details>
-      </details>
-      <details class="help"><summary>How lining up works</summary>
-        <div class="muted">No two runs take exactly the same time, so the analyzer matches them up point by point. First it uses GPS (where you were on the trail). Then it fine-tunes with the suspension sensors and the motion sensors (IMU) in the logger box, which feel the same bumps in both rides. This stretching of one ride's clock to fit the other is called <i>time warping</i>. Every comparison is checked a second, independent way; if the rides can&#39;t be matched reliably, you&#39;re told instead of shown made-up numbers.</div>
-        <div class="muted" id="alignInfo" style="margin-top:6px"></div>
-      </details>
+      <div class="muted" id="alignInfo" style="margin-top:6px"></div>
+      <div id="cmpMsg" class="msg"></div>
     </div>
 
     <div id="cmpResults" class="hidden">
-      <div class="card"><div id="cmpHead" class="headline"></div><div class="tiles" id="cmpTiles"></div>
-        <details id="cmpSure"><summary>How sure is this?</summary><div class="tiles" id="cmpTiles2" style="margin-top:6px"></div></details>
-        <div id="cmpNotes" class="notes hidden"></div></div>
+      <div id="cmpNotes" class="banner hidden"></div>
+      <div class="card"><div class="tiles" id="cmpTiles"></div></div>
       <div class="card tabcard">
         <nav class="subtabs" id="cmpTabs" role="tablist" aria-label="Comparison views">
           <button type="button" role="tab" data-csub="speed" class="on">Speed</button>
@@ -896,8 +835,7 @@ ul.takeaways li.info{border-left-color:var(--s1)}
     <div class="card">
       <h2>Cloud &amp; notifications</h2>
       <div class="muted" id="offlineState" style="margin-bottom:6px"></div>
-      <div class="muted" style="margin-bottom:8px">Your logger uploads each ride over your hotspot when you stop recording. With this set, new rides show up here by themselves.</div>
-      <details class="help"><summary>Using your own cloud</summary><div class="muted">The rides go to a Cloudflare Worker (logger firmware 4.4 or newer). To use your own, enter its address and read key below. Setup steps: FIRMWARE_SUMMARY.md, section 13.</div></details>
+      <div class="muted" style="margin-bottom:8px">Your logger (firmware 4.4+) uploads each ride to your own Cloudflare Worker after Stop, over your hotspot. With this set, new rides come in by themselves when this page opens, from anywhere, without a logger tab. Setup steps: FIRMWARE_SUMMARY.md, section 13.</div>
       <div class="grid3">
         <div style="grid-column:span 2"><label class="f" for="cloudUrl">Worker address</label><input id="cloudUrl" type="url" inputmode="url" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="https://suspension-logger.NAME.workers.dev"></div>
         <div><label class="f" for="cloudKey">Read key</label><input id="cloudKey" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off"></div>
@@ -926,19 +864,19 @@ ul.takeaways li.info{border-left-color:var(--s1)}
       </div>
       <h3>Sensors</h3>
       <div class="grid2">
-        <div><label class="f" for="p_frontPotStroke">Front sensor length (mm)</label><input id="p_frontPotStroke" type="number" min="1"></div>
-        <div><label class="f" for="p_rearPotStroke">Rear sensor length (mm)</label><input id="p_rearPotStroke" type="number" min="1"></div>
+        <div><label class="f" for="p_frontPotStroke">Front pot stroke (mm)</label><input id="p_frontPotStroke" type="number" min="1"></div>
+        <div><label class="f" for="p_rearPotStroke">Rear pot stroke (mm)</label><input id="p_rearPotStroke" type="number" min="1"></div>
       </div>
       <div class="row" style="margin-top:8px">
-        <label class="row" style="gap:6px"><input type="checkbox" id="p_invertFront"> Flip front sensor direction</label>
-        <label class="row" style="gap:6px"><input type="checkbox" id="p_invertRear"> Flip rear sensor direction</label>
+        <label class="row" style="gap:6px"><input type="checkbox" id="p_invertFront"> Invert front</label>
+        <label class="row" style="gap:6px"><input type="checkbox" id="p_invertRear"> Invert rear</label>
       </div>
       <div class="grid2" style="margin-top:8px">
-        <div><label class="f" for="p_frontPot">Front sensor</label><select id="p_frontPot"><option value="auto">Auto-detect</option><option value="on">Connected</option><option value="off">Not connected</option></select></div>
-        <div><label class="f" for="p_rearPot">Rear sensor</label><select id="p_rearPot"><option value="auto">Auto-detect</option><option value="on">Connected</option><option value="off">Not connected</option></select></div>
+        <div><label class="f" for="p_frontPot">Front pot</label><select id="p_frontPot"><option value="auto">Auto-detect</option><option value="on">Connected</option><option value="off">Not connected</option></select></div>
+        <div><label class="f" for="p_rearPot">Rear pot</label><select id="p_rearPot"><option value="auto">Auto-detect</option><option value="on">Connected</option><option value="off">Not connected</option></select></div>
       </div>
-      <p class="muted" style="margin:4px 0 0">A travel sensor (potentiometer, or &ldquo;pot&rdquo;) that isn&#39;t plugged in is left out of the numbers, the ride report and lining up rides. Auto-detect spots an unplugged one.</p>
-      <details style="margin-top:10px"><summary>Smoothing</summary>
+      <p class="muted" style="margin:4px 0 0">A pot that isn't plugged in is left out of stats, the ride report and run alignment. Auto-detect spots one that only picks up the other pot's signal.</p>
+      <h3>Data filtering</h3>
       <div class="filterbox">
         <div class="grid3">
           <div><label class="f" for="p_filterType">Filter type</label>
@@ -953,9 +891,7 @@ ul.takeaways li.info{border-left-color:var(--s1)}
         </div>
         <div class="muted" id="filterHelp" style="margin-top:6px"></div>
       </div>
-      </details>
-      <details><summary>Rear linkage (shock to wheel)</summary>
-      <div class="muted">wheel = a + b&middot;s + c&middot;s&sup2; + d&middot;s&sup3;, where s is shock travel. Easiest: fit it from a linkage file below.</div>
+      <h3>Rear linkage: shock &rarr; wheel (wheel = a + b&middot;s + c&middot;s&sup2; + d&middot;s&sup3;)</h3>
       <div class="grid2">
         <div><label class="f" for="p_rearA">a</label><input id="p_rearA" type="number" step="any"></div>
         <div><label class="f" for="p_rearB">b</label><input id="p_rearB" type="number" step="any"></div>
@@ -967,7 +903,6 @@ ul.takeaways li.info{border-left-color:var(--s1)}
         &#128202; Fit a, b, c, d from a linkage CSV (shock mm, wheel mm)
       </label>
       <div id="linkageMsg" class="msg"></div>
-      </details>
 
       <details style="margin-top:10px"><summary>Filtering &amp; velocity</summary>
         <div class="grid3">
@@ -1021,47 +956,42 @@ ul.takeaways li.info{border-left-color:var(--s1)}
       </div>
     </div>
     <div class="card">
-      <details id="aboutNums"><summary>How the numbers are worked out</summary>
+      <h2>About the numbers</h2>
       <div class="muted">Sample rate is read from each file&#39;s time column (logger files: 1000&nbsp;Hz sampled, 4 averaged &rarr; 250 rows/s). Velocity uses a Savitzky-Golay derivative computed for the chosen window and order. Positive velocity is compression everywhere. Results differ from the old SD-card analyzer, whose velocities were about 12&times; too high (it assumed 1000&nbsp;Hz and its filter weights summed to 3.14 instead of 1).</div>
       <div class="muted" style="margin-top:8px"><b>Compare</b> lines the rides up in two stages: GPS first (tracks matched by position and heading), then the pots and frame/bar IMU together (coarse-to-fine DTW with a limited warp speed). The pots-only and IMU-only alignments are also run separately as a cross-check. <b>Speed difference</b> is the slope of the time gap: the gap is fused from the sensor timing (where trusted) and GPS, smoothed, and differentiated; its band comes from 100 simulated re-runs with each input&#39;s own noise, widened so it holds for the whole run at once. Frame and bar IMU readings are converted to g (logger files are already in g; older files in m/s&sup2; are detected).</div>
       <div class="muted" style="margin-top:8px"><b>Compare map</b>: the trail (from A&#39;s GPS, or B&#39;s carried over through the alignment) is coloured by the speed curve on the Speed tab, as the faster rider&#39;s lead in % (blue A, orange B, grey even). The colour scale is fixed per comparison at the 95th percentile of that difference while both riders are moving and the sensors are trusted, rounded up to 3, 5, 8, 10, 15, 20, 25 or 30%; stops (where the alignment has one rider at least 4&times; slower for 3&nbsp;s or more: one clock runs on while the other covers the same ground) are taken out of the comparison, drawn dark grey and left out of the scale, and anything beyond the scale is drawn at full colour and ringed. The two dots start the section together and move by the alignment&#39;s time gap (stops included), so a rider who stopped waits there. Everything in the comparison comes from the alignment; the GPS only places the trail on the map.</div>
       <div class="muted" style="margin-top:8px"><b>Without GPS</b> the rough alignment comes from the sensors themselves: front and rear travel and the frame and bar IMU are matched by shape (not size, so a different spring, shock or sag still matches) over the whole ride, then in 8&nbsp;s windows, and the windows are chained into one timeline. Only stretches where both riders are moving are matched, so waiting at the start doesn&#39;t count. <b>Independent check</b>: every comparison re-measures the timing a second way, by plain cross-correlation in 4&nbsp;s windows with no DTW, and says whether the bumps in the speed curve are real. On two real runs with different shocks (2000&nbsp;Hz, no GPS) the result agreed with it to about 25&ndash;30&nbsp;ms where trusted, and the speed to about &plusmn;1.5% over 5&nbsp;s. <b>Sample rate</b>: settings counted in rows mean rows at 250 a second and are scaled for files at other rates, so they always cover the same time.</div>
-      </details>
     </div>
   </section>
 </main>
 
 <script>
-// The charting library (3.5 MB) loads in the background so the ride report shows
-// at once; charts wait for window.plotlyReady. Served by the logger
-// (http://datalogger.local/analyzer): the copy on its SD card first, so charts work
-// on the logger's own Wi-Fi with no internet. Then the CDNs.
-window.plotlyReady = new Promise(function (done) {
-  var srcs = [];
-  if (location.protocol === 'http:') srcs.push('plotly-2.27.0.min.js');
-  srcs.push('https://cdn.plot.ly/plotly-2.27.0.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.27.0/plotly.min.js');
-  function stub() {
-    /* No charting library (offline?): a stand-in so everything except the charts still works */
-    var note = function (div) {
-      div = typeof div === 'string' ? document.getElementById(div) : div;
-      if (div) {
-        if (!div.on) div.on = function () {};
-        div.innerHTML = '<div style="padding:40px 10px;text-align:center;color:var(--muted)">Chart unavailable - the charting library could not load (no internet?).</div>';
-      }
-      return Promise.resolve(div);
-    };
-    window.Plotly = { react: note, newPlot: note, relayout: function () { return Promise.resolve(); }, restyle: function () { return Promise.resolve(); }, purge: function () {}, Plots: { resize: function () {} } };
+// Served by the logger (http://datalogger.local/analyzer): the copy on its SD card
+// first, so charts work on the logger's own Wi-Fi with no internet. Then the CDNs.
+if (location.protocol === 'http:') document.write('<script src="plotly-2.27.0.min.js" charset="utf-8"><\/script>');
+</script>
+<script>
+if (!window.Plotly) document.write('<script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"><\/script>');
+</script>
+<script>
+if (!window.Plotly) document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.27.0/plotly.min.js" charset="utf-8"><\/script>');
+</script>
+<script>
+/* No charting library (offline?): a stand-in so everything except the charts still works */
+if (!window.Plotly) (function () {
+  var note = function (div) {
+    div = typeof div === 'string' ? document.getElementById(div) : div;
+    if (div) {
+      if (!div.on) div.on = function () {};
+      div.innerHTML = '<div style="padding:40px 10px;text-align:center;color:var(--muted)">Chart unavailable - the charting library could not load (no internet?).</div>';
+    }
+    return Promise.resolve(div);
+  };
+  window.Plotly = { react: note, newPlot: note, relayout: function () { return Promise.resolve(); }, restyle: function () { return Promise.resolve(); }, purge: function () {}, Plots: { resize: function () {} } };
+  document.addEventListener('DOMContentLoaded', function () {
     var b = document.getElementById('noCharts'); if (b) b.classList.remove('hidden');
-  }
-  (function next(i) {
-    if (window.Plotly) return done(true);
-    if (i >= srcs.length) { stub(); return done(false); }
-    var s = document.createElement('script'); s.src = srcs[i]; s.charset = 'utf-8'; s.async = true;
-    s.onload = function () { if (window.Plotly) done(true); else next(i + 1); };
-    s.onerror = function () { next(i + 1); };
-    document.head.appendChild(s);
-  })(0);
-});
+  });
+})();
 </script>
 <script>
 /* ---- analysis.js ---- */
@@ -1239,34 +1169,6 @@ window.plotlyReady = new Promise(function (done) {
   }
   // Robust "top-out" level (from the original analyzer): 2nd percentile, or
   // the 5th when the lowest 5% are spread out (noisy dips)
-  // Full extension ("top-out", 0 mm) of one sensor, from the ride itself.
-  // Riders sit in sag most of the time, so the old rule (2nd/5th percentile)
-  // landed between top-out and sag whenever full extension was rare, and cut
-  // real extension off as negative travel. Now: the 0.5th percentile of the
-  // cleaned (median-filtered) position - about 0.6 s of a 2 min ride at the
-  // most extended - plus checks that tell the rider when no zero from the ride
-  // can be right:
-  //   rail     the sensor reads its end-stop (ADC 0/4095) at full extension:
-  //            the real top-out is past what it can measure
-  //   reversed most of the spread is below the typical position: the sensor
-  //            direction looks flipped (zero then sits at bottom-out)
-  // pos: cleaned position (mm, not yet zeroed); adc: raw ADC after the invert
-  // setting (0 = top-out end), or null
-  function topOutZero(pos, adc, name) {
-    const n = pos.length, out = { zero: 0, how: 'none', warn: [] };
-    if (n < 50) { out.zero = n ? Math.min(...pos) : 0; return out; }
-    const v = Float64Array.from(pos).sort(), q = f => v[Math.min(n - 1, Math.max(0, Math.floor(f * (n - 1))))];
-    out.zero = q(0.005); out.how = '0.5th percentile';
-    const med = q(0.5), lo = med - q(0.01), hi = q(0.99) - med;
-    if (adc) {
-      let top = 0, bot = 0; for (let i = 0; i < adc.length; i++) { if (adc[i] <= 2) top++; else if (adc[i] >= 4093) bot++; }
-      const fTop = top / adc.length, fBot = bot / adc.length;
-      if (fTop >= 0.02) { out.how = 'sensor end-stop'; out.warn.push(name + ' sensor hits its end-stop at full extension (' + Math.round(fTop * 100) + '% of the ride), so full extension is past what it can read: zero and sag are approximate. Move the sensor so it has room at full extension.'); }
-      if (fBot >= 0.02) out.warn.push(name + ' sensor hits its end-stop when compressed (' + Math.round(fBot * 100) + '% of the ride): deep travel is cut off. Check the sensor length setting and mount.');
-    }
-    if (lo > 15 && hi < 0.6 * lo) out.warn.push(name + ' sensor direction looks reversed (the readings spread mostly below the typical position), so zero may be at bottom-out instead of full extension. Try "Flip ' + name.toLowerCase() + ' sensor direction" in Settings.');
-    return out;
-  }
   function robustBaseline(arr) {
     const n = arr.length; if (!n) return 0;
     const v = Float64Array.from(arr).sort();
@@ -1610,7 +1512,6 @@ window.plotlyReady = new Promise(function (done) {
     while (b > a && parsed.time[b - 1] - t0 > end) b--;
     const n = b - a;
     const time = new Float64Array(n), fr = new Float64Array(n), rr = new Float64Array(n);
-    const fAdc = new Uint16Array(n), rAdc = new Uint16Array(n);      // after the invert setting: 0 = top-out end
     const potOn = potsConnected(parsed, a, b, p);
     let fa0 = Infinity, fa1 = -Infinity, ra0 = Infinity, ra1 = -Infinity;
     for (let i = 0; i < n; i++) {
@@ -1620,7 +1521,6 @@ window.plotlyReady = new Promise(function (done) {
       // invert the pot reading before the linkage (a pot mounted the other way round)
       if (p.invertFront) fa = 4095 - fa;
       if (p.invertRear) ra = 4095 - ra;
-      fAdc[i] = fa; rAdc[i] = ra;
       fr[i] = toMM(fa, 'front', p); rr[i] = toMM(ra, 'rear', p);
     }
     // Row-based settings are "rows at 250 rows/s" (the logger's rate), so they
@@ -1641,12 +1541,7 @@ window.plotlyReady = new Promise(function (done) {
     // zero = the robust top-out level, so 0 mm is full extension
     // a part of a ride (a run, descents) uses the zero of the whole recording when it is given (fixedZero)
     const fz = p.fixedZero && isFinite(p.fixedZero.front) && isFinite(p.fixedZero.rear) ? p.fixedZero : null;
-    const zf = potOn.front ? topOutZero(front, fAdc, 'Front') : { zero: 0, how: 'not connected', warn: [] };
-    const zr = potOn.rear ? topOutZero(rear, rAdc, 'Rear') : { zero: 0, how: 'not connected', warn: [] };
-    const zero = fz ? { front: fz.front, rear: fz.rear } : { front: p.autoZero ? zf.zero : 0, rear: p.autoZero ? zr.zero : 0 };
-    // the checks run on this part even when the zero comes from the whole recording
-    zero.warn = fz && fz.warn ? fz.warn.slice() : zf.warn.concat(zr.warn);
-    zero.how = { front: fz ? 'whole recording' : p.autoZero ? zf.how : 'off', rear: fz ? 'whole recording' : p.autoZero ? zr.how : 'off' };
+    const zero = fz ? { front: fz.front, rear: fz.rear } : { front: p.autoZero ? robustBaseline(front) : 0, rear: p.autoZero ? robustBaseline(rear) : 0 };
     for (let i = 0; i < n; i++) { front[i] -= zero.front; rear[i] -= zero.rear; fr[i] -= zero.front; rr[i] -= zero.rear; }
     const vel = x => type === 'savgol' ? perSegment(x, segs, y => sgDerivative(y, rate, p.velocityWindow, p.velocityOrder))
                                        : diffVelocity(x, time, gapT, p.velocityFilterWindow, type);
@@ -1665,8 +1560,7 @@ window.plotlyReady = new Promise(function (done) {
       ...['front', 'rear'].filter(k => !potOn[k]).map(k => (k === 'front' ? 'Front' : 'Rear') + ' pot: ' + (potOn.why[k] || 'not connected') + ' — ignored'),
       'Rear ADC ' + ra0 + '–' + ra1 + ' → ' + f1((ra1 - ra0) / 4095 * p.rearPotStroke) + ' of ' + p.rearPotStroke + ' mm pot stroke used',
       'Position: median ' + p.medianFilterSize + ', max ' + p.maxPosChange + ' mm/row, ' + (type === 'none' || pw < 3 ? 'no smoothing' : (type === 'savgol' ? 'Savitzky-Golay' : 'moving average') + ' ' + pw + ' rows'),
-      'Zero (top-out): ' + (fz ? 'from the whole recording: front ' + f1(zero.front) + ' mm, rear ' + f1(zero.rear) + ' mm' : p.autoZero ? 'front ' + f1(zero.front) + ' mm, rear ' + f1(zero.rear) + ' mm subtracted' : 'off') + (p.autoZero && !fz ? ' (' + zero.how.front + ' / ' + zero.how.rear + ')' : ''),
-      ...zero.warn.map(w => 'Zero check: ' + w),
+      'Zero (top-out): ' + (fz ? 'from the whole recording: front ' + f1(zero.front) + ' mm, rear ' + f1(zero.rear) + ' mm' : p.autoZero ? 'front ' + f1(zero.front) + ' mm, rear ' + f1(zero.rear) + ' mm subtracted' : 'off'),
       'Velocity: ' + (type === 'savgol' ? 'Savitzky-Golay derivative, ' + p.velocityWindow + ' rows, order ' + p.velocityOrder : type === 'moving_average' ? 'difference → median → ±5000 clamp → moving average ' + p.velocityFilterWindow + ' rows' : 'raw difference, ±5000 clamp'),
       'Velocity range: front ' + f0(fv[0]) + ' to ' + f0(fv[1]) + ' mm/s, rear ' + f0(rv[0]) + ' to ' + f0(rv[1]) + ' mm/s',
       'Strokes: front ' + strokes.front.compression.length + ' compression / ' + strokes.front.rebound.length + ' rebound, rear ' + strokes.rear.compression.length + ' / ' + strokes.rear.rebound.length
@@ -2679,7 +2573,7 @@ window.plotlyReady = new Promise(function (done) {
   // centred in the window) between A and mapped B, versus the best of the
   // same correlation with B shifted ±0.2–1.8 s. Also the activity (smaller
   // of the two variances), to tell "smooth" from "different".
-  function evidence(ctx, F, use, w, map, gridStep, half) {
+  function evidence(ctx, F, use, w, map, gridStep, half, wantLag) {
     const fs = F.fs, tA0 = ctx.tA0, nG = Math.floor((ctx.tA1 - tA0) / gridStep) + 1;
     // Dense shifts from 0.2 s: catches periodic ambiguity (pedal bob, evenly
     // spaced braking bumps) where a warp one period off would match as well
@@ -2695,6 +2589,7 @@ window.plotlyReady = new Promise(function (done) {
     const N = F.N, Bm = FB.map(() => new Float32Array(N));
     for (let i = 0; i < N; i++) { const j = mapAtoB(map, tA0 + i / fs) * fs; for (let k = 0; k < K; k++) Bm[k][i] = isFinite(j) ? sampleAt(FB[k], j) : NaN; }
     const r = new Float32Array(nG), rn = new Float32Array(nG), act = new Float32Array(nG);
+    const LM = Math.max(2, Math.round(0.15 * fs)), lag = new Float32Array(nG).fill(NaN), rBest = new Float32Array(nG).fill(NaN);
     const corrAt = (i0, i1, sh, wantAct) => {
       let sxy = 0, sxx = 0, syy = 0, vA = 0, vB = 0, any = false;
       const a0 = Math.max(i0, -sh), a1 = Math.min(i1, N - 1 - sh);
@@ -2711,12 +2606,22 @@ window.plotlyReady = new Promise(function (done) {
     for (let g = 0; g < nG; g++) {
       const ic = Math.round(g * gridStep * fs), i0 = Math.max(0, ic - hs), i1 = Math.min(F.N - 1, ic + hs);
       const c0 = corrAt(i0, i1, 0, true); r[g] = c0.r; act[g] = c0.act;
+      // Residual lag of these channels against the map: best small shift
+      // (±0.15 s), refined to a fraction of a sample. A rigid shift over 2 s
+      // cannot overfit the way a whole single-sensor DTW can.
+      if (wantLag) {
+        let bl = 0, br = c0.r; const cs = new Map([[0, c0.r]]);
+        for (let sh = -LM; sh <= LM; sh++) { if (!sh) continue; const c = corrAt(i0, i1, sh, false).r; cs.set(sh, c); if (isFinite(c) && (!isFinite(br) || c > br)) { br = c; bl = sh; } }
+        let f = 0; const ym = cs.get(bl - 1), yp = cs.get(bl + 1);
+        if (isFinite(ym) && isFinite(yp)) { const d = ym - 2 * br + yp; if (d < 0) f = clamp(0.5 * (ym - yp) / d, -0.5, 0.5); }
+        lag[g] = Math.abs(bl) === LM ? NaN : (bl + f) / fs; rBest[g] = br;
+      }
       let mx = -1, bs = 0; for (const sh of shifts) { const c = corrAt(i0, i1, sh, false); if (isFinite(c.r) && c.r > mx) { mx = c.r; bs = sh; } }
       // refine around the best shift (correlation peaks are narrow)
       for (let d = -2 * fine; d <= 2 * fine; d += fine) { if (!d || Math.abs(bs + d) < 0.18 * fs) continue; const c = corrAt(i0, i1, bs + d, false); if (isFinite(c.r) && c.r > mx) mx = c.r; }
       rn[g] = mx;
     }
-    return { t0: tA0, step: gridStep, n: nG, r, rn, act };
+    return { t0: tA0, step: gridStep, n: nG, r, rn, act, lag, rBest };
   }
   // 0..1: how much a stretch's alignment can be trusted on its own
   const quality = (r, rn) => !isFinite(r) ? 0 : clamp((r - Math.max(rn, 0) - 0.08) / 0.25, 0, 1) * clamp((r - 0.3) / 0.3, 0, 1);
@@ -2778,8 +2683,24 @@ window.plotlyReady = new Promise(function (done) {
     // 4. Confidence on a 0.2 s grid
     const F2 = getFeats(ctx, fAll.rate, Math.min(10, 0.4 * fAll.rate));
     const evA = evidence(ctx, F2, used, w, fAll.map, gridStep, 1.0);
-    const evP = fP ? evidence(ctx, F2, g1, w, fP.map, gridStep, 1.0) : null;
-    const evI = fI ? evidence(ctx, F2, g2, w, fI.map, gridStep, 1.0) : null;
+    // Cross-check: each sensor group's own residual lag against the FUSED map
+    // (not a separate single-group DTW: with one pot and one IMU those wander
+    // by 0.1–1 s through stretches where that sensor sees nothing, and the
+    // disagreement wiped out trust on rides that line up within 10 ms).
+    const evP = fP ? evidence(ctx, F2, g1, w, fAll.map, gridStep, 1.0, true) : null;
+    const evI = fI ? evidence(ctx, F2, g2, w, fAll.map, gridStep, 1.0, true) : null;
+    // What each group says on its own, for the charts and the held-out
+    // channel check: the fused map moved by that group's local lag
+    const lagMap = ev => {
+      const a = [], b = [];
+      for (let g = 0; g < nG; g++) { const t = tA0 + g * gridStep, L = ev.lag[g], m = mapAtoB(fAll.map, t); if (isFinite(L) && isFinite(m) && ev.rBest[g] > 0.3) { a.push(t); b.push(m + L); } }
+      return a.length >= 2 ? { a: Float64Array.from(a), b: Float64Array.from(b) } : null;
+    };
+    if (evP && evI) {
+      const mP = lagMap(evP), mI = lagMap(evI);
+      out.maps.g1 = mP; out.maps.g2 = mI;
+      chs.forEach((c, i) => { out.channels[i].rHeld = g1.includes(i) && mI ? chanCorr(F1, i, mI, tA0, 5).median : g2.includes(i) && mP ? chanCorr(F1, i, mP, tA0, 5).median : NaN; });
+    }
     // Warp roughness: how jerky the implied speed ratio is (0.5 s vs 3 s
     // slopes). Real riding on the same line stays near 0.03; a warp forced
     // through unrelated terrain swings by 0.15–0.8, even when both sensor
@@ -2802,7 +2723,7 @@ window.plotlyReady = new Promise(function (done) {
     // a disagreement that lasts, so only lasting ones count.
     const disM = fP ? (() => {
       const raw = new Float32Array(nG), out = new Float32Array(nG);
-      for (let g = 0; g < nG; g++) { const t = tA0 + g * gridStep; raw[g] = Math.abs(mapAtoB(fP.map, t) - mapAtoB(fI.map, t)); }
+      for (let g = 0; g < nG; g++) raw[g] = Math.abs(evP.lag[g] - evI.lag[g]);
       for (let g = 0; g < nG; g++) { const v = []; for (let q = Math.max(0, g - 3); q <= Math.min(nG - 1, g + 3); q++) if (isFinite(raw[q])) v.push(raw[q]); out[g] = v.length ? median(v) : NaN; }
       return out;
     })() : null;
@@ -2815,18 +2736,23 @@ window.plotlyReady = new Promise(function (done) {
       // through unrelated terrain is jerky AND not distinctive, so the limit
       // grows with how far the match beats its shifted copies.
       const mg = evA.r[g] - Math.max(evA.rn[g], 0), rLim = 0.15 + 0.35 * clamp((mg - 0.25) / 0.25, 0, 1);
-      q *= clamp((rLim - rough[g]) / (0.45 * rLim), 0, 1);
+      // Two independent sensor groups that both lock on and agree on the lag
+      // are direct evidence, so the roughness heuristic (meant for warps no
+      // second sensor can vouch for) is relaxed there.
+      const confirmed = evP && evI && quality(evP.rBest[g], evP.rn[g]) > 0.25 && quality(evI.rBest[g], evI.rn[g]) > 0.25 && Math.abs(evP.lag[g] - evI.lag[g]) < 0.06;
+      q *= clamp((rLim - rough[g]) / (0.45 * rLim), confirmed ? 0.8 : 0, 1);
       q *= clamp((evA.act[g] / act90 - 0.03) / 0.12, 0, 1);      // too quiet: features are mostly noise
       let s2 = 0.02 * 0.02;                             // base timing noise of a trusted match
       if (fP) {
-        qPots[g] = quality(evP.r[g], evP.rn[g]); qImu[g] = quality(evI.r[g], evI.rn[g]);
+        qPots[g] = isFinite(evP.lag[g]) ? quality(evP.rBest[g], evP.rn[g]) : 0; qImu[g] = isFinite(evI.lag[g]) ? quality(evI.rBest[g], evI.rn[g]) : 0;
         dis[g] = disM[g];
         if (qPots[g] > 0.25 && qImu[g] > 0.25 && isFinite(dis[g])) {
           // Both groups see the stretch: they must agree. DTW can always find
           // SOME warp through unrelated terrain, but two independent sensors
           // won't find the same one. Disagreement > 0.2 s → no trust.
           both++; if (dis[g] < 0.06) agree++;
-          s2 += dis[g] * dis[g] / 4;                    // error of the mean of two independent maps ≈ |difference| / 2
+          const mL = (evP.lag[g] + evI.lag[g]) / 2;     // both groups say the fused map is off by this
+          s2 += dis[g] * dis[g] / 4 + mL * mL;          // error of the mean of two independent lags ≈ |difference| / 2
           q *= clamp((0.2 - dis[g]) / 0.12, 0, 1);
           ok[g] = dis[g] < 0.12 ? 1 : 0;
         } else { s2 += 0.03 * 0.03; ok[g] = 2; }        // only one group sees it: unverified
@@ -2845,7 +2771,7 @@ window.plotlyReady = new Promise(function (done) {
     const bad = Math.round(1.5 / gridStep), near = new Uint8Array(nG);
     for (let g = 0; g < nG; g++) if (ok[g] === 0) for (let q = Math.max(0, g - bad); q <= Math.min(nG - 1, g + bad); q++) near[q] = 1;
     for (let g = 0; g < nG; g++) { if (near[g]) qAll[g] = 0; wF[g] = qAll[g] / (sF[g] * sF[g]); }
-    out.conf = { t0: tA0, step: gridStep, n: nG, qAll, qRaw, near, qPots, qImu, dis, wF, sigma: sF, r: evA.r, rn: evA.rn, act: evA.act, ok, rough,
+    out.conf = { lagP: evP && evP.lag, lagI: evI && evI.lag, t0: tA0, step: gridStep, n: nG, qAll, qRaw, near, qPots, qImu, dis, wF, sigma: sF, r: evA.r, rn: evA.rn, act: evA.act, ok, rough,
                  crossChecked: both, agreed: agree };
     // Without GPS the rough map is only a guess at the ends, so the speed
     // curve covers the span between the first and last trusted sensor match
@@ -3432,7 +3358,7 @@ window.plotlyReady = new Promise(function (done) {
     const chans = R => {
       const n = Math.floor(R.time[R.time.length - 1] * fs) + 1, out = [];
       const add = y => { const r = resample(R.time, lowpass(y, R.rate, 10), 0, fs, n); out.push(r); };
-      add(R.front); add(R.rear);
+      for (const k of ['front', 'rear']) if (potUsed(A, B, k)) add(R[k]);   // an unplugged pot is all zeros: it would void every window
       if (R.imu) for (const k of ['frame', 'bar']) if (R.imu[k]) add(R.imu[k].acc);
       return { n, ch: out };
     };
@@ -5334,7 +5260,6 @@ window.plotlyReady = new Promise(function (done) {
     // an unplugged pot has no numbers (not zeros)
     for (const [k, sfx] of [['front', 'F'], ['rear', 'R']]) if (!on[k]) for (const key of Object.keys(out)) if (key.endsWith(sfx) && key !== 'kmh') out[key] = null;
     out.potOff = !on.front ? 'front' : !on.rear ? 'rear' : null;
-    out.zeroWarn = zero && zero.warn ? zero.warn.slice(0, 3) : [];     // zero checks of the whole recording
     return out;
   }
 
@@ -5735,8 +5660,7 @@ window.plotlyReady = new Promise(function (done) {
   // A session: one rider's recordings with less than 2 h between them (you can stop and start, or power off, between runs)
   function sessions() {
     const by = new Map();
-    for (const r of rides) { if (A.boxShown && !A.boxShown(r)) continue;   // the box picked in Rides
-      const k = riderOf(r); if (!by.has(k)) by.set(k, []); by.get(k).push(r); }
+    for (const r of rides) { const k = riderOf(r); if (!by.has(k)) by.set(k, []); by.get(k).push(r); }
     const out = [];
     for (const [rider, list] of by) {
       list.sort((a, b) => whenOf(a) - whenOf(b));
@@ -5758,64 +5682,18 @@ window.plotlyReady = new Promise(function (done) {
     const st = SEG.effortStats(ctx.parsed, A.params(), { t0: d.t0, t1: d.t1, time: d.t1 - d.t0 }, null, ctx.r.zero);
     quick.set(k, st); return st;
   }
-  let reportSession = null, reportGen = 0;
-  const pct = x => Math.round(x) + '%';
-  // Plain-language takeaways from the runs' numbers (the first 2–4 things a rider wants to know)
-  function takeaways(S, runs, stats, E) {
-    const out = [];                       // [kind, text, action?]
-    const lab = i => { const { r, d } = runs[i]; const e = E.find(x => x.rideKey === r.key && x.t0 < d.t1 && x.t1 > d.t0); const s = e && segs.find(x => x.id === e.segId); return s ? s.name : 'run ' + (i + 1); };
-    // personal bests / timed runs
-    const prs = E.filter(e => { const prior = efforts.filter(x => x.segId === e.segId && x.rider === e.rider && x.when < e.when); return prior.length && e.time < Math.min(...prior.map(x => x.time)) - 0.05; });
-    if (prs.length) out.push(['good', A.plural(prs.length, 'personal best') + ': ' + prs.map(e => { const s = segs.find(x => x.id === e.segId); return (s ? s.name : '?') + ' ' + fmtT(e.time); }).join(', ') + '.']);
-    else if (E.length) {
-      const near = E.map(e => { const prior = efforts.filter(x => x.segId === e.segId && x.rider === e.rider && x.when < e.when); return prior.length ? [e, e.time - Math.min(...prior.map(x => x.time))] : null; }).filter(Boolean).sort((a, b) => a[1] - b[1])[0];
-      if (near) { const s = segs.find(x => x.id === near[0].segId); out.push(['info', (s ? s.name : 'Segment') + ': ' + fmtT(near[0].time) + ', ' + near[1].toFixed(2) + ' s off your best.']); }
-    }
-    // zero (full extension) checks: sensor at its end-stop, direction reversed
-    { const zw = [...new Set(stats.filter(Boolean).flatMap(st => st.zeroWarn || []))];
-      zw.slice(0, 2).forEach(w => out.push(['warn', w, ['Check sensors', () => A.showView('setup')]])); }
-    // travel and bottom-outs, per end
-    const have = stats.map((st, i) => [st, i]).filter(([st]) => st);
-    for (const [k, name, setting] of [['F', 'Fork', 'Front travel'], ['R', 'Rear', 'Rear travel']]) {
-      const vals = have.filter(([st]) => st['travel' + k] != null);
-      if (!have.length) break;
-      // recordings where this end's sensor gave nothing on every run
-      const off = S.rides.filter(r => { const L = have.filter(([, i]) => runs[i].r === r); return L.length && L.every(([st]) => st['travel' + k] == null); });
-      if (off.length) out.push(['warn', (k === 'F' ? 'Front' : 'Rear') + ' sensor not connected on ' + (off.length === S.rides.length ? 'this ride' : off.map(r => r.name).join(', ')) + ', so its numbers are left out.', ['Check sensors', () => A.showView('setup')]]);
-      if (!vals.length) continue;
-      const [mx, iMax] = vals.reduce((b, [st, i]) => st['travel' + k] > b[0] ? [st['travel' + k], i] : b, [-1, 0]);
-      const bo = vals.reduce((a, [st]) => a + (st['bottom' + k] || 0), 0);
-      const boMost = vals.reduce((b, [st, i]) => (st['bottom' + k] || 0) > b[0] ? [st['bottom' + k] || 0, i] : b, [0, -1]);
-      if (mx > 105) out.push(['warn', name + ' reads ' + pct(mx) + ' of its travel, more than it has. Check ' + setting + ' and the sensor length in Settings.', ['Fix in Settings', () => A.showView('setup')]]);
-      else if (bo) out.push([bo >= 3 ? 'warn' : 'info', name + ' used ' + pct(mx) + ' of its travel and bottomed out ' + (bo === 1 ? 'once' : bo + '×') + (vals.length > 1 && boMost[1] >= 0 ? ', most on ' + lab(boMost[1]) : ' on ' + lab(iMax)) + '.']);
-      else out.push(['info', name + ' used up to ' + pct(mx) + ' of its travel' + (mx < 70 ? ', with plenty left over' : '') + ', no bottom-outs.']);
-    }
-    // packing (rebound too slow to recover between hits)
-    const pk = have.reduce((b, [st, i]) => st.packing > b[0] ? [st.packing, i] : b, [-1, -1]);
-    if (pk[0] >= 40) out.push(['warn', 'Suspension packed down on ' + lab(pk[1]) + ' (score ' + Math.round(pk[0]) + ' of 100): rebound may be too slow.']);
-    // missing GPS / IMU
-    const digs = S.rides.map(r => [r, digMem.get(r.key)]).filter(([, d]) => d);
-    const noGps = digs.filter(([, d]) => !d.bbox), noImu = digs.filter(([, d]) => d.hasImu === false);
-    const which = L => L.length === S.rides.length ? 'this ride' : L.map(([r]) => r.name).join(', ');
-    const same = noGps.length && noGps.length === noImu.length && noGps.every(([r], i) => noImu[i][0] === r);
-    if (same) out.push(['warn', 'No GPS and no motion sensor (IMU) on ' + which(noGps) + ': no map, no trail times. Check the logger\u2019s cables, and wait for the GPS light before you ride.']);
-    else {
-      if (noGps.length) out.push(['warn', 'No GPS on ' + which(noGps) + ': no map or trail times. Wait for the GPS light before you ride.']);
-      if (noImu.length) out.push(['warn', 'Motion sensor (IMU) missing on ' + which(noImu) + '. Check its cable.']);
-    }
-    // keep the problems, then the most useful others, max 4
-    const warn = out.filter(o => o[0] === 'warn'), rest = out.filter(o => o[0] !== 'warn');
-    return rest.slice(0, Math.max(1, 4 - warn.length)).concat(warn).slice(0, Math.max(4, warn.length));
-  }
+  let reportSession = null;
   function renderReport() {
     const box = $('report'); if (!box || !ready) return;
     const all = sessions();
     if (!all.length) { box.textContent = ''; return; }
     const S = (reportSession && all.find(x => x.id === reportSession)) || all[0];
-    const gen = ++reportGen;
     box.textContent = '';
     const C = el('div', { class: 'card report' });
     box.append(C);
+    const sel = el('select', { 'aria-label': 'Session' });
+    all.slice(0, 30).forEach(x => sel.append(el('option', { value: x.id, selected: x === S ? true : null }, fmtDay(x.start) + ' · ' + riderName(x.rider) + ' · ' + A.plural(x.rides.length, 'recording'))));
+    sel.addEventListener('change', () => { reportSession = sel.value; renderReport(); });
     // runs: each timed run (its own gates), plus descents that no timed run covers
     const runs = [];
     for (const r of S.rides) {
@@ -5826,63 +5704,23 @@ window.plotlyReady = new Promise(function (done) {
       for (const d of D) { const cov = wins.reduce((c, w) => c + Math.max(0, Math.min(w.t1, d.t1) - Math.max(w.t0, d.t0)), 0); if (cov < 0.3 * (d.t1 - d.t0)) wins.push({ t0: d.t0, t1: d.t1 }); }
       wins.sort((a, b) => a.t0 - b.t0).forEach(d => runs.push({ r, d }));
     }
-    const pendingR = S.rides.filter(r => !digMem.has(r.key)), pending = pendingR.length;
-    const ridden = runs.reduce((a, { d }) => a + d.t1 - d.t0, 0);
-    C.append(el('h2', { style: 'margin:0' }, all[0] === S ? 'Your latest ride' : 'Ride'),
-      el('div', { class: 'muted' }, [fmtDay(S.start) + ' ' + fmtClock(S.start), riderName(S.rider), A.plural(runs.length, 'downhill run') + (runs.length ? ' (' + A.fmtDur(ridden) + ')' : '')].join(' · ')));
-    // still reading: say what and how far, so a big ride doesn't look stuck
-    if (pending) {
-      const big = pendingR.reduce((a, r) => a + (r.size || 0), 0);
-      C.append(el('div', { class: 'working', role: 'status' }, el('span', { class: 'spin' }),
-        el('span', null, 'Reading ' + (pending === 1 ? pendingR[0].name : A.plural(pending, 'recording')) + (big > 20e6 ? ' (' + A.fmtBytes(big) + ', a big file: this can take a minute)' : '') + '…')));
-    }
+    const pending = S.rides.filter(r => !digMem.has(r.key)).length;
+    C.append(el('div', { class: 'row', style: 'justify-content:space-between' },
+      el('h2', { style: 'margin:0' }, all[0] === S ? 'Latest ride' : 'Ride'),
+      el('div', { style: 'min-width:200px;flex:0 1 320px' }, sel)),
+      el('div', { class: 'muted' }, fmtDay(S.start) + ' · ' + riderName(S.rider) + ' · ' + A.plural(S.rides.length, 'recording') + ' · ' + A.plural(runs.length, 'run') + (pending ? ' · reading ' + pending + ' more…' : '')));
     // battery over the session, from the logger's ride summaries (firmware 4.6.6+ with the divider on pin 11)
-    let battLow = null;
     const bs = S.rides.map(r => r.summary && r.summary.batt).filter(b => b && b.start_v > 0);
-    // takeaways (filled when the runs' numbers are ready)
-    const TK = el('ul', { class: 'takeaways' }, el('li', { class: 'info' }, pending ? 'Working out what happened…' : 'Adding up your runs…'));
-    C.append(TK);
     if (bs.length) {
       const v0 = bs[0].start_v, v1 = bs[bs.length - 1].end_v || bs[bs.length - 1].start_v, lo = Math.min(...bs.map(b => b.min_v || b.end_v || b.start_v));
       const cells = bs[bs.length - 1].cells || 1;
-      if (lo / cells < 3.4) battLow = 'Logger battery dipped to ' + lo.toFixed(2) + ' V: charge it before the next ride.';
-      C.append(el('div', { class: 'muted' }, 'Logger battery ' + v0.toFixed(2) + ' → ' + v1.toFixed(2) + ' V' + (cells > 1 ? ' (' + cells + 'S)' : '')));
+      C.append(el('div', { class: 'muted' }, 'Battery ' + v0.toFixed(2) + ' → ' + v1.toFixed(2) + ' V over this ride' + (cells > 1 ? ' (' + cells + 'S)' : '') + (lo / cells < 3.4 ? ' · dipped to ' + lo.toFixed(2) + ' V: charge before the next ride' : '')));
     }
-    // what next
-    const E = efforts.filter(e => S.rides.some(r => r.key === e.rideKey));
-    const acts = el('div', { class: 'nextacts' });
-    let lossRef = null;                   // the timed run with the most time lost to a best
-    for (const e of E) {
-      const prior = efforts.filter(x => x.segId === e.segId && x.rider === e.rider && x.when < e.when);
-      const ref = prior.length ? prior.reduce((b, x) => x.time < b.time ? x : b) : null;
-      if (ref && (!lossRef || e.time - ref.time > lossRef[0].time - lossRef[1].time)) lossRef = [e, ref];
-    }
-    if (lossRef) {
-      const [e, ref] = lossRef, s = segs.find(x => x.id === e.segId), r = rideByKey(e.rideKey), ro = rideByKey(ref.rideKey);
-      if (s && r && ro) {
-        const lbl = s.name + ': your best ' + fmtT(ref.time) + ' (A) vs this run ' + fmtT(e.time) + ' (B)';
-        acts.append(el('button', { class: 'btn primary', onclick: () => A.openCompare(ro.id, [ref.t0, ref.t1], r.id, [e.t0, e.t1], lbl, 'loss') }, 'Where did I lose time?'),
-          el('button', { class: 'btn', onclick: () => A.openCompare(ro.id, [ref.t0, ref.t1], r.id, [e.t0, e.t1], lbl, 'speed') }, 'Compare with my best'));
-      }
-    } else if (runs.length >= 2) {
-      // two runs of about the same length are most likely the same trail
-      let best = null;
-      for (let i = 0; i < runs.length; i++) for (let j = i + 1; j < runs.length; j++) {
-        const a = runs[i].d.t1 - runs[i].d.t0, b = runs[j].d.t1 - runs[j].d.t0, q = Math.abs(a - b) / Math.max(a, b);
-        if (!best || q < best[0]) best = [q, i, j];
-      }
-      if (best && best[0] < 0.3) {
-        const [, i, j] = best, x = runs[i], y = runs[j];
-        acts.append(el('button', { class: 'btn primary', onclick: () => A.openCompare(x.r.id, [x.d.t0, x.d.t1], y.r.id, [y.d.t0, y.d.t1], 'Run ' + (i + 1) + ' (A) vs run ' + (j + 1) + ' (B)', 'loss') }, 'Compare run ' + (i + 1) + ' with run ' + (j + 1)));
-      }
-    }
-    if (runs.length) acts.append(el('button', { class: 'btn' + (acts.childNodes.length ? '' : ' primary'), onclick: () => A.openAnalyzeParts(runs.map(({ r, d }) => ({ id: r.id, t0: d.t0, t1: d.t1 })), 'all ' + A.plural(runs.length, 'run') + ' of ' + fmtDay(S.start), 'charts') }, 'See the charts'));
-    if (acts.childNodes.length) C.append(acts);
     // setup: one tap
     C.append(setupPrompt(S));
     // runs
+    const E = efforts.filter(e => S.rides.some(r => r.key === e.rideKey));
     const list = el('div', { class: 'runlist' });
-    const statP = [];
     runs.forEach(({ r, d }, i) => {
       const mine = E.filter(e => e.rideKey === r.key && e.t0 < d.t1 && e.t1 > d.t0);
       const row = el('div', { class: 'runrow' });
@@ -5905,34 +5743,22 @@ window.plotlyReady = new Promise(function (done) {
         }
       }
       const stats = mine.length && mine[0].stats ? mine[0].stats : null;
-      const nums = el('div', { class: 'runnums muted' }, 'Adding up…');
-      const fill = st => { nums.textContent = st ? ['Fork ' + (st.travelF == null ? 'no sensor' : pct(st.travelF) + ' travel'), 'rear ' + (st.travelR == null ? 'no sensor' : pct(st.travelR) + ' travel'), A.plural((st.bottomF || 0) + (st.bottomR || 0), 'bottom-out'), 'packing ' + Math.round(st.packing) + '/100', st.kmh ? st.kmh + ' km/h avg' : ''].filter(Boolean).join(' · ') : ''; return st; };
-      statP.push(stats ? Promise.resolve(fill(stats)) : quickStats(r, d).then(fill).catch(() => { nums.textContent = ''; return null; }));
+      const nums = el('div', { class: 'runnums muted' });
+      const fill = st => { nums.textContent = st ? 'Travel used front ' + (st.travelF == null ? 'no pot' : Math.round(st.travelF) + '%') + ' · rear ' + (st.travelR == null ? 'no pot' : Math.round(st.travelR) + '%') + ' · bottom-outs ' + ((st.bottomF || 0) + (st.bottomR || 0)) + ' · packing ' + st.packing + (st.kmh ? ' · ' + st.kmh + ' km/h avg' : '') : ''; };
+      if (stats) fill(stats); else quickStats(r, d).then(fill).catch(() => {});
       row.append(nums, el('div', { class: 'row', style: 'margin-top:4px' },
-        el('button', { class: 'btn small', onclick: () => A.openAnalyze(r.id, d.t0, d.t1, 'stats', 'Run ' + (i + 1) + ' (' + r.name + ')') }, 'Numbers'),
+        el('button', { class: 'btn small', onclick: () => A.openAnalyze(r.id, d.t0, d.t1, 'stats', 'Run ' + (i + 1) + ' (' + r.name + ')') }, 'Stats'),
         el('button', { class: 'btn small', onclick: () => A.openAnalyze(r.id, d.t0, d.t1, 'charts', 'Run ' + (i + 1) + ' (' + r.name + ')') }, 'Charts')));
       list.append(row);
     });
-    if (!runs.length) list.append(el('div', { class: 'muted' }, pending ? 'Working out your runs…' : 'No downhill runs in these recordings (no riding at speed). Open the ride in Analyze to see all of it.'));
-    C.append(el('h3', null, 'Runs'), list);
-    // other highlights (segments made, changes vs your usual)
-    const hl = highlights(S, runs, E).filter(h => !/personal best|timed run/.test(h));
-    if (hl.length) C.append(el('ul', { class: 'insights plain' }, ...hl.map(h => el('li', null, h))));
-    // older rides
-    const sel = el('select', { 'aria-label': 'Show another ride' });
-    all.slice(0, 30).forEach(x => sel.append(el('option', { value: x.id, selected: x === S ? true : null }, fmtDay(x.start) + ' · ' + riderName(x.rider) + ' · ' + A.plural(x.rides.length, 'recording'))));
-    sel.addEventListener('change', () => { reportSession = sel.value; renderReport(); });
-    C.append(el('div', { class: 'row otherride' }, el('label', { class: 'f', style: 'margin:0' }, 'Show another day'), el('div', { class: 'grow', style: 'min-width:180px' }, sel)),
-      el('div', { class: 'row', style: 'margin-top:8px' }, el('button', { class: 'btn small', onclick: () => A.showView('trails') }, 'Trails & leaderboards')));
-    // fill the takeaways once the numbers are in
-    Promise.all(statP).then(stats => {
-      if (gen !== reportGen) return;
-      const items = takeaways(S, runs, stats, E);
-      if (battLow) items.push(['warn', battLow]);
-      TK.textContent = '';
-      if (!items.length) { TK.append(el('li', { class: 'info' }, pending ? 'Working out what happened…' : runs.length ? 'Nothing stood out on this ride.' : 'No riding at speed in these recordings.')); return; }
-      for (const [kind, text, act] of items) TK.append(el('li', { class: kind }, el('span', null, text), act ? el('button', { class: 'btn small', onclick: act[1] }, act[0]) : null));
-    });
+    if (!runs.length) list.append(el('div', { class: 'muted' }, pending ? 'Working out your runs…' : 'No descents in these recordings (no riding at speed).'));
+    C.append(list);
+    // highlights
+    const hl = highlights(S, runs, E);
+    if (hl.length) C.append(el('ul', { class: 'insights' }, ...hl.map(h => el('li', null, h))));
+    C.append(el('div', { class: 'row', style: 'margin-top:8px' },
+      runs.length ? el('button', { class: 'btn primary', onclick: () => A.openAnalyzeParts(runs.map(({ r, d }) => ({ id: r.id, t0: d.t0, t1: d.t1 })), 'all ' + A.plural(runs.length, 'run') + ' of ' + fmtDay(S.start), 'stats') }, runs.length > 1 ? 'Analyze all runs together' : 'Analyze this run') : null,
+      el('button', { class: 'btn', onclick: () => A.showView('trails') }, 'Trails & leaderboards')));
   }
   function highlights(S, runs, E) {
     const out = [];
@@ -6132,7 +5958,7 @@ window.plotlyReady = new Promise(function (done) {
     $('trMapTitle').textContent = 'Trails';
     const box = $('trList'); box.textContent = '';
     if (!segs.length) {
-      box.append(el('div', { class: 'empty' }, 'No segments yet. Ride the same trail twice with GPS and it becomes a timed segment by itself, with a leaderboard. Or make one by hand from a run.'));
+      box.append(el('div', { class: 'empty' }, 'No segments yet. Ride a trail twice (with GPS) and it becomes a segment by itself: gates on features the logger finds again (a jump landing, a drop, a big hit), every run timed. Or make one by hand from a run.'));
     }
     const groups = new Map();
     for (const s of segs) { const k = s.trail || 'Other segments'; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(s); }
@@ -6677,9 +6503,6 @@ window.plotlyReady = new Promise(function (done) {
   const fmtBytes = b => b > 1e6 ? (b / 1e6).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1e3)) + ' KB';
   const fmtDur = s => { if (!isFinite(s)) return '–'; s = Math.round(s); const m = Math.floor(s / 60); return m ? m + ' min ' + (s % 60) + ' s' : s + ' s'; };
   function msg(id, text, kind) { const m = $(id); m.textContent = text || ''; m.className = 'msg' + (kind ? ' ' + kind : ''); }
-  // A message with a spinner, painted before heavy work starts (the spinner keeps turning while the work runs)
-  const paint = () => new Promise(res => requestAnimationFrame(() => setTimeout(res, 0)));
-  function busyMsg(id, text) { msg(id, text, 'busy'); return paint(); }
   const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
   // ======================================================= state
@@ -6709,7 +6532,7 @@ window.plotlyReady = new Promise(function (done) {
   // Plotly needs a resize when a hidden chart becomes visible (only visible ones can be resized)
   function resizeIn(root) {
     setTimeout(() => (root ? root.querySelectorAll('.js-plotly-plot') : []).forEach(p => {
-      if (p.offsetParent !== null && window.Plotly) Promise.resolve(Plotly.Plots.resize(p)).catch(() => {});
+      if (p.offsetParent !== null) Promise.resolve(Plotly.Plots.resize(p)).catch(() => {});
     }), 30);
   }
   // Every view change is a history step, so the phone's Back gesture goes to
@@ -6881,12 +6704,7 @@ window.plotlyReady = new Promise(function (done) {
       el('span', { class: 'muted' }, el('span', { class: 'tag a' }, 'A'), ' ' + ra.name + '  ', el('span', { class: 'tag b' }, 'B'), ' ' + rb.name),
       el('button', { class: 'btn primary', type: 'button', onclick: () => { showView('compare', { from: 'Rides' }); runCompare(); } }, 'Compare A vs B \u2192')));
     renderBoxFilter();
-    // first run: a 3-step start instead of empty cards and settings
-    const none = !rides.length;
-    $('start').classList.toggle('hidden', !none);
-    $('libCard').classList.toggle('hidden', none);
-    $('loggerCard').classList.toggle('hidden', none && !loggerCardWanted);
-    if (none) { ul.append(el('li', { class: 'empty' }, 'No rides yet. Tap Get new rides, or open a ride file.')); return; }
+    if (!rides.length) { ul.append(el('li', { class: 'empty' }, 'No rides yet. Tap Get new rides, or open a CSV file.')); return; }
     const shown = rides.filter(boxShown);
     if (!shown.length) ul.append(el('li', { class: 'empty' }, 'No rides from ' + (boxFilter() === '-' ? 'opened files' : boxName(boxFilter())) + ' yet.'));
     for (const r of shown) {
@@ -6910,21 +6728,9 @@ window.plotlyReady = new Promise(function (done) {
     }
   }
   $('boxFilter').addEventListener('change', e => {
-    LS.set('boxFilter', e.target.value); refreshLibrary().then(() => fillSelects()); devStatus();
+    LS.set('boxFilter', e.target.value); renderLibrary(); fillSelects(); devStatus();
     if (e.target.value && e.target.value !== '-' && cloudOn()) cloudSync(false);
   });
-  let loggerCardWanted = false;
-  function showLoggerCard() { loggerCardWanted = true; $('loggerCard').classList.remove('hidden'); }
-  $('stGetNew').addEventListener('click', () => { showLoggerCard(); $('btnGetNew').click(); scrollToEl($('loggerCard')); });
-  $('stCloud').addEventListener('click', () => {
-    msg('stMsg', 'Checking for uploaded rides…', 'busy');
-    cloudSync(true).then(() => { const c = $('cloudLine'); msg('stMsg', c.textContent || (cloudOn() ? 'No rides uploaded yet.' : 'Cloud isn\u2019t set up: see Settings.'), /err/.test(c.className) ? 'err' : ''); });
-  });
-  // offline: say so once, at the top (rides on the phone still work)
-  function offlineBar(off) { $('offlineBar').classList.toggle('hidden', !off); }
-  window.addEventListener('offline', () => offlineBar(true));
-  window.addEventListener('online', () => { offlineBar(false); cloudSync(false); devStatus(); });
-  if (!navigator.onLine) offlineBar(true);
   function fillSelects() {
     const fill = (sel, value) => {
       const cur = value != null ? String(value) : sel.value;
@@ -7035,8 +6841,7 @@ window.plotlyReady = new Promise(function (done) {
     };
   }
 
-  function showQuickLook(sum, name, id) { qlShown = true; return (window.plotlyReady || Promise.resolve()).then(() => showQuickLook0(sum, name, id)); }
-  function showQuickLook0(sum, name, id) {
+  function showQuickLook(sum, name, id) {
     qlShown = true; qlName = name; qlId = id; qlUploading = false;
     const box = $('quickLook'); box.textContent = ''; box.classList.remove('hidden');
     const F = qlSide(sum, 'front'), Rr = qlSide(sum, 'rear'), g = sum.gps || {}, imu = sum.imu || {};
@@ -7143,7 +6948,6 @@ window.plotlyReady = new Promise(function (done) {
     return cfetch('/list').then(res => {
       if (res.status === 401) throw new Error('Cloud: wrong read key (Setup → Cloud).');
       if (!res.ok) throw new Error('Cloud: HTTP ' + res.status);
-      offlineBar(false);
       return res.json();
     }).then(list => {
       const have = new Set(rides.map(r => r.key));
@@ -7188,7 +6992,7 @@ window.plotlyReady = new Promise(function (done) {
         const lib = rides.find(x => x.name === focus.name && x.source === 'logger' && (!focus.host || x.key.indexOf('logger:' + focus.host + ':') === 0));
         if (lib && lib.summary) showQuickLook(lib.summary, lib.name, lib.id);
       }
-    }).catch(e => { const off = !navigator.onLine || /fetch|network|load failed/i.test(e.message || ''); if (off) offlineBar(true); msg('cloudLine', off ? '' : e.message, off ? '' : 'err'); }).finally(() => { cloudBusy = false; });
+    }).catch(e => { const off = !navigator.onLine || /fetch|network|load failed/i.test(e.message || ''); msg('cloudLine', off ? 'Offline — new rides will sync when you\u2019re back online.' : e.message, off ? '' : 'err'); }).finally(() => { cloudBusy = false; });
   }
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') cloudSync(false); });
 
@@ -7323,10 +7127,9 @@ window.plotlyReady = new Promise(function (done) {
       const lr = d.last_rec || {}, miss = [!lr.summary && 'ride summary', !lr.compress && 'compression', !lr.preroll && 'auto-pause'].filter(Boolean);
       if (lr.min_free && miss.length) line('Last recording ran without', miss.join(', ') + ' (not enough memory)', true);
       if (d.sd === false) line('SD card', 'not found', true);
-      if (d.last_crash) line('Last restart', d.last_crash, /while/.test(d.last_crash));
       line('Firmware', d.fw + ' · ' + d.host + (isFinite(d.rssi) ? ' · WiFi ' + d.rssi + ' dBm' : ''));
       if (others.length) line('Other boxes', others.map(x => boxName(x.host) + ' ' + ago(x.seen) + (x.batt && isFinite(x.batt.pct) ? ' (' + x.batt.pct + '%)' : '')).join(' · '));
-    }).catch(() => setChip('off', 'No signal', 'Can’t reach the cloud right now, so the logger’s status is unknown'))
+    }).catch(() => setChip('off', 'Logger: no internet', 'Can’t reach the cloud right now'))
       .finally(() => { if (document.visibilityState === 'visible') devTimer = setTimeout(devStatus, 60000); });
   }
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') devStatus(); });
@@ -7656,8 +7459,7 @@ window.plotlyReady = new Promise(function (done) {
       const fl = gd._fullLayout; if (fl && fl.xaxis && fl.xaxis.autorange) { gd.__userZoom = false; gd.__showReset(); }
     }
   }
-  const plotlyReady = window.plotlyReady || Promise.resolve(!!window.Plotly);
-  plotlyReady.then(function wrapPlotly() {
+  (function wrapPlotly() {
     if (!window.Plotly || !Plotly.version || Plotly.__wrapped) return;
     Plotly.__wrapped = true;
     for (const fn of ['react', 'newPlot']) {
@@ -7668,7 +7470,7 @@ window.plotlyReady = new Promise(function (done) {
         return Promise.resolve(orig.call(Plotly, node || gd, data, L, cfg)).then(r => { try { chartControls(node, L); } catch (e) {} return r; });
       };
     }
-  });
+  })();
   function line(name, x, y, color) {
     return { type: x.length > 4000 ? 'scattergl' : 'scatter', mode: 'lines', name, x, y,
              line: { color, width: 1.5 }, hovertemplate: '%{y:.1f}<extra>' + name + '</extra>' };
@@ -7722,7 +7524,7 @@ window.plotlyReady = new Promise(function (done) {
   function fillParts(id, list) {
     const sel = $('anPart'), cur = sel.value || 'desc';
     sel.textContent = '';
-    sel.append(el('option', { value: 'desc' }, list && list.length > 1 ? 'All ' + list.length + ' downhill runs' : 'Downhill run'));
+    sel.append(el('option', { value: 'desc' }, list && list.length > 1 ? 'Descents (all ' + list.length + ' runs)' : 'Descents'));
     (list || []).forEach((d, i) => sel.append(el('option', { value: 'run' + i }, partLabel(d, i))));
     sel.append(el('option', { value: 'whole' }, 'Whole recording'));
     sel.value = [...sel.options].some(o => o.value === cur) ? cur : 'desc';
@@ -7739,21 +7541,22 @@ window.plotlyReady = new Promise(function (done) {
       if ($('anPart').dataset.ride !== String(id)) fillParts(id, list);
       const part = $('anPart').value;
       $('trimBox').classList.toggle('hidden', part !== 'whole');
-      if (part === 'whole' || !list.length) { if (!list.length && part !== 'whole') { $('anPart').value = 'whole'; $('trimBox').classList.remove('hidden'); } return Object.assign(whole(), { note: list.length ? '' : 'No downhill runs found (no riding at speed), so the whole recording is shown.' }); }
+      if (part === 'whole' || !list.length) { if (!list.length && part !== 'whole') { $('anPart').value = 'whole'; $('trimBox').classList.remove('hidden'); } return Object.assign(whole(), { note: list.length ? '' : 'No descents found (no riding at speed), so the whole recording is shown.' }); }
       if (part === 'desc' && list.length > 1) {
         const comb = window.SEG.combineParts(list.map(d => ({ parsed, t0: d.t0, t1: d.t1, name: parsed.name })));
         comb.name = parsed.name + ' (descents)';
-        return { parsed: comb, p: Object.assign(base, { fixedZero: z }), note: plural(list.length, 'downhill run') + ' joined (standing, climbs and lifts cut out). Pick one run or the whole recording under Which part.' };
+        return { parsed: comb, p: Object.assign(base, { fixedZero: z }), note: 'Descents only: ' + plural(list.length, 'run') + ' joined (standing, climbs and lifts cut out). Pick one run or the whole recording under Part.' };
       }
       const d = part === 'desc' ? list[0] : list[+part.slice(3)] || list[0];
-      return { parsed, p: Object.assign(base, { trimStart: d.t0, trimEnd: d.t1, fixedZero: z }), note: (part === 'desc' ? 'Downhill run only' : partLabel(d, list.indexOf(d))) + ' (standing and climbing cut out).' };
+      return { parsed, p: Object.assign(base, { trimStart: d.t0, trimEnd: d.t1, fixedZero: z }), note: (part === 'desc' ? 'Descent only' : partLabel(d, list.indexOf(d))) + ' (standing and climbing cut out).' };
     });
   }
   function runAnalyze() {
     readParamInputs();
     if (anJob && anJob.parts) {                     // several rides' descents together
+      msg('anMsg', 'Analyzing ' + anJob.label + '…');
       const job = anJob;
-      return Promise.all([busyMsg('anMsg', 'Analyzing ' + job.label + '…'), plotlyReady]).then(() => Promise.all(job.parts.map(q => getParsed(q.id).then(parsed => ({ parsed, t0: q.t0, t1: q.t1, name: parsed.name })))))
+      return Promise.all(job.parts.map(q => getParsed(q.id).then(parsed => ({ parsed, t0: q.t0, t1: q.t1, name: parsed.name }))))
         .then(parts => (segOK() ? window.SegUI.zero(job.parts[0].id) : Promise.resolve(null)).then(z => {
           const comb = window.SEG.combineParts(parts); comb.name = job.label;
           return showAnalysis(comb, Object.assign({}, params, { fixedZero: z }), job.note || ('Analyzed ' + job.label + ': ' + plural(parts.length, 'run') + ' joined.'));
@@ -7761,17 +7564,14 @@ window.plotlyReady = new Promise(function (done) {
     }
     const id = +$('anRide').value;
     if (!id) { msg('anMsg', 'Choose a ride first.', 'err'); return Promise.resolve(null); }
-    const big = (rides.find(r => r.id === id) || {}).size > 20e6;
-    return Promise.all([busyMsg('anMsg', big ? 'Analyzing a big ride… this can take a few seconds.' : 'Analyzing…'), plotlyReady]).then(() => getParsed(id)).then(parsed => jobFor(id, parsed)).then(j => showAnalysis(j.parsed, j.p, j.note))
+    msg('anMsg', 'Analyzing…');
+    return getParsed(id).then(parsed => jobFor(id, parsed)).then(j => showAnalysis(j.parsed, j.p, j.note))
       .catch(e => { console.error(e); msg('anMsg', e.message, 'err'); return null; });
   }
   function showAnalysis(parsed, p, note) {
     const t0 = performance.now();
     const r = SA.analyze(parsed, p);
     r.name = parsed.name;
-    const tk = r.potOn && (!r.potOn.front || !r.potOn.rear) ? (!r.potOn.front ? 'Front' : 'Rear') + ' sensor not connected on this ride, so its numbers are left out. ' : '';
-    const zw = (r.zero && r.zero.warn) || [];
-    const tkAll = tk + (zw.length ? zw.join(' ') + ' ' : '');
     if (r.rows < 10) { msg('anMsg', 'Not enough data after trimming (' + r.rows + ' rows).', 'err'); return null; }
     Object.defineProperty(r, '_parsed', { value: parsed, enumerable: false });
     try { r.track = TRACK.build(parsed, r); } catch (e) { console.warn(e); r.track = { ok: false, reason: 'The GPS track could not be read (' + e.message + ').' }; }
@@ -7780,8 +7580,7 @@ window.plotlyReady = new Promise(function (done) {
     $('anRate').textContent = Math.round(r.rate) + ' Hz' + (params.rateOverride > 0 ? ' (override)' : '');
     $('trimEnd').placeholder = fmt(parsed.time[parsed.rows - 1] - parsed.time[0], 1);
     renderAnalysis(r);
-    msg('anMsg', tkAll + (note ? note + ' ' : '') + 'Done in ' + ((performance.now() - t0) / 1000).toFixed(1) + ' s.', tkAll ? 'warn' : 'ok');
-    const lg = $('procLogText'); if (lg) lg.textContent = 'Analyzed ' + r.rows.toLocaleString() + ' rows in ' + Math.round(performance.now() - t0) + ' ms.\n' + lg.textContent;
+    msg('anMsg', (note ? note + ' ' : '') + 'Analyzed ' + r.rows.toLocaleString() + ' rows in ' + Math.round(performance.now() - t0) + ' ms.', 'ok');
     return r;
   }
   function clockS(t) { t = Math.max(0, Math.round(t)); return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0'); }
@@ -8507,9 +8306,7 @@ window.plotlyReady = new Promise(function (done) {
   function runCompare() {
     if (!selA || !selB) { msg('cmpMsg', 'Choose ride A and ride B (on this tab or in the Rides list).', 'err'); return; }
     readParamInputs();
-    const big = [selA, selB].some(id => (rides.find(r => r.id === id) || {}).size > 20e6);
-    msg('cmpMsg', 'Lining up the two rides and comparing them…' + (big ? ' Big rides take a few seconds; the screen may pause.' : ''), 'busy');
-    cmpRefused(null);
+    msg('cmpMsg', 'Aligning (GPS or sensors, then pots + IMU) and matching hits…');
     $('btnCompare').disabled = true;
     const mode = $('alignMode').value;
     const opts = { mode, refine: $('alignRefine').checked };
@@ -8520,7 +8317,7 @@ window.plotlyReady = new Promise(function (done) {
     const zeroOf = id => cmpWin && window.SegUI && window.SegUI.ready() ? window.SegUI.zero(id).catch(() => null) : Promise.resolve(null);
     const cut = (p, w, name) => { if (!w || !window.SEG) return p; const c = window.SEG.combineParts([{ parsed: p, t0: w[0], t1: w[1], name }]); c.name = name; return c; };
     let zA = null, zB = null;
-    Promise.all([getParsed(selA), getParsed(selB), pathFile ? pathFile.text() : null, zeroOf(selA), zeroOf(selB), plotlyReady, paint()])
+    Promise.all([getParsed(selA), getParsed(selB), pathFile ? pathFile.text() : null, zeroOf(selA), zeroOf(selB)])
       .then(([pa, pb, pathText, za, zb]) => { zA = za; zB = zb; return new Promise(res => setTimeout(() => res([cmpWin ? cut(pa, cmpWin.A, pa.name) : pa, cmpWin ? cut(pb, cmpWin.B, pb.name) : pb, pathText]), 30)); })   // let the message paint
       .then(([pa, pb, pathText]) => {
         if (pathText != null) {
@@ -8545,33 +8342,11 @@ window.plotlyReady = new Promise(function (done) {
         lastCompare = R;
         renderCompare(R);
         msg('cmpMsg', 'Done in ' + (R.ms / 1000).toFixed(1) + ' s.', 'ok');
-        if (curView === 'compare') scrollToEl($('cmpResults'));
       })
-      .catch(e => {
-        console.error(e);
-        if (/cannot be lined up reliably/.test(e.message)) { msg('cmpMsg', ''); $('cmpResults').classList.add('hidden'); cmpRefused(e.message); }
-        else msg('cmpMsg', e.message, 'err');
-      })
+      .catch(e => { console.error(e); msg('cmpMsg', e.message, 'err'); })
       .finally(() => { $('btnCompare').disabled = false; });
   }
 
-  // "These rides cannot be lined up reliably": say it plainly, with what to try
-  function cmpRefused(text) {
-    let box = $('cmpRefused');
-    if (!text) { if (box) box.remove(); return; }
-    if (!box) { box = el('div', { id: 'cmpRefused', class: 'card refused', role: 'alert' }); $('cmpMsg').closest('.card').after(box); }
-    box.textContent = '';
-    const noGps = /no GPS/.test(text);
-    box.append(el('h2', null, 'These two rides can\u2019t be lined up'),
-      el('p', null, noGps ? 'One ride has no GPS, and the suspension and motion sensors don\u2019t show a stretch of trail that matches in both rides. Rather than guess, no comparison is shown.'
-        : 'The sensors don\u2019t show a stretch of trail that matches in both rides. Rather than guess, no comparison is shown.'),
-      el('b', null, 'Things to try'),
-      el('ul', null, el('li', null, 'Pick two runs of the same trail (from a ride report or Trails, each run is cut gate to gate).'),
-        el('li', null, 'Record with GPS locked on both rides: wait for the logger\u2019s GPS light before you drop in.'),
-        el('li', null, 'If you know the rides start at the same spot, open Line-up options and choose \u201cBy hand: shift ride B\u201d.')),
-      el('details', { class: 'help' }, el('summary', null, 'Details'), el('div', { class: 'muted' }, text)));
-    scrollToEl(box);
-  }
   const sideName = s => s === 'front' ? 'Front' : 'Rear';
   const fmtP = p => !isFinite(p) ? '–' : p < 0.0001 ? '< 0.0001' : p < 0.001 ? p.toFixed(4) : p.toFixed(3);
   const signed = (x, d) => !isFinite(x) ? '–' : (x > 0 ? '+' : x < 0 ? '−' : '') + Math.abs(x).toFixed(d);
@@ -8591,15 +8366,8 @@ window.plotlyReady = new Promise(function (done) {
 
     // ---- tiles
     const T = $('cmpTiles'); T.textContent = '';
-    const T2 = $('cmpTiles2'); T2.textContent = '';
     const O = R.pace.overall;
     const bFaster = O.gap < 0, pctW = bFaster ? O.pct : (O.TB / O.TA - 1) * 100;
-    // ---- the answer in one line
-    const H = $('cmpHead'); H.textContent = '';
-    const nmA = (R.A.name || 'A').replace(/\.csv$/i, ''), nmB = (R.B.name || 'B').replace(/\.csv$/i, '');
-    H.append(el('div', { class: 'big' }, O.sig ? el('span', { class: 'tag ' + (bFaster ? 'b' : 'a') }, bFaster ? 'B' : 'A') : null, ' ',
-      O.sig ? (bFaster ? nmB : nmA) + ' was ' + fmtSec(Math.abs(O.gap)) + ' s faster' : 'No clear difference in speed'),
-      el('div', { class: 'muted' }, (O.sig ? Math.abs(pctW).toFixed(1) + '% quicker over the ' : 'Over the ') + fmtDur(O.TA) + ' both rides cover' + ((O.stopA || 0) + (O.stopB || 0) > 0 ? ' (stops taken out)' : '') + '. Open Time lost to see where.'));
     const riding = (O.stopA || 0) + (O.stopB || 0) > 0;
     T.append(tile(O.sig ? (bFaster ? 'B ' : 'A ') + Math.abs(pctW).toFixed(1) + '%' : 'Even', O.sig ? (riding ? 'faster riding' : 'faster overall') : 'No clear overall difference',
       'B ' + (O.gap >= 0 ? '+' : '−') + fmtSec(O.gap) + ' s ± ' + fmtSec(1.96 * O.gapSd) + ' over ' + fmtDur(O.TA) + (riding ? ' of riding' : '')));
@@ -8613,21 +8381,20 @@ window.plotlyReady = new Promise(function (done) {
     const secLen = R.section.a1 - R.section.a0;
     T.append(tile(fmtDur(secLen), 'Aligned section', 'A ' + fmt(R.section.a0, 0) + '–' + fmt(R.section.a1, 0) + ' s · B ' + fmt(R.section.b0, 0) + '–' + fmt(R.section.b1, 0) + ' s'));
     const tc = tile('–', 'Independent check', ' '), ta = tile('–', 'Timing where trusted', ' '); tc.id = 'tileCheck'; ta.id = 'tileAcc';
-    T2.append(tc, ta);
-    T2.append(tile(Math.round(O.sensorFrac * 100) + '%', 'Speed from pots/IMU', 'the rest from ' + (R.gps && R.gps.ok ? 'GPS (wider band)' : 'the rough alignment')));
+    T.append(tc, ta);
+    T.append(tile(Math.round(O.sensorFrac * 100) + '%', 'Speed from pots/IMU', 'the rest from ' + (R.gps && R.gps.ok ? 'GPS (wider band)' : 'the rough alignment')));
     const al = R.align;
-    if (al.conf && al.groups && al.conf.crossChecked) T2.append(tile(Math.round(al.conf.agreed / al.conf.crossChecked * 100) + '%', al.groups[0] + ' vs ' + al.groups[1] + ' agree', 'within 60 ms, on ' + Math.round(al.conf.crossChecked * al.conf.step) + ' s both could check'));
-    if (R.gps && R.gps.ok) T2.append(tile(fmt(R.gps.medianErr, 1) + ' m', 'GPS track match', '90% within ' + fmt(R.gps.p90Err, 1) + ' m · ' + R.gps.fixesA + ' / ' + R.gps.fixesB + ' fixes'));
-    else { const m0 = R.coarseMethod.split(' ')[0]; T2.append(tile(m0.charAt(0).toUpperCase() + m0.slice(1), 'Rough alignment', R.coarseMethod)); }
+    if (al.conf && al.groups && al.conf.crossChecked) T.append(tile(Math.round(al.conf.agreed / al.conf.crossChecked * 100) + '%', al.groups[0] + ' vs ' + al.groups[1] + ' agree', 'within 60 ms, on ' + Math.round(al.conf.crossChecked * al.conf.step) + ' s both could check'));
+    if (R.gps && R.gps.ok) T.append(tile(fmt(R.gps.medianErr, 1) + ' m', 'GPS track match', '90% within ' + fmt(R.gps.p90Err, 1) + ' m · ' + R.gps.fixesA + ' / ' + R.gps.fixesB + ' fixes'));
+    else { const m0 = R.coarseMethod.split(' ')[0]; T.append(tile(m0.charAt(0).toUpperCase() + m0.slice(1), 'Rough alignment', R.coarseMethod)); }
     const used = R.pairs.filter(p => p.used).length;
-    T2.append(tile(String(used), 'Hit pairs used', 'front ' + R.counts.front.used + ' · rear ' + R.counts.rear.used));
+    T.append(tile(String(used), 'Hit pairs used', 'front ' + R.counts.front.used + ' · rear ' + R.counts.rear.used));
     const sig = R.stats.filter(s => s.sig);
-    T2.append(tile(String(sig.length), 'Significant hit changes', 'of ' + R.stats.length + ' metrics · q < ' + params.alpha));
+    T.append(tile(String(sig.length), 'Significant hit changes', 'of ' + R.stats.length + ' metrics · q < ' + params.alpha));
 
     $('alignInfo').textContent = 'Rough: ' + R.coarseMethod + (R.fine ? ' → refined with ' + (al.channels || []).filter(c => c.weight > 0).map(c => c.label).join(', ') + ' (10 Hz, then ' + R.fine.rate + ' Hz).' : '.');
 
     fillCheckTiles(R);
-    { const tcv = $('tileCheck'); $('cmpSure').querySelector('summary').textContent = 'How sure is this?' + (tcv && !tcv.classList.contains('hidden') ? ' Checked a second way: ' + tcv.querySelector('.v').textContent.toLowerCase() + '.' : ''); }
     // each tab draws when it is first shown (hidden Plotly charts size badly)
     if (fly.R !== R) { flyStop(); fly.R = R; fly.F = null; fly.e = 0; lossWho = null; lossSel = null; }
     cDirty = new Set(CSUBS);
@@ -9347,9 +9114,10 @@ window.plotlyReady = new Promise(function (done) {
     const Lo = baseLayout('B − A (s)', 'Time in A (s)');
     const ds = (m, step) => { const x = [], y = []; const k = Math.max(1, Math.floor(m.a.length / step)); for (let i = 0; i < m.a.length; i += k) { x.push(m.a[i]); y.push(m.b[i] - m.a[i]); } return [x, y]; };
     const [cx, cy] = ds(R.coarse, 3000), traces = [{ type: 'scattergl', mode: R.coarse.a.length < 400 ? 'lines+markers' : 'lines', name: 'Rough (' + R.coarseMethod.split(' ')[0] + ')', x: cx, y: cy, line: { color: cssVar('--muted'), width: 1.5, dash: 'dot' }, marker: { size: 4 } }];
-    if (al.maps && al.maps.g1) { const [x1, y1] = ds(al.maps.g1, 3000), [x2, y2] = ds(al.maps.g2, 3000);
-      traces.push({ type: 'scattergl', mode: 'lines', name: al.groups[0] + ' only', x: x1, y: y1, line: { color: s1, width: 1 } });
-      traces.push({ type: 'scattergl', mode: 'lines', name: al.groups[1] + ' only', x: x2, y: y2, line: { color: s2, width: 1 } }); }
+    // each group's own lag around the fused map (0.2 s grid, only where it locks on): dots, so gaps stay gaps
+    if (al.maps && al.maps.g1 && al.maps.g2) { const [x1, y1] = ds(al.maps.g1, 3000), [x2, y2] = ds(al.maps.g2, 3000);
+      traces.push({ type: 'scattergl', mode: 'markers', name: al.groups[0] + ' only', x: x1, y: y1, marker: { color: s1, size: 3 } });
+      traces.push({ type: 'scattergl', mode: 'markers', name: al.groups[1] + ' only', x: x2, y: y2, marker: { color: s2, size: 3 } }); }
     if (R.fine) { const [fx, fy] = ds(R.map, 4000); traces.push({ type: 'scattergl', mode: 'lines', name: 'Fused', x: fx, y: fy, line: { color: cssVar('--ink'), width: 2 } }); }
     Plotly.react('chOffset', traces, Lo, PLOT_CFG);
     // Confidence along the ride: three stacked panels on one time axis
@@ -9556,7 +9324,7 @@ window.plotlyReady = new Promise(function (done) {
 
   // ======================================================= API for the Trails tab (trails.js)
   window.SA_APP = {
-    getParsed, rides: () => rides, params: () => params, boxShown, boxName, rideHost, el, fmt, fmtDur, fmtWhen, fmtBytes, msg, cssVar, LS, showView, plural,
+    getParsed, rides: () => rides, params: () => params, el, fmt, fmtDur, fmtWhen, fmtBytes, msg, cssVar, LS, showView, plural,
     cloud: { on: () => cloudOn(), fetch: (path, opts) => cfetch(path, opts) },
     refreshLibrary: () => refreshLibrary(),
     // Analyze one run: the ride cut to t0..t1, on a given sub-tab (e.g. 'stats')
