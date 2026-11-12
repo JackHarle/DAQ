@@ -271,6 +271,44 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
 .gainloss{font-size:13px;color:var(--ink2);margin:3px 0 4px}
 .report ul.insights{margin:10px 0 0}
 .report ul.insights li:first-child{font-size:15px}
+/* ---- UX pass: first run, report takeaways, busy states, plain help */
+.h1sub{font-weight:500;color:var(--ink2)}
+@media(max-width:380px){.h1sub{display:none}}
+.start h2{font-size:18px}
+ol.startsteps{list-style:none;counter-reset:st;margin:10px 0 0;padding:0;display:grid;gap:12px}
+ol.startsteps>li{counter-increment:st;position:relative;padding:0 0 0 40px;min-height:30px}
+ol.startsteps>li::before{content:counter(st);position:absolute;left:0;top:0;width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--accentInk);display:grid;place-items:center;font-weight:700;font-size:14px}
+ol.startsteps>li>b{display:block;font-size:15px;margin:2px 0}
+label.btn{cursor:pointer}
+details.help{margin-top:6px}
+details.help>summary{font-weight:600;color:var(--ink2);font-size:14px}
+.msg.busy::before,.spin{content:"";display:inline-block;width:14px;height:14px;margin-right:8px;vertical-align:-2px;border-radius:50%;border:2px solid var(--grid);border-top-color:var(--accent);animation:spin .8s linear infinite;will-change:transform}
+.msg.warn{color:var(--ink)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.msg.busy::before,.spin{animation-duration:2.4s}}
+.working{display:flex;align-items:center;gap:0;margin:10px 0 0;padding:10px 12px;border-radius:10px;background:var(--chip);font-size:14px}
+ul.takeaways{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:8px}
+ul.takeaways li{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:10px 12px 10px 14px;border-radius:10px;background:var(--surface);border:1px solid var(--ring);border-left:5px solid var(--s1);font-size:15px;line-height:1.4}
+ul.takeaways li>span{flex:1 1 200px}
+ul.takeaways li.good{border-left-color:var(--good)}
+ul.takeaways li.warn{border-left-color:var(--warn)}
+ul.takeaways li.info{border-left-color:var(--s1)}
+.nextacts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.nextacts .btn{flex:1 1 160px}
+.report h3{font-size:15px;color:var(--ink);margin:16px 0 4px}
+.report ul.insights.plain li:first-child{font-weight:400;list-style:disc;margin-left:0;font-size:14px}
+.report ul.insights.plain{font-size:14px;color:var(--ink2)}
+.otherride{margin-top:14px;padding-top:10px;border-top:1px solid var(--ring)}
+.banner.offline{background:var(--card);border-left:5px solid var(--warn)}
+.headline{margin:0 0 10px}
+.headline .big{font-size:20px;font-weight:700;line-height:1.3}
+.headline .tag{font-size:13px;vertical-align:3px;margin:0 2px 0 0}
+#cmpSure{margin-top:8px}#cmpSure>summary{font-size:15px;font-weight:600;color:var(--ink2)}
+.notes{margin-top:8px;padding:10px 12px;border-radius:10px;background:var(--chip);font-size:14px;display:grid;gap:4px}
+.card.refused{border-left:5px solid var(--warn)}
+.card.refused h2{font-size:17px}
+.card.refused ul{margin:4px 0 0;padding-left:20px}.card.refused li{margin:3px 0}
+.btn.wide1{flex:1 1 auto;max-width:360px}
 /* ---- phone */
 .alignpick{width:210px}
 .abbar{position:sticky;bottom:10px;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--card);border:1px solid var(--accent);box-shadow:0 4px 14px rgba(0,0,0,.18)}
@@ -297,7 +335,7 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
 <body>
 <header>
   <div class="top">
-    <h1>Suspension Analyzer <span class="appver" id="appVer" title="Analyzer version">v2026.11.07e</span></h1>
+    <h1>ShokIQ <span class="h1sub">Analyzer</span> <span class="appver" id="appVer" title="Analyzer version">v2026.11.09c</span></h1>
     <span class="chip" id="linkChip"><span class="dot" id="linkDot"></span><span id="linkText">No logger</span></span>
   </div>
   <nav class="tabs" role="tablist">
@@ -312,12 +350,28 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
 <main>
   <div id="noCharts" class="banner hidden">Charts can&#39;t load right now (no internet?). Rides, numbers and tables still work; reload when you&#39;re back online to see the charts.</div>
   <div id="incoming" class="banner hidden"></div>
+  <div id="offlineBar" class="banner offline hidden" role="status"><b>You&#39;re offline.</b> Rides on this phone still open. New rides, maps and trail names come in when you have signal again.</div>
 
   <!-- ============================== RIDES ============================== -->
   <section class="view on" id="view-rides">
+    <div id="start" class="card start hidden">
+      <h2>Let&#39;s get your first ride in</h2>
+      <p class="muted" style="margin:0 0 4px">Three steps. After that, every ride shows up here with a short report.</p>
+      <ol class="startsteps">
+        <li><b>Connect your logger</b>
+          <div class="muted">Turn on your phone&#39;s hotspot, then switch the logger on. It joins your hotspot by itself. Flip the toggle to record a ride, flip it back to stop.</div></li>
+        <li><b>Get your rides</b>
+          <div class="muted">With the hotspot on, finished rides upload by themselves and appear here. Next to the logger without signal? Get them straight from it.</div>
+          <div class="row" style="margin-top:6px"><button class="btn primary" id="stGetNew" type="button">Get rides from the logger</button><button class="btn" id="stCloud" type="button">Check for uploaded rides</button></div></li>
+        <li><b>Or open a ride file</b>
+          <div class="muted">Have a CSV from the logger&#39;s SD card? Open it from this phone.</div>
+          <div class="row" style="margin-top:6px"><label class="btn" for="fileInput" id="stOpen">Open a ride file</label></div></li>
+      </ol>
+      <div id="stMsg" class="msg" role="status"></div>
+    </div>
     <div id="report"></div>
     <div class="card hidden" id="quickLook"></div>
-    <div class="card" style="scroll-margin-top:110px">
+    <div class="card" id="loggerCard" style="scroll-margin-top:110px">
       <h2>Logger</h2>
       <div id="devStatus" class="devstatus hidden" role="status"></div>
       <div class="row">
@@ -328,9 +382,11 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
       </div>
       <div class="row" style="margin-top:8px">
         <button class="btn primary" id="btnGetNew">Get new rides</button>
-        <button class="btn" id="btnList">Show recordings</button>
+        <button class="btn" id="btnList">See what&#39;s on the logger</button>
       </div>
-      <div class="muted" style="margin-top:6px">Opens a logger tab for a moment: it hands the recordings to this page and closes by itself. Your phone must be on the same network as the logger (your hotspot). Android: use the logger&#39;s IP if <code>.local</code> doesn't work.</div>
+      <details class="help"><summary>How getting rides works</summary>
+        <div class="muted">A logger tab opens for a moment: it hands the recordings to this page and closes by itself. Your phone must be on the same network as the logger (your hotspot). Android: use the logger&#39;s IP if <code>.local</code> doesn't work.</div>
+      </details>
       <div id="linkMsg" class="msg" role="status"></div>
       <div id="cloudLine" class="msg" role="status"></div>
       <div class="progress hidden" id="importBar"><div></div></div>
@@ -344,9 +400,9 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="libCard">
       <div class="row" style="justify-content:space-between">
-        <h2 style="margin:0">Ride library</h2>
+        <h2 style="margin:0">All rides</h2>
         <span class="muted" id="storageInfo"></span>
       </div>
       <div class="muted" style="margin:4px 0 10px">Saved in this browser on this device. Tap <b>A</b> and <b>B</b> to pick two rides to compare.</div>
@@ -356,9 +412,9 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
         <span class="muted" style="font-size:13px">Picking one box also limits cloud downloads to it.</span>
       </div>
       <ul class="list" id="rideList"></ul>
-      <label class="drop" id="drop" style="display:block;margin-top:10px">
-        <input type="file" id="fileInput" accept=".csv,text/csv" multiple class="hidden">
-        &#128193; Open CSV files from this device (or drop them here)
+      <input type="file" id="fileInput" accept=".csv,text/csv" multiple class="hidden">
+      <label class="drop" id="drop" for="fileInput" style="display:block;margin-top:10px">
+        &#128193; Open ride files (CSV) from this phone
       </label>
     </div>
   </section>
@@ -382,7 +438,7 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
     <div id="trHome">
       <div class="card">
         <div class="row" style="justify-content:space-between"><h2 style="margin:0">Segments</h2><button class="btn small" id="trNewBtn">Make one by hand</button></div>
-        <label class="row" style="gap:6px;margin-top:6px;font-size:14px"><input type="checkbox" id="trAuto" checked> Make segments automatically from descents I ride more than once</label>
+        <label class="row" style="gap:6px;margin-top:6px;font-size:14px"><input type="checkbox" id="trAuto" checked> Make segments by themselves from runs I ride more than once</label>
         <div id="trStatus" class="msg" role="status"></div>
         <div id="trList"></div>
       </div>
@@ -405,10 +461,10 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
           <label class="f" for="anRide">Ride</label>
           <select id="anRide"></select>
         </div>
-        <span class="rate-badge" id="anRate" title="Rows per second in this file">&ndash; Hz</span>
+        <span class="rate-badge" id="anRate" title="Readings per second in this file">&ndash; Hz</span>
       </div>
       <div class="row" style="margin-top:8px">
-        <div style="min-width:200px;flex:1 1 200px"><label class="f" for="anPart">Part</label><select id="anPart"><option value="desc">Descents</option><option value="whole">Whole recording</option></select></div>
+        <div style="min-width:200px;flex:1 1 200px"><label class="f" for="anPart">Which part</label><select id="anPart"><option value="desc">Downhill runs</option><option value="whole">Whole recording</option></select></div>
         <span id="trimBox" class="row hidden">
         <div style="width:130px"><label class="f" for="trimStart">Trim start (s)</label><input id="trimStart" type="number" min="0" step="0.1" value="0"></div>
         <div style="width:130px"><label class="f" for="trimEnd">Trim end (s)</label><input id="trimEnd" type="number" min="0" step="0.1" placeholder="end"></div>
@@ -416,8 +472,7 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
         <button class="btn primary" id="btnAnalyze" style="align-self:flex-end">Analyze</button>
       </div>
       <div id="anMsg" class="msg"></div>
-      <div class="muted" id="filterStatus" style="margin-top:4px"></div>
-      <details id="procLog"><summary>Processing log</summary><pre id="procLogText" class="log"></pre></details>
+      <details id="procLog"><summary>Technical details</summary><div class="muted" id="filterStatus" style="margin-top:4px"></div><pre id="procLogText" class="log"></pre></details>
     </div>
 
     <div id="anResults" class="hidden">
@@ -430,7 +485,7 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
         <nav class="subtabs" id="anTabs" role="tablist" aria-label="Analysis views">
           <button type="button" role="tab" data-sub="charts" class="on">Charts</button>
           <button type="button" role="tab" data-sub="map">Map</button>
-          <button type="button" role="tab" data-sub="imu">IMU</button>
+          <button type="button" role="tab" data-sub="imu">Motion</button>
           <button type="button" role="tab" data-sub="stats">Statistics</button>
           <button type="button" role="tab" data-sub="events">Events</button>
           <button type="button" role="tab" data-sub="balance">Balance</button>
@@ -486,6 +541,11 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
 
         <!-- IMU -->
         <div class="subview" id="sub-imu" role="tabpanel">
+          <h3>Front vs rear harshness</h3>
+          <div id="harshBox"></div>
+          <div id="chHarsh" class="chart short"></div>
+          <div class="muted" id="harshNote"></div>
+          <h3 style="margin-top:16px">Raw IMU</h3>
           <div class="row">
             <div><label class="f" for="imuSel">IMU</label><select id="imuSel" style="width:auto"><option value="frame">Frame</option><option value="bar">Bar</option></select></div>
             <div><label class="f" for="imuAxis">Axis</label><select id="imuAxis" style="width:auto"><option value="x">X</option><option value="y">Y</option><option value="z">Z</option><option value="mag">Total (|a|)</option></select></div>
@@ -579,15 +639,18 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
         <div><label class="f" for="cmpA"><span class="tag a">A</span> Reference ride</label><select id="cmpA"></select></div>
         <div><label class="f" for="cmpB"><span class="tag b">B</span> Comparison ride</label><select id="cmpB"></select></div>
       </div>
-      <h3>Line up B with A</h3>
+      <div class="row" style="margin-top:12px"><button class="btn primary wide1" id="btnCompare" type="button">Compare these rides</button></div>
+      <div id="cmpMsg" class="msg" role="status"></div>
+      <details id="cmpOpts" style="margin-top:4px"><summary>Line-up options</summary>
+        <div class="muted" style="margin-bottom:6px">To compare, the two rides are lined up so the same spot on the trail matches in both. Automatic works for most rides.</div>
       <div class="row">
-        <div class="alignpick"><label class="f" for="alignMode">Rough alignment</label>
+        <div class="alignpick"><label class="f" for="alignMode">Line up by</label>
           <select id="alignMode">
-            <option value="gps">GPS track (recommended; uses the sensors when there is no GPS)</option>
-            <option value="pots">Sensors only (travel + IMU, no GPS)</option>
-            <option value="manual">Manual offset</option>
-            <option value="path">Mapping file (time pairs or warp path)</option>
-            <option value="none">Start of file</option>
+            <option value="gps">Automatic (GPS, or sensors if no GPS)</option>
+            <option value="pots">Sensors only (ignore GPS)</option>
+            <option value="manual">By hand: shift ride B</option>
+            <option value="path">From a mapping file</option>
+            <option value="none">Starts of the files</option>
           </select></div>
         <div id="offBox" class="hidden" style="width:150px"><label class="f" for="offset">B offset (s)</label><input id="offset" type="number" step="0.05" value="0"></div>
         <div id="dtwBox" class="hidden row">
@@ -595,10 +658,9 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
           <div style="width:170px"><label class="f" for="dtwRate">Index rate (Hz, index pairs only)</label><input id="dtwRate" type="number" min="1" step="1" placeholder="250"></div>
           <div class="muted" style="flex-basis:100%">A file with a <code>time1,time2</code> header (or decimal numbers) is read as seconds in ride A and ride B; whole-number pairs are sample indices at the index rate.</div>
         </div>
-        <label class="row" style="gap:6px;align-self:flex-end;min-height:42px"><input type="checkbox" id="alignRefine" checked> Refine with pots + IMU</label>
-        <button class="btn primary" id="btnCompare" style="align-self:flex-end">Compare</button>
+        <label class="row" style="gap:6px;align-self:flex-end;min-height:42px"><input type="checkbox" id="alignRefine" checked> Fine-tune with the suspension and motion sensors</label>
       </div>
-      <details style="margin-top:8px"><summary>Alignment settings</summary>
+      <details style="margin-top:8px"><summary>Expert settings</summary>
         <div class="grid3">
           <div><label class="f" for="p_alignBand">Sensor search window, max (&plusmn; s)</label><input id="p_alignBand" type="number" min="0.5" max="20" step="0.1"></div>
           <div><label class="f" for="p_alignRate">Fine alignment rate (Hz)</label><input id="p_alignRate" type="number" min="10" max="250" step="5"></div>
@@ -609,13 +671,17 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
         </div>
         <div class="muted" style="margin-top:6px">GPS matches the two tracks by position and heading (resampled every 2&nbsp;m) and trims both rides to the section they share; every point gets a timing uncertainty from the GPS drift, speed and gaps between fixes. The pots and IMU then fine-tune the timing in two passes (10&nbsp;Hz inside that uncertainty, then the fine rate within &plusmn;0.35&nbsp;s), with the warp speed limited to 0.5&ndash;2&times; so it can&#39;t jitter on noise. The search window caps how far the sensors may move the timing from GPS. GPS drift: about 3.5&nbsp;m for a 1&nbsp;Hz receiver; lower it for a 10&nbsp;Hz or RTK unit.</div>
       </details>
-      <div class="muted" id="alignInfo" style="margin-top:6px"></div>
-      <div id="cmpMsg" class="msg"></div>
+      </details>
+      <details class="help"><summary>How lining up works</summary>
+        <div class="muted">No two runs take exactly the same time, so the analyzer matches them up point by point. First it uses GPS (where you were on the trail). Then it fine-tunes with the suspension sensors and the motion sensors (IMU) in the logger box, which feel the same bumps in both rides. This stretching of one ride's clock to fit the other is called <i>time warping</i>. Every comparison is checked a second, independent way; if the rides can&#39;t be matched reliably, you&#39;re told instead of shown made-up numbers.</div>
+        <div class="muted" id="alignInfo" style="margin-top:6px"></div>
+      </details>
     </div>
 
     <div id="cmpResults" class="hidden">
-      <div id="cmpNotes" class="banner hidden"></div>
-      <div class="card"><div class="tiles" id="cmpTiles"></div></div>
+      <div class="card"><div id="cmpHead" class="headline"></div><div class="tiles" id="cmpTiles"></div>
+        <details id="cmpSure"><summary>How sure is this?</summary><div class="tiles" id="cmpTiles2" style="margin-top:6px"></div></details>
+        <div id="cmpNotes" class="notes hidden"></div></div>
       <div class="card tabcard">
         <nav class="subtabs" id="cmpTabs" role="tablist" aria-label="Comparison views">
           <button type="button" role="tab" data-csub="speed" class="on">Speed</button>
@@ -763,6 +829,16 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
           <div class="muted" style="margin-top:8px">Each hit is measured in both rides and B &minus; A is taken per hit. <b>q</b> is the p-value corrected for testing many metrics at once (Benjamini&ndash;Hochberg); a metric counts as significant when q &lt; <span class="alphaTxt">0.05</span>. Phase counts and the IMU compression / rebound values use the split speed set in Setup (the Python tool used 10&nbsp;mm/s, which counts sensor noise as movement). IMU acceleration is the size of the acceleration vector minus 1&nbsp;g, so it doesn&#39;t depend on how the sensor is mounted. <b>d<sub>z</sub></b> is the mean change divided by its spread (0.2 small, 0.5 medium, 0.8 large). Hits a few seconds apart share speed, line and fatigue, so p-values are optimistic: ride each setup more than once (A, B, A, B) before trusting a small change.</div>
         </div>
 
+        <div class="card" id="roughCard">
+          <h2>Roughness (IMU)</h2>
+          <p id="roughSum" style="margin:0 0 10px"></p>
+          <div class="tbl"><table id="cmpRough"></table></div>
+          <h3 id="harshCmpHead" style="margin-top:14px">Front vs rear (frame IMU)</h3>
+          <div id="harshCmpWarn"></div>
+          <div class="tbl"><table id="cmpHarsh"></table></div>
+          <div class="muted" style="margin-top:8px"><b>From hits:</b> all of that IMU&rsquo;s hit metrics (accel and jerk peak, mean, RMS, SD, in compression and rebound) pooled into one score: the average effect size d<sub>z</sub> of B &minus; A, weighted by its size; + means B was rougher. The verdict needs &ge; 75% of those metrics at p &lt; 0.10 (&ge; 50%: a lean). They measure overlapping things, so read it as a summary, not as independent votes. <b>Whole run:</b> RMS of |a| &minus; 1 g and of jerk in 5 s stretches of A against the same stretch of B, paired over the stretches; it includes everything between hits (chatter, braking bumps). <b>Front vs rear:</b> the single frame IMU&rsquo;s up/down jerk over each axle, from its heave and pitch (as on Analyze; wheelbase, IMU position and which way it faces from Settings &rarr; Sensors). Through the hits: over each paired hit and the 0.3 s after it, so a front hit also catches the rear wheel on the same bump; q is corrected for all the hit metrics.</div>
+        </div>
+
         <div class="card">
           <h2>Hits</h2>
           <div class="tbl"><table id="cmpCounts"></table></div>
@@ -835,7 +911,8 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
     <div class="card">
       <h2>Cloud &amp; notifications</h2>
       <div class="muted" id="offlineState" style="margin-bottom:6px"></div>
-      <div class="muted" style="margin-bottom:8px">Your logger (firmware 4.4+) uploads each ride to your own Cloudflare Worker after Stop, over your hotspot. With this set, new rides come in by themselves when this page opens, from anywhere, without a logger tab. Setup steps: FIRMWARE_SUMMARY.md, section 13.</div>
+      <div class="muted" style="margin-bottom:8px">Your logger uploads each ride over your hotspot when you stop recording. With this set, new rides show up here by themselves.</div>
+      <details class="help"><summary>Using your own cloud</summary><div class="muted">The rides go to a Cloudflare Worker (logger firmware 4.4 or newer). To use your own, enter its address and read key below. Setup steps: FIRMWARE_SUMMARY.md, section 13.</div></details>
       <div class="grid3">
         <div style="grid-column:span 2"><label class="f" for="cloudUrl">Worker address</label><input id="cloudUrl" type="url" inputmode="url" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="https://suspension-logger.NAME.workers.dev"></div>
         <div><label class="f" for="cloudKey">Read key</label><input id="cloudKey" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off"></div>
@@ -844,6 +921,10 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
         <button class="btn primary" id="btnCloudSave">Save &amp; check</button>
         <button class="btn" id="btnCloudSync">Get new rides from the cloud</button>
       </div>
+      <h3>Rides in the cloud</h3>
+      <div class="muted">Every ride your loggers have uploaded. Deleting one here removes it for every phone; the copy on the logger's SD card stays.</div>
+      <div class="row" style="margin-top:8px"><button class="btn" id="btnCloudList" type="button">Show rides in the cloud</button></div>
+      <div id="cloudList" class="tbl" style="margin-top:8px"></div>
       <h3>Ride notifications</h3>
       <div class="muted">A notification when the logger uploads a ride: tap it to open that ride. <span id="pushState"></span></div>
       <div class="row" style="margin-top:8px">
@@ -864,19 +945,28 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
       </div>
       <h3>Sensors</h3>
       <div class="grid2">
-        <div><label class="f" for="p_frontPotStroke">Front pot stroke (mm)</label><input id="p_frontPotStroke" type="number" min="1"></div>
-        <div><label class="f" for="p_rearPotStroke">Rear pot stroke (mm)</label><input id="p_rearPotStroke" type="number" min="1"></div>
+        <div><label class="f" for="p_frontPotStroke">Front sensor length (mm)</label><input id="p_frontPotStroke" type="number" min="1"></div>
+        <div><label class="f" for="p_rearPotStroke">Rear sensor length (mm)</label><input id="p_rearPotStroke" type="number" min="1"></div>
       </div>
       <div class="row" style="margin-top:8px">
-        <label class="row" style="gap:6px"><input type="checkbox" id="p_invertFront"> Invert front</label>
-        <label class="row" style="gap:6px"><input type="checkbox" id="p_invertRear"> Invert rear</label>
+        <label class="row" style="gap:6px"><input type="checkbox" id="p_invertFront"> Flip front sensor direction</label>
+        <label class="row" style="gap:6px"><input type="checkbox" id="p_invertRear"> Flip rear sensor direction</label>
+        <label class="row" style="gap:6px"><input type="checkbox" id="p_swapPots"> Front and rear plugs swapped (the front column is the rear sensor)</label>
       </div>
       <div class="grid2" style="margin-top:8px">
-        <div><label class="f" for="p_frontPot">Front pot</label><select id="p_frontPot"><option value="auto">Auto-detect</option><option value="on">Connected</option><option value="off">Not connected</option></select></div>
-        <div><label class="f" for="p_rearPot">Rear pot</label><select id="p_rearPot"><option value="auto">Auto-detect</option><option value="on">Connected</option><option value="off">Not connected</option></select></div>
+        <div><label class="f" for="p_frontPot">Front sensor</label><select id="p_frontPot"><option value="auto">Auto-detect</option><option value="on">Connected</option><option value="off">Not connected</option></select></div>
+        <div><label class="f" for="p_rearPot">Rear sensor</label><select id="p_rearPot"><option value="auto">Auto-detect</option><option value="on">Connected</option><option value="off">Not connected</option></select></div>
       </div>
-      <p class="muted" style="margin:4px 0 0">A pot that isn't plugged in is left out of stats, the ride report and run alignment. Auto-detect spots one that only picks up the other pot's signal.</p>
-      <h3>Data filtering</h3>
+      <h3>Frame IMU (front vs rear harshness)</h3>
+      <div class="grid3">
+        <div><label class="f" for="p_wheelbase">Wheelbase (mm)</label><input id="p_wheelbase" type="number" min="800" max="1600" step="5"></div>
+        <div><label class="f" for="p_imuFromFront">IMU behind the front axle (mm)</label><input id="p_imuFromFront" type="number" min="-600" max="2000" step="10"></div>
+        <div><label class="f" for="p_imuForward">IMU forward direction</label><select id="p_imuForward"><option value="auto">Auto-detect</option><option value="+x">+X</option><option value="-x">&minus;X</option><option value="+y">+Y</option><option value="-y">&minus;Y</option><option value="+z">+Z</option><option value="-z">&minus;Z</option></select></div>
+        <div><label class="f" for="p_harshHit">Harsh hit above (g/s)</label><input id="p_harshHit" type="number" min="50" max="5000" step="50"></div>
+      </div>
+      <p class="muted" style="margin:4px 0 0">Measure the IMU distance level with the ground, from the front axle back to the IMU (mid-downtube is about 450&ndash;550&nbsp;mm). Auto-detect finds which way the IMU faces from the travel sensors, or from the rear wheel reaching bumps after the front; set it by hand if the check says it can&#39;t tell. The X/Y/Z arrows are printed on the IMU board.</p>
+      <p class="muted" style="margin:4px 0 0">A travel sensor (potentiometer, or &ldquo;pot&rdquo;) that isn&#39;t plugged in is left out of the numbers, the ride report and lining up rides. Auto-detect spots an unplugged one.</p>
+      <details style="margin-top:10px"><summary>Smoothing</summary>
       <div class="filterbox">
         <div class="grid3">
           <div><label class="f" for="p_filterType">Filter type</label>
@@ -891,7 +981,9 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
         </div>
         <div class="muted" id="filterHelp" style="margin-top:6px"></div>
       </div>
-      <h3>Rear linkage: shock &rarr; wheel (wheel = a + b&middot;s + c&middot;s&sup2; + d&middot;s&sup3;)</h3>
+      </details>
+      <details><summary>Rear linkage (shock to wheel)</summary>
+      <div class="muted">wheel = a + b&middot;s + c&middot;s&sup2; + d&middot;s&sup3;, where s is shock travel. Easiest: fit it from a linkage file below.</div>
       <div class="grid2">
         <div><label class="f" for="p_rearA">a</label><input id="p_rearA" type="number" step="any"></div>
         <div><label class="f" for="p_rearB">b</label><input id="p_rearB" type="number" step="any"></div>
@@ -903,6 +995,7 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
         &#128202; Fit a, b, c, d from a linkage CSV (shock mm, wheel mm)
       </label>
       <div id="linkageMsg" class="msg"></div>
+      </details>
 
       <details style="margin-top:10px"><summary>Filtering &amp; velocity</summary>
         <div class="grid3">
@@ -956,42 +1049,47 @@ dialog.dlg h2{margin:0 0 4px;font-size:17px}
       </div>
     </div>
     <div class="card">
-      <h2>About the numbers</h2>
+      <details id="aboutNums"><summary>How the numbers are worked out</summary>
       <div class="muted">Sample rate is read from each file&#39;s time column (logger files: 1000&nbsp;Hz sampled, 4 averaged &rarr; 250 rows/s). Velocity uses a Savitzky-Golay derivative computed for the chosen window and order. Positive velocity is compression everywhere. Results differ from the old SD-card analyzer, whose velocities were about 12&times; too high (it assumed 1000&nbsp;Hz and its filter weights summed to 3.14 instead of 1).</div>
       <div class="muted" style="margin-top:8px"><b>Compare</b> lines the rides up in two stages: GPS first (tracks matched by position and heading), then the pots and frame/bar IMU together (coarse-to-fine DTW with a limited warp speed). The pots-only and IMU-only alignments are also run separately as a cross-check. <b>Speed difference</b> is the slope of the time gap: the gap is fused from the sensor timing (where trusted) and GPS, smoothed, and differentiated; its band comes from 100 simulated re-runs with each input&#39;s own noise, widened so it holds for the whole run at once. Frame and bar IMU readings are converted to g (logger files are already in g; older files in m/s&sup2; are detected).</div>
       <div class="muted" style="margin-top:8px"><b>Compare map</b>: the trail (from A&#39;s GPS, or B&#39;s carried over through the alignment) is coloured by the speed curve on the Speed tab, as the faster rider&#39;s lead in % (blue A, orange B, grey even). The colour scale is fixed per comparison at the 95th percentile of that difference while both riders are moving and the sensors are trusted, rounded up to 3, 5, 8, 10, 15, 20, 25 or 30%; stops (where the alignment has one rider at least 4&times; slower for 3&nbsp;s or more: one clock runs on while the other covers the same ground) are taken out of the comparison, drawn dark grey and left out of the scale, and anything beyond the scale is drawn at full colour and ringed. The two dots start the section together and move by the alignment&#39;s time gap (stops included), so a rider who stopped waits there. Everything in the comparison comes from the alignment; the GPS only places the trail on the map.</div>
       <div class="muted" style="margin-top:8px"><b>Without GPS</b> the rough alignment comes from the sensors themselves: front and rear travel and the frame and bar IMU are matched by shape (not size, so a different spring, shock or sag still matches) over the whole ride, then in 8&nbsp;s windows, and the windows are chained into one timeline. Only stretches where both riders are moving are matched, so waiting at the start doesn&#39;t count. <b>Independent check</b>: every comparison re-measures the timing a second way, by plain cross-correlation in 4&nbsp;s windows with no DTW, and says whether the bumps in the speed curve are real. On two real runs with different shocks (2000&nbsp;Hz, no GPS) the result agreed with it to about 25&ndash;30&nbsp;ms where trusted, and the speed to about &plusmn;1.5% over 5&nbsp;s. <b>Sample rate</b>: settings counted in rows mean rows at 250 a second and are scaled for files at other rates, so they always cover the same time.</div>
+      </details>
     </div>
   </section>
 </main>
 
 <script>
-// Served by the logger (http://datalogger.local/analyzer): the copy on its SD card
-// first, so charts work on the logger's own Wi-Fi with no internet. Then the CDNs.
-if (location.protocol === 'http:') document.write('<script src="plotly-2.27.0.min.js" charset="utf-8"><\/script>');
-</script>
-<script>
-if (!window.Plotly) document.write('<script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"><\/script>');
-</script>
-<script>
-if (!window.Plotly) document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.27.0/plotly.min.js" charset="utf-8"><\/script>');
-</script>
-<script>
-/* No charting library (offline?): a stand-in so everything except the charts still works */
-if (!window.Plotly) (function () {
-  var note = function (div) {
-    div = typeof div === 'string' ? document.getElementById(div) : div;
-    if (div) {
-      if (!div.on) div.on = function () {};
-      div.innerHTML = '<div style="padding:40px 10px;text-align:center;color:var(--muted)">Chart unavailable - the charting library could not load (no internet?).</div>';
-    }
-    return Promise.resolve(div);
-  };
-  window.Plotly = { react: note, newPlot: note, relayout: function () { return Promise.resolve(); }, restyle: function () { return Promise.resolve(); }, purge: function () {}, Plots: { resize: function () {} } };
-  document.addEventListener('DOMContentLoaded', function () {
+// The charting library (3.5 MB) loads in the background so the ride report shows
+// at once; charts wait for window.plotlyReady. Served by the logger
+// (http://datalogger.local/analyzer): the copy on its SD card first, so charts work
+// on the logger's own Wi-Fi with no internet. Then the CDNs.
+window.plotlyReady = new Promise(function (done) {
+  var srcs = [];
+  if (location.protocol === 'http:') srcs.push('plotly-2.27.0.min.js');
+  srcs.push('https://cdn.plot.ly/plotly-2.27.0.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.27.0/plotly.min.js');
+  function stub() {
+    /* No charting library (offline?): a stand-in so everything except the charts still works */
+    var note = function (div) {
+      div = typeof div === 'string' ? document.getElementById(div) : div;
+      if (div) {
+        if (!div.on) div.on = function () {};
+        div.innerHTML = '<div style="padding:40px 10px;text-align:center;color:var(--muted)">Chart unavailable - the charting library could not load (no internet?).</div>';
+      }
+      return Promise.resolve(div);
+    };
+    window.Plotly = { react: note, newPlot: note, relayout: function () { return Promise.resolve(); }, restyle: function () { return Promise.resolve(); }, purge: function () {}, Plots: { resize: function () {} } };
     var b = document.getElementById('noCharts'); if (b) b.classList.remove('hidden');
-  });
-})();
+  }
+  (function next(i) {
+    if (window.Plotly) return done(true);
+    if (i >= srcs.length) { stub(); return done(false); }
+    var s = document.createElement('script'); s.src = srcs[i]; s.charset = 'utf-8'; s.async = true;
+    s.onload = function () { if (window.Plotly) done(true); else next(i + 1); };
+    s.onerror = function () { next(i + 1); };
+    document.head.appendChild(s);
+  })(0);
+});
 </script>
 <script>
 /* ---- analysis.js ---- */
@@ -1169,6 +1267,34 @@ if (!window.Plotly) (function () {
   }
   // Robust "top-out" level (from the original analyzer): 2nd percentile, or
   // the 5th when the lowest 5% are spread out (noisy dips)
+  // Full extension ("top-out", 0 mm) of one sensor, from the ride itself.
+  // Riders sit in sag most of the time, so the old rule (2nd/5th percentile)
+  // landed between top-out and sag whenever full extension was rare, and cut
+  // real extension off as negative travel. Now: the 0.5th percentile of the
+  // cleaned (median-filtered) position - about 0.6 s of a 2 min ride at the
+  // most extended - plus checks that tell the rider when no zero from the ride
+  // can be right:
+  //   rail     the sensor reads its end-stop (ADC 0/4095) at full extension:
+  //            the real top-out is past what it can measure
+  //   reversed most of the spread is below the typical position: the sensor
+  //            direction looks flipped (zero then sits at bottom-out)
+  // pos: cleaned position (mm, not yet zeroed); adc: raw ADC after the invert
+  // setting (0 = top-out end), or null
+  function topOutZero(pos, adc, name) {
+    const n = pos.length, out = { zero: 0, how: 'none', warn: [] };
+    if (n < 50) { out.zero = n ? Math.min(...pos) : 0; return out; }
+    const v = Float64Array.from(pos).sort(), q = f => v[Math.min(n - 1, Math.max(0, Math.floor(f * (n - 1))))];
+    out.zero = q(0.005); out.how = '0.5th percentile';
+    const med = q(0.5), lo = med - q(0.01), hi = q(0.99) - med;
+    if (adc) {
+      let top = 0, bot = 0; for (let i = 0; i < adc.length; i++) { if (adc[i] <= 2) top++; else if (adc[i] >= 4093) bot++; }
+      const fTop = top / adc.length, fBot = bot / adc.length;
+      if (fTop >= 0.02) { out.how = 'sensor end-stop'; out.warn.push(name + ' sensor hits its end-stop at full extension (' + Math.round(fTop * 100) + '% of the ride), so full extension is past what it can read: zero and sag are approximate. Move the sensor so it has room at full extension.'); }
+      if (fBot >= 0.02) out.warn.push(name + ' sensor hits its end-stop when compressed (' + Math.round(fBot * 100) + '% of the ride): deep travel is cut off. Check the sensor length setting and mount.');
+    }
+    if (lo > 15 && hi < 0.6 * lo) out.warn.push(name + ' sensor direction looks reversed (the readings spread mostly below the typical position), so zero may be at bottom-out instead of full extension. Try "Flip ' + name.toLowerCase() + ' sensor direction" in Settings.');
+    return out;
+  }
   function robustBaseline(arr) {
     const n = arr.length; if (!n) return 0;
     const v = Float64Array.from(arr).sort();
@@ -1453,7 +1579,7 @@ if (!window.Plotly) (function () {
     frontTravel: 150, rearTravel: 150, sagPercent: 30,
     frontPotStroke: 225, rearPotStroke: 85,
     rearA: 0, rearB: 2.8574, rearC: 0, rearD: 0,
-    trimStart: 0, trimEnd: Infinity, invertFront: false, invertRear: false,
+    trimStart: 0, trimEnd: Infinity, invertFront: false, invertRear: false, swapPots: false,
     // Pot connected? 'auto' spots an unplugged one (it only picks up the other pot's signal)
     frontPot: 'auto', rearPot: 'auto',
     medianFilterSize: 5, maxPosChange: 15, velocityWindow: 21, velocityOrder: 3,
@@ -1473,7 +1599,9 @@ if (!window.Plotly) (function () {
     // Compare: hit detection (both rides, same rules) and pairing
     hitVelocity: 400, hitMinTravel: 8, hitMinDuration: 0.03, hitMaxDuration: 2, hitSettle: 0.08,
     hitCooldown: 0.05, hitReturn: 0.4, hitBacktrack: 0.3,
-    pairTolerance: 0.25, pairMinCorr: 0.5, alpha: 0.05, jerkCutoff: 20, phaseThreshold: 50
+    pairTolerance: 0.25, pairMinCorr: 0.5, alpha: 0.05, jerkCutoff: 20, phaseThreshold: 50,
+    // Frame IMU: front vs rear harshness (bike geometry, which way the IMU faces, what counts as a harsh hit)
+    wheelbase: 1250, imuFromFront: 500, imuForward: 'auto', harshHit: 400
   };
 
   // Is each pot connected? Set by hand ('on' / 'off') or, on 'auto', judged
@@ -1484,7 +1612,8 @@ if (!window.Plotly) (function () {
     if (!out.front) out.why.front = 'set to not connected'; if (!out.rear) out.why.rear = 'set to not connected';
     const n = b - a; if (n < 50) return out;
     const step = Math.max(1, Math.floor(n / 20000)), F = [], R = [];
-    for (let i = a; i < b; i += step) { const f = parsed.front[i], r = parsed.rear[i]; if (isFinite(f) && isFinite(r)) { F.push(f); R.push(r); } }
+    const PF = p.swapPots ? parsed.rear : parsed.front, PR = p.swapPots ? parsed.front : parsed.rear;
+    for (let i = a; i < b; i += step) { const f = PF[i], r = PR[i]; if (isFinite(f) && isFinite(r)) { F.push(f); R.push(r); } }
     if (F.length < 50) return out;
     const span = x => { const v = x.slice().sort((u, w) => u - w); return v[Math.floor(0.95 * (v.length - 1))] - v[Math.floor(0.05 * (v.length - 1))]; };
     let sx = 0, sy = 0, sxx = 0, syy = 0, sxy = 0; const m = F.length - 1;
@@ -1512,15 +1641,19 @@ if (!window.Plotly) (function () {
     while (b > a && parsed.time[b - 1] - t0 > end) b--;
     const n = b - a;
     const time = new Float64Array(n), fr = new Float64Array(n), rr = new Float64Array(n);
+    const fAdc = new Uint16Array(n), rAdc = new Uint16Array(n);      // after the invert setting: 0 = top-out end
     const potOn = potsConnected(parsed, a, b, p);
+    // front/rear plugs swapped on the logger: the front_disp column is the rear sensor
+    const PF = p.swapPots ? parsed.rear : parsed.front, PR = p.swapPots ? parsed.front : parsed.rear;
     let fa0 = Infinity, fa1 = -Infinity, ra0 = Infinity, ra1 = -Infinity;
     for (let i = 0; i < n; i++) {
       time[i] = parsed.time[a + i] - t0;
-      let fa = parsed.front[a + i], ra = parsed.rear[a + i];
+      let fa = PF[a + i], ra = PR[a + i];
       if (fa < fa0) fa0 = fa; if (fa > fa1) fa1 = fa; if (ra < ra0) ra0 = ra; if (ra > ra1) ra1 = ra;
       // invert the pot reading before the linkage (a pot mounted the other way round)
       if (p.invertFront) fa = 4095 - fa;
       if (p.invertRear) ra = 4095 - ra;
+      fAdc[i] = fa; rAdc[i] = ra;
       fr[i] = toMM(fa, 'front', p); rr[i] = toMM(ra, 'rear', p);
     }
     // Row-based settings are "rows at 250 rows/s" (the logger's rate), so they
@@ -1541,7 +1674,12 @@ if (!window.Plotly) (function () {
     // zero = the robust top-out level, so 0 mm is full extension
     // a part of a ride (a run, descents) uses the zero of the whole recording when it is given (fixedZero)
     const fz = p.fixedZero && isFinite(p.fixedZero.front) && isFinite(p.fixedZero.rear) ? p.fixedZero : null;
-    const zero = fz ? { front: fz.front, rear: fz.rear } : { front: p.autoZero ? robustBaseline(front) : 0, rear: p.autoZero ? robustBaseline(rear) : 0 };
+    const zf = potOn.front ? topOutZero(front, fAdc, 'Front') : { zero: 0, how: 'not connected', warn: [] };
+    const zr = potOn.rear ? topOutZero(rear, rAdc, 'Rear') : { zero: 0, how: 'not connected', warn: [] };
+    const zero = fz ? { front: fz.front, rear: fz.rear } : { front: p.autoZero ? zf.zero : 0, rear: p.autoZero ? zr.zero : 0 };
+    // the checks run on this part even when the zero comes from the whole recording
+    zero.warn = fz && fz.warn ? fz.warn.slice() : zf.warn.concat(zr.warn);
+    zero.how = { front: fz ? 'whole recording' : p.autoZero ? zf.how : 'off', rear: fz ? 'whole recording' : p.autoZero ? zr.how : 'off' };
     for (let i = 0; i < n; i++) { front[i] -= zero.front; rear[i] -= zero.rear; fr[i] -= zero.front; rr[i] -= zero.rear; }
     const vel = x => type === 'savgol' ? perSegment(x, segs, y => sgDerivative(y, rate, p.velocityWindow, p.velocityOrder))
                                        : diffVelocity(x, time, gapT, p.velocityFilterWindow, type);
@@ -1560,7 +1698,8 @@ if (!window.Plotly) (function () {
       ...['front', 'rear'].filter(k => !potOn[k]).map(k => (k === 'front' ? 'Front' : 'Rear') + ' pot: ' + (potOn.why[k] || 'not connected') + ' — ignored'),
       'Rear ADC ' + ra0 + '–' + ra1 + ' → ' + f1((ra1 - ra0) / 4095 * p.rearPotStroke) + ' of ' + p.rearPotStroke + ' mm pot stroke used',
       'Position: median ' + p.medianFilterSize + ', max ' + p.maxPosChange + ' mm/row, ' + (type === 'none' || pw < 3 ? 'no smoothing' : (type === 'savgol' ? 'Savitzky-Golay' : 'moving average') + ' ' + pw + ' rows'),
-      'Zero (top-out): ' + (fz ? 'from the whole recording: front ' + f1(zero.front) + ' mm, rear ' + f1(zero.rear) + ' mm' : p.autoZero ? 'front ' + f1(zero.front) + ' mm, rear ' + f1(zero.rear) + ' mm subtracted' : 'off'),
+      'Zero (top-out): ' + (fz ? 'from the whole recording: front ' + f1(zero.front) + ' mm, rear ' + f1(zero.rear) + ' mm' : p.autoZero ? 'front ' + f1(zero.front) + ' mm, rear ' + f1(zero.rear) + ' mm subtracted' : 'off') + (p.autoZero && !fz ? ' (' + zero.how.front + ' / ' + zero.how.rear + ')' : ''),
+      ...zero.warn.map(w => 'Zero check: ' + w),
       'Velocity: ' + (type === 'savgol' ? 'Savitzky-Golay derivative, ' + p.velocityWindow + ' rows, order ' + p.velocityOrder : type === 'moving_average' ? 'difference → median → ±5000 clamp → moving average ' + p.velocityFilterWindow + ' rows' : 'raw difference, ±5000 clamp'),
       'Velocity range: front ' + f0(fv[0]) + ' to ' + f0(fv[1]) + ' mm/s, rear ' + f0(rv[0]) + ' to ' + f0(rv[1]) + ' mm/s',
       'Strokes: front ' + strokes.front.compression.length + ' compression / ' + strokes.front.rebound.length + ' rebound, rear ' + strokes.rear.compression.length + ' / ' + strokes.rear.rebound.length
@@ -1641,10 +1780,233 @@ if (!window.Plotly) (function () {
     return out;
   }
 
+  // ---------------------------------------------------------------- frame IMU: front vs rear harshness
+  // The frame is treated as one stiff body. From the IMU's up/down
+  // acceleration (a) and its pitch rotation (nose-up rate w, angular
+  // acceleration al = dw/dt), the up/down acceleration of the frame over each
+  // axle is
+  //   front: a + x * al          rear: a - (L - x) * al
+  // (x = IMU distance behind the front axle, L = wheelbase). Harshness is the
+  // jerk (rate of change) of each: low-passed at the jerk cutoff, then
+  // differentiated, as in the desktop tool. A front hit pitches the nose up,
+  // a rear hit pitches it down; hits on both wheels show as heave.
+  function lpZ(x, fs, fc) {                         // 2nd-order Butterworth, forward + backward
+    const n = x.length, out = new Float64Array(n); if (!n) return out;
+    const K = Math.tan(Math.PI * Math.min(fc, fs * 0.45) / fs), q = Math.SQRT1_2, nm = 1 / (1 + K / q + K * K);
+    const b0 = K * K * nm, b1 = 2 * b0, b2 = b0, a1 = 2 * (K * K - 1) * nm, a2 = (1 - K / q + K * K) * nm;
+    const pass = (src, dst, rev) => {
+      const i0 = rev ? n - 1 : 0, st = rev ? -1 : 1; let x1 = src[i0], x2 = src[i0], y1 = src[i0], y2 = src[i0];
+      for (let k = 0, i = i0; k < n; k++, i += st) { const v = src[i], y = b0 * v + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2; x2 = x1; x1 = v; y2 = y1; y1 = y; dst[i] = y; }
+    };
+    const tmp = new Float64Array(n); pass(x, tmp, false); pass(tmp, out, true); return out;
+  }
+  function gradZ(x, fs) {
+    const n = x.length, o = new Float64Array(n);
+    for (let i = 1; i < n - 1; i++) o[i] = (x[i + 1] - x[i - 1]) * fs / 2;
+    if (n > 2) { o[0] = o[1]; o[n - 1] = o[n - 2]; }
+    return o;
+  }
+  function hpZ(x, fs, fc) { const l = lpZ(x, fs, fc), o = new Float64Array(x.length); for (let i = 0; i < x.length; i++) o[i] = x[i] - l[i]; return o; }
+  function corrZ(a, b, from, to) {
+    let sa = 0, sb = 0, saa = 0, sbb = 0, sab = 0, m = 0;
+    for (let i = from; i < to; i++) { const u = a[i], v = b[i]; sa += u; sb += v; saa += u * u; sbb += v * v; sab += u * v; m++; }
+    if (m < 10) return 0;
+    const va = saa - sa * sa / m, vb = sbb - sb * sb / m;
+    return va > 0 && vb > 0 ? (sab - sa * sb / m) / Math.sqrt(va * vb) : 0;
+  }
+  const IMU_AXES = { '+x': [1, 0, 0], '-x': [-1, 0, 0], '+y': [0, 1, 0], '-y': [0, -1, 0], '+z': [0, 0, 1], '-z': [0, 0, -1] };
+  const dot3 = (u, v) => u[0] * v[0] + u[1] * v[1] + u[2] * v[2];
+  const norm3 = u => { const l = Math.hypot(u[0], u[1], u[2]) || 1; return [u[0] / l, u[1] / l, u[2] / l]; };
+  const cross3 = (u, v) => [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+  const axisName = u => { const k = [0, 1, 2].reduce((b, i) => Math.abs(u[i]) > Math.abs(u[b]) ? i : b, 0); return (u[k] < 0 ? '−' : '+') + 'XYZ'[k]; };
+
+  // Frame IMU rows [a, b) in g and rad/s, or null (no columns, or all zeros)
+  function imuFrame(parsed, a, b) {
+    const K = ['fax', 'fay', 'faz', 'gfx', 'gfy', 'gfz'];
+    if (!K.every(k => parsed[k])) return null;
+    const n = b - a; if (n < 50) return null;
+    const A = [0, 1, 2].map(() => new Float64Array(n)), G = [0, 1, 2].map(() => new Float64Array(n));
+    let nz = 0; const last = [0, 0, 0, 0, 0, 0];
+    for (let i = 0; i < n; i++) {
+      for (let c = 0; c < 6; c++) { const v = parsed[K[c]][a + i]; if (isFinite(v)) last[c] = v; (c < 3 ? A[c] : G[c - 3])[i] = last[c]; }
+      if (Math.abs(A[0][i]) + Math.abs(A[1][i]) + Math.abs(A[2][i]) > 0.05) nz++;
+    }
+    if (nz < n * 0.5) return null;                    // columns present but zeros (IMU not fitted)
+    const mags = [], gs = [], st = Math.max(1, Math.floor(n / 4000));
+    for (let i = 0; i < n; i += st) { mags.push(Math.hypot(A[0][i], A[1][i], A[2][i])); gs.push(Math.max(Math.abs(G[0][i]), Math.abs(G[1][i]), Math.abs(G[2][i]))); }
+    mags.sort((u, v) => u - v); gs.sort((u, v) => u - v);
+    const med = mags[mags.length >> 1];
+    let unitA;
+    if (med > 0.4 && med < 3) unitA = 'g'; else if (med > 4 && med < 30) unitA = 'm/s²'; else return null;
+    if (unitA !== 'g') for (const c of A) for (let i = 0; i < n; i++) c[i] /= 9.80665;
+    // logger: °/s; some files: rad/s (a ride rarely passes 30 rad/s, while °/s readings do)
+    const unitG = gs[Math.floor(0.999 * (gs.length - 1))] < 30 ? 'rad/s' : '°/s';
+    if (unitG === '°/s') for (const c of G) for (let i = 0; i < n; i++) c[i] *= Math.PI / 180;
+    return { A, G, n, unitA, unitG };
+  }
+
+  // Which way is up, forward and nose-up, judged once on the whole recording
+  // (so every run of a ride uses the same answer). Cached on the parsed ride.
+  function imuOrientation(parsed, p) {
+    p = Object.assign({}, DEFAULTS, p || {});
+    const key = [p.imuForward, p.invertFront, p.invertRear, p.frontPot, p.rearPot, p.swapPots].join('|');
+    if (parsed._imuOri && parsed._imuOri.key === key) return parsed._imuOri.v;
+    let v = null;
+    try { v = imuOrientationCalc(parsed, p); } catch (e) { v = null; }
+    try { Object.defineProperty(parsed, '_imuOri', { value: { key, v }, configurable: true, writable: true, enumerable: false }); } catch (e) {}
+    return v;
+  }
+  function imuOrientationCalc(parsed, p) {
+    const n = parsed.rows, fs = detectRate(parsed.time) || 250;
+    const I = imuFrame(parsed, 0, n); if (!I) return null;
+    const { A, G } = I, warn = [];
+    let up = [0, 0, 0];
+    for (let i = 0; i < n; i++) { up[0] += A[0][i]; up[1] += A[1][i]; up[2] += A[2][i]; }
+    up = norm3(up);
+    const manual = IMU_AXES[p.imuForward];
+    let e;
+    if (manual) e = manual;
+    else {
+      // forward = the box axis (across gravity) with the most slow
+      // acceleration: braking and speeding up are along the bike; in a
+      // leaned turn the sideways pull adds to "down" in the frame's own axes
+      let best = -1;
+      const Al = A.map(c => lpZ(c, fs, 1));
+      for (const k of ['+x', '+y', '+z']) {
+        const u = IMU_AXES[k], d = dot3(u, up), pr = [u[0] - d * up[0], u[1] - d * up[1], u[2] - d * up[2]];
+        if (Math.hypot(pr[0], pr[1], pr[2]) < 0.5) continue;
+        const w = norm3(pr); let s = 0, ss = 0;
+        for (let i = 0; i < n; i++) { const v = Al[0][i] * w[0] + Al[1][i] * w[1] + Al[2][i] * w[2]; s += v; ss += v * v; }
+        const vr = ss / n - (s / n) * (s / n);
+        if (vr > best) { best = vr; e = u; }
+      }
+      if (!e) return null;
+    }
+    const d0 = dot3(e, up);
+    let fwd = norm3([e[0] - d0 * up[0], e[1] - d0 * up[1], e[2] - d0 * up[2]]), rt = cross3(fwd, up);
+    // nose-up angular acceleration and heave, for the direction checks
+    const fc = Math.max(5, Math.min(p.jerkCutoff || 20, fs * 0.4));
+    const w = new Float64Array(n), au = new Float64Array(n);
+    for (let i = 0; i < n; i++) { w[i] = G[0][i] * rt[0] + G[1][i] * rt[1] + G[2][i] * rt[2]; au[i] = A[0][i] * up[0] + A[1][i] * up[1] + A[2][i] * up[2]; }
+    const al = gradZ(lpZ(w, fs, fc), fs), aup = lpZ(au, fs, fc);
+    // Check 1, the suspension sensors: a front hit (fork compressing fast)
+    // pitches the nose up at the same moment, a rear hit pitches it down.
+    let potSign = 0, potScore = 0;
+    const on = potsConnected(parsed, 0, n, p);
+    if (on.front || on.rear) {
+      const alh = hpZ(al, fs, 3), edge = Math.round(0.3 * fs);
+      const pv = (raw, inv) => { const x = new Float64Array(n); for (let i = 0; i < n; i++) x[i] = inv ? 4095 - raw[i] : raw[i]; return hpZ(gradZ(lpZ(x, fs, fc), fs), fs, 3); };
+      const PF = p.swapPots ? parsed.rear : parsed.front, PR = p.swapPots ? parsed.front : parsed.rear;
+      const cF = on.front ? corrZ(pv(PF, p.invertFront), alh, edge, n - edge) : 0;
+      const cR = on.rear ? corrZ(pv(PR, p.invertRear), alh, edge, n - edge) : 0;
+      potScore = cF - cR;
+      if (Math.abs(potScore) > 0.15) potSign = potScore > 0 ? 1 : -1;
+    }
+    // Check 2, timing: the rear wheel reaches a bump after the front, so with
+    // the right direction the rear harshness follows the front one.
+    const lagFor = sg => {
+      const x = 0.5, L = 1.25, step = Math.max(1, Math.round(fs / 50)), m = Math.floor(n / step);
+      const env = which => {
+        const a = new Float64Array(n); for (let i = 0; i < n; i++) a[i] = aup[i] + (which ? -(L - x) : x) * sg * al[i] / 9.80665;
+        const j = gradZ(a, fs); for (let i = 0; i < n; i++) j[i] = Math.abs(j[i]);
+        const e2 = lpZ(j, fs, 2), o = new Float64Array(m); let s = 0;
+        for (let k = 0; k < m; k++) { o[k] = e2[k * step]; s += o[k]; }
+        s /= m || 1; let q = 0; for (let k = 0; k < m; k++) { o[k] -= s; q += o[k] * o[k]; }
+        q = Math.sqrt(q / (m || 1)) || 1; for (let k = 0; k < m; k++) o[k] /= q; return o;
+      };
+      const F = env(false), R = env(true), lo = Math.round(0.06 * 50), hi = Math.round(0.8 * 50);
+      let pos = -Infinity, neg = -Infinity;
+      for (let l = lo; l <= hi; l++) {
+        let sp = 0, sn = 0;
+        for (let k = 0; k + l < m; k++) { sp += F[k] * R[k + l]; sn += R[k] * F[k + l]; }
+        pos = Math.max(pos, sp / m); neg = Math.max(neg, sn / m);
+      }
+      return pos - neg;
+    };
+    const d1 = lagFor(1), d2 = lagFor(-1), lagMargin = (d1 - d2) / 2, lagSign = Math.abs(lagMargin) > 0.02 ? (lagMargin > 0 ? 1 : -1) : 0;
+    let sign = 1, how;
+    if (manual) {
+      how = 'set in Settings';
+      if (potSign < 0) warn.push('The suspension sensors suggest the IMU faces the other way round from the “IMU forward” setting; front and rear may be swapped.');
+    } else if (potSign) {
+      sign = potSign; how = 'from the suspension sensors';
+      // the timing check is the weaker one: only worth a warning when the sensors' answer is weak too
+      if (lagSign && lagSign !== potSign && Math.abs(potScore) < 0.3 && Math.abs(lagMargin) > 0.05) warn.push('The front-then-rear timing of hits disagrees with the suspension sensors about which way the IMU faces; check how it is mounted.');
+    } else if (lagSign) {
+      sign = lagSign; how = 'from the timing of hits';
+    } else {
+      how = 'not confirmed'; warn.push('Couldn’t tell which way the IMU faces on this ride, so front and rear could be swapped. Set “IMU forward” in Settings → Sensors.');
+    }
+    if (sign < 0) { fwd = fwd.map(v => -v); rt = rt.map(v => -v); }
+    return { up, fwd, rt, how, warn, manual: !!manual, forwardAxis: axisName(fwd), upAxis: axisName(up), potScore, lagMargin, unitA: I.unitA, unitG: I.unitG };
+  }
+
+  // Front vs rear harshness over the analysed rows of r (from analyze()).
+  function harshness(parsed, r, p) {
+    p = Object.assign({}, DEFAULTS, p || {});
+    const ori = imuOrientation(parsed, p); if (!ori) return null;
+    const o = r.rowOffset || 0, n = r.rows, fs = r.rate;
+    const I = imuFrame(parsed, o, o + n); if (!I) return null;
+    const { A, G } = I, { up, rt } = ori;
+    const fc = Math.max(5, Math.min(p.jerkCutoff || 20, fs * 0.4));
+    const L = Math.max(0.6, (p.wheelbase || 1250) / 1000), x = Math.max(-0.5 * L, Math.min(1.5 * L, (p.imuFromFront != null ? p.imuFromFront : 500) / 1000));
+    const au = new Float64Array(n), w = new Float64Array(n), mag = new Float64Array(n);
+    let clip = 0;
+    for (let i = 0; i < n; i++) {
+      au[i] = A[0][i] * up[0] + A[1][i] * up[1] + A[2][i] * up[2];
+      w[i] = G[0][i] * rt[0] + G[1][i] * rt[1] + G[2][i] * rt[2];
+      mag[i] = Math.hypot(A[0][i], A[1][i], A[2][i]);
+      if (I.unitA === 'g' && (Math.abs(A[0][i]) >= 7.95 || Math.abs(A[1][i]) >= 7.95 || Math.abs(A[2][i]) >= 7.95)) clip++;
+    }
+    const aup = lpZ(au, fs, fc), al = gradZ(lpZ(w, fs, fc), fs);
+    const aF = new Float64Array(n), aR = new Float64Array(n);
+    for (let i = 0; i < n; i++) { aF[i] = aup[i] + x * al[i] / 9.80665; aR[i] = aup[i] - (L - x) * al[i] / 9.80665; }
+    const jF = gradZ(aF, fs), jR = gradZ(aR, fs);
+    // rows that count: not in the air (near 0 g), not next to a time gap or the ends
+    const ok = new Uint8Array(n).fill(1), magL = lpZ(mag, fs, 10), pad = Math.round(0.2 * fs);
+    let air = 0;
+    for (let i = 0; i < n; i++) if (magL[i] < 0.35) { ok[i] = 0; air++; }
+    const t = parsed.time, gapT = Math.max(0.01, 3 / fs);
+    const kill = c => { for (let k = Math.max(0, c - pad); k < Math.min(n, c + pad); k++) ok[k] = 0; };
+    kill(0); kill(n - 1);
+    for (let i = 1; i < n; i++) if (t[o + i] - t[o + i - 1] > gapT) kill(i);
+    const thr = p.harshHit || 400, sep = Math.round(0.1 * fs);
+    const side = j => {
+      let s2 = 0, c = 0, pk = 0; const v = [];
+      for (let i = 0; i < n; i++) if (ok[i]) { const a = Math.abs(j[i]); s2 += j[i] * j[i]; c++; if (a > pk) pk = a; if (i % 2 === 0) v.push(a); }
+      v.sort((u, z) => u - z);
+      let hits = 0, lastHit = -Infinity;
+      for (let i = 1; i < n - 1; i++) {
+        if (!ok[i]) continue; const a = Math.abs(j[i]);
+        if (a > thr && a >= Math.abs(j[i - 1]) && a >= Math.abs(j[i + 1]) && i - lastHit >= sep) { hits++; lastHit = i; }
+      }
+      const sec = c / fs;
+      return { rms: c ? Math.sqrt(s2 / c) : NaN, p95: v.length ? v[Math.floor(0.95 * (v.length - 1))] : NaN, peak: pk, hits, perMin: sec > 0 ? hits / sec * 60 : NaN };
+    };
+    const F = side(jF), R = side(jR);
+    // rolling RMS (0.5 s window every 0.1 s) for the chart
+    const win = Math.max(2, Math.round(0.5 * fs)), hop = Math.max(1, Math.round(0.1 * fs)), sT = [], sF = [], sR = [];
+    for (let s = 0; s + win <= n; s += hop) {
+      let f2 = 0, r2 = 0, c = 0;
+      for (let i = s; i < s + win; i++) if (ok[i]) { f2 += jF[i] * jF[i]; r2 += jR[i] * jR[i]; c++; }
+      sT.push(r.time ? r.time[s + (win >> 1)] : (s + win / 2) / fs);
+      if (c > win * 0.3) { sF.push(Math.sqrt(f2 / c)); sR.push(Math.sqrt(r2 / c)); } else { sF.push(null); sR.push(null); }
+    }
+    let valid = 0; for (let i = 0; i < n; i++) valid += ok[i];
+    return {
+      front: F, rear: R, share: F.rms + R.rms > 0 ? 100 * R.rms / (F.rms + R.rms) : NaN,
+      ratio: F.rms > 0 ? R.rms / F.rms : NaN, cutoff: fc, threshold: thr, wheelbase: L * 1000, imuFromFront: x * 1000,
+      seconds: valid / fs, airPct: 100 * air / n, clipPct: 100 * clip / n, ori, series: { t: sT, front: sF, rear: sR },
+      // per analysed row (lines up with r.time): front / rear jerk (g/s) and
+      // whether the row counts (not airborne, not next to a gap); for Compare
+      trace: { front: jF, rear: jR, ok }
+    };
+  }
+
   const SA = { parseCSV, detectRate, medianFilter, limitChange, sgCoeffs, sgDerivative, sgSmooth, movingAverage, diffVelocity, robustBaseline,
                detectStrokes, strokeStats, wheelToShock, linkageRatio, toMM, detectImpacts,
                detectPacking, packingIndex, rating, posStats, velStats, travelHistogram, analyze, DEFAULTS,
-               autoOffset, parseWarpPath, warpTimes, packedSeconds, potsConnected };
+               autoOffset, parseWarpPath, warpTimes, packedSeconds, potsConnected, imuOrientation, harshness };
   if (typeof module !== 'undefined' && module.exports) module.exports = SA;
   else root.SA = SA;
 })(typeof window !== 'undefined' ? window : this);
@@ -3499,6 +3861,7 @@ if (!window.Plotly) (function () {
 (function (root) {
   'use strict';
   const AL = () => root.ALIGN || (typeof require !== 'undefined' ? require('./align.js') : null);
+  const SAm = () => root.SA || (typeof require !== 'undefined' ? require('./analysis.js') : null);
 
   // =================================================================== utils
   function interp(xs, ys, x) {            // xs non-decreasing; NaN outside
@@ -3689,6 +4052,32 @@ if (!window.Plotly) (function () {
   for (const ch of ['wheel', 'frame', 'bar']) for (const q of IMU_PARTS)
     METRICS.push({ key: ch + q.k, label: IMU_NAMES[ch] + ' ' + q.label, unit: q.unit, d: q.d, group: 'imu', imu: ch });
 
+  // Front vs rear harshness from the single frame IMU (SA.harshness: the
+  // frame's up/down jerk over each axle, from heave + pitch). Per hit, over the
+  // hit and the 0.3 s after it, so a front hit also catches the rear wheel
+  // reaching the same bump (wheelbase / speed is ~0.1–0.3 s).
+  const HARSH_PARTS = [
+    { key: 'harshFrontPeak', label: 'Front harshness peak', unit: 'g/s', d: 0 },
+    { key: 'harshFrontRms', label: 'Front harshness RMS', unit: 'g/s', d: 0 },
+    { key: 'harshRearPeak', label: 'Rear harshness peak', unit: 'g/s', d: 0 },
+    { key: 'harshRearRms', label: 'Rear harshness RMS', unit: 'g/s', d: 0 },
+    { key: 'harshShare', label: 'Rear share of harshness', unit: '%', d: 0 }
+  ];
+  for (const q of HARSH_PARTS) METRICS.push(Object.assign({ group: 'imu', imu: 'harsh' }, q));
+  function harshHitMetrics(R, i0, i1, m) {
+    const h = R.harsh && R.harsh.trace;
+    if (!h) { for (const q of HARSH_PARTS) m[q.key] = NaN; return; }
+    const t = R.time, end = Math.min(t.length - 1, lowerIndex(t, t[i1] + 0.3));
+    let fP = 0, rP = 0, f2 = 0, r2 = 0, c = 0;
+    for (let i = i0; i <= end; i++) {
+      if (!h.ok[i]) continue; const f = h.front[i], r = h.rear[i];
+      if (Math.abs(f) > fP) fP = Math.abs(f); if (Math.abs(r) > rP) rP = Math.abs(r); f2 += f * f; r2 += r * r; c++;
+    }
+    if (c < 5) { for (const q of HARSH_PARTS) m[q.key] = NaN; return; }
+    const fR = Math.sqrt(f2 / c), rR = Math.sqrt(r2 / c);
+    m.harshFrontPeak = fP; m.harshFrontRms = fR; m.harshRearPeak = rP; m.harshRearRms = rR; m.harshShare = fR + rR > 0 ? 100 * rR / (fR + rR) : NaN;
+  }
+
   function countRuns(mask, a, b) {               // runs of true longer than 2 samples
     let n = 0, run = 0;
     for (let i = a; i <= b; i++) { if (mask(i)) run++; else { if (run > 2) n++; run = 0; } }
@@ -3737,6 +4126,7 @@ if (!window.Plotly) (function () {
     imuHitMetrics(imu[side], vel, i0, i1, thr, 'wheel', m);
     imuHitMetrics(imu.frame, vel, i0, i1, thr, 'frame', m);
     imuHitMetrics(imu.bar, vel, i0, i1, thr, 'bar', m);
+    harshHitMetrics(R, i0, i1, m);
     return m;
   }
   // Bounds of a hit inside a mapped window of the other ride
@@ -3904,6 +4294,8 @@ if (!window.Plotly) (function () {
     const ALIGN = AL();
     opts = opts || {};
     attachImu(A, pa, p); attachImu(B, pb, p);
+    // front vs rear harshness from the frame IMU (orientation judged on each whole recording)
+    for (const [R, P] of [[A, pa], [B, pb]]) { try { const S = SAm(); R.harsh = S && S.harshness ? S.harshness(P, R, p) : null; } catch (e) { R.harsh = null; } }
     const al = ALIGN.align(A, B, pa, pb, p, opts);
     const out = { notes: al.notes.slice(), align: al };
     out.coarse = al.coarse.map; out.coarseMethod = al.coarse.method; out.gps = al.coarse.gps; out.potsCoarse = al.coarse.potsCoarse;
@@ -3922,6 +4314,7 @@ if (!window.Plotly) (function () {
     out.pairs = hp.pairs; out.counts = hp.counts;
     out.stats = compareStats(hp.pairs, p);
     out.section = { a0: out.map.a[0], a1: out.map.a[out.map.a.length - 1], b0: out.map.b[0], b1: out.map.b[out.map.b.length - 1] };
+    try { out.roughness = imuRoughness(A, B, out.map, out.stats, al.paceSection || out.section, p); } catch (e) { console.warn('IMU roughness:', e); out.roughness = []; }
     // independent check of the timing (plain cross-correlation, no DTW); skipped if it fails
     try { out.check = al.refined ? ALIGN.independentCheck(A, B, al, p) : null; } catch (e) { out.check = null; }
     // stops from each ride's GPS: the speed comparison is about riding
@@ -4043,6 +4436,96 @@ if (!window.Plotly) (function () {
       if (g1 - g0 >= 10 / c.step) al.paceSection = { a0: c.t0 + g0 * c.step, a1: c.t0 + g1 * c.step };
     }
     return res;
+  }
+
+  // ======================================================= IMU roughness
+  // Two views of "which ride was rougher", per IMU (each wheel, frame, bar):
+  //  1. Hits: every IMU hit metric (accel / jerk peak, mean, RMS, SD, …) is
+  //     already a paired B − A test over the paired hits. They are pooled into
+  //     one composite: the mean of their effect sizes dz weighted by |dz|, signed
+  //     so + = B rougher ("jerk min" is flipped: more negative = rougher).
+  //     How many of them reach p < 0.10 decides the verdict: >= 75% clear,
+  //     >= 50% a lean, else no clear difference. (The metrics are correlated,
+  //     so this is a summary, not an independent vote count.)
+  //  2. Whole run: |a| − 1 g RMS and jerk RMS in 5 s windows of A, against the
+  //     same stretch of B through the alignment (stops and untrusted ends are
+  //     included only inside the compared section). Paired over the windows.
+  const ROUGH_FLIP = { JerkMin: true };
+  const ROUGH_IMUS = [['front', 'Front wheel IMU', 'wheel', 'front'], ['rear', 'Rear wheel IMU', 'wheel', 'rear'], ['frame', 'Frame IMU', 'frame', null], ['bar', 'Bar IMU', 'bar', null]];
+  function imuRoughness(A, B, map, stats, sec, p) {
+    const out = [];
+    for (const [id, label, pre, side] of ROUGH_IMUS) {
+      const rows = stats.filter(s => s.group === 'imu' && s.key.startsWith(pre) && (!side || s.side === side) && isFinite(s.dz));
+      const o = { id, label, n: rows.length };
+      if (rows.length >= 3) {
+        let sw = 0, sx = 0, nSig = 0, nSigQ = 0, nHits = 0;
+        for (const r of rows) {
+          const dz = ROUGH_FLIP[r.key.slice(pre.length)] ? -r.dz : r.dz, w = Math.abs(dz);
+          sw += w; sx += w * dz; if (r.pT < 0.10) nSig++; if (r.sig) nSigQ++; nHits = Math.max(nHits, r.n);
+        }
+        o.score = sw > 0 ? sx / sw : 0; o.sig = nSig; o.sigQ = nSigQ; o.sigPct = nSig / rows.length * 100; o.hits = nHits;
+        o.verdict = o.sigPct >= 75 ? (o.score > 0 ? 'B rougher' : 'B smoother') : o.sigPct >= 50 ? (o.score > 0 ? 'B may be rougher' : 'B may be smoother') : 'No clear difference';
+        o.clear = o.sigPct >= 75;
+        o.metrics = rows.map(r => ({ label: r.label, side: r.side, dz: ROUGH_FLIP[r.key.slice(pre.length)] ? -r.dz : r.dz, p: r.pT, pct: r.pct }));
+      }
+      // whole-run vibration
+      const chA = A.imu && A.imu[id], chB = B.imu && B.imu[id];
+      if (chA && chB && sec && map) {
+        const W = 5, wins = [];
+        for (let t = sec.a0; t + W <= sec.a1; t += W) {
+          const b0 = mapAtoB(map, t), b1 = mapAtoB(map, t + W); if (!isFinite(b0) || !(b1 > b0)) continue;
+          const ra = imuRms(A, chA, t, t + W), rb = imuRms(B, chB, b0, b1);
+          if (ra && rb) wins.push({ t, aA: ra.acc, aB: rb.acc, jA: ra.jerk, jB: rb.jerk });
+        }
+        if (wins.length >= 3) {
+          o.win = W; o.windows = wins;
+          o.acc = pairedStats(wins.map(w => w.aA), wins.map(w => w.aB));
+          o.jerk = pairedStats(wins.map(w => w.jA), wins.map(w => w.jB));
+        }
+      }
+      if (o.n >= 3 || o.acc) out.push(o);
+    }
+    const hz = harshRoughness(A, B, map, stats, sec);
+    if (hz) out.harsh = hz;
+    return out;
+  }
+  // Front vs rear (single frame IMU): through the hits (paired stats rows) and
+  // over the whole run (RMS in 5 s stretches, paired through the alignment)
+  function harshRoughness(A, B, map, stats, sec) {
+    const hA = A.harsh && A.harsh.trace, hB = B.harsh && B.harsh.trace;
+    if (!hA || !hB) return null;
+    const o = { oriA: A.harsh.ori, oriB: B.harsh.ori, sure: A.harsh.ori.how !== 'not confirmed' && B.harsh.ori.how !== 'not confirmed' };
+    const rows = stats.filter(s => s.key && s.key.startsWith('harsh'));
+    o.hits = {};
+    for (const k of ['harshFrontPeak', 'harshFrontRms', 'harshRearPeak', 'harshRearRms', 'harshShare']) {
+      // front hits and rear hits are separate rows; pool them by taking the one with more hits
+      const c = rows.filter(r => r.key === k).sort((x, y) => y.n - x.n)[0]; if (c) o.hits[k] = c;
+    }
+    const rms = (R, h, t0, t1) => {
+      const i0 = lowerIndex(R.time, t0), i1 = Math.min(R.time.length - 1, lowerIndex(R.time, t1));
+      let f2 = 0, r2 = 0, c = 0; for (let i = i0; i <= i1; i++) if (h.ok[i]) { f2 += h.front[i] * h.front[i]; r2 += h.rear[i] * h.rear[i]; c++; }
+      if (c < 0.3 * (i1 - i0 + 1) || c < 20) return null;
+      const f = Math.sqrt(f2 / c), r = Math.sqrt(r2 / c); return { f, r, share: f + r > 0 ? 100 * r / (f + r) : NaN };
+    };
+    const W = 5, wins = [];
+    if (sec && map) for (let t = sec.a0; t + W <= sec.a1; t += W) {
+      const b0 = mapAtoB(map, t), b1 = mapAtoB(map, t + W); if (!isFinite(b0) || !(b1 > b0)) continue;
+      const a = rms(A, hA, t, t + W), b = rms(B, hB, b0, b1); if (a && b) wins.push({ t, a, b });
+    }
+    if (wins.length >= 3) {
+      o.win = W; o.windows = wins;
+      o.front = pairedStats(wins.map(w => w.a.f), wins.map(w => w.b.f));
+      o.rear = pairedStats(wins.map(w => w.a.r), wins.map(w => w.b.r));
+      o.share = pairedStats(wins.map(w => w.a.share), wins.map(w => w.b.share));
+    }
+    return Object.keys(o.hits).length || o.front ? o : null;
+  }
+  function imuRms(R, ch, t0, t1) {
+    const i0 = lowerIndex(R.time, t0), i1 = Math.min(R.time.length - 1, lowerIndex(R.time, t1));
+    if (i1 - i0 < 10) return null;
+    let sa = 0, sj = 0, n = 0;
+    for (let i = i0; i <= i1; i++) { const a = ch.acc[i] - 1, j = ch.jerk[i]; if (!isFinite(a) || !isFinite(j)) continue; sa += a * a; sj += j * j; n++; }
+    return n > 10 ? { acc: Math.sqrt(sa / n), jerk: Math.sqrt(sj / n) } : null;
   }
   const LOSS_WINDOW = 4;
   // Speed difference and sectors; cheap enough to redo when the window changes
@@ -4191,7 +4674,7 @@ if (!window.Plotly) (function () {
   const pctTxt = v => v >= 100 ? 'full travel' : v.toFixed(0) + '% of travel';
 
   const CMP = { run, updatePace, explainLosses, interp, mapAtoB, mapBtoA, detectHits, hitMetrics, pairHits, pairedStats, compareStats,
-                wilcoxon, bh, tTwoSided, tQuantile, matchQuality, hitAnchors, attachImu, imuChannel, METRICS, median, pearson, resample };
+                wilcoxon, bh, tTwoSided, tQuantile, matchQuality, hitAnchors, imuRoughness, attachImu, imuChannel, METRICS, median, pearson, resample };
   if (typeof module !== 'undefined' && module.exports) module.exports = CMP;
   else root.CMP = CMP;
 })(typeof window !== 'undefined' ? window : this);
@@ -5393,7 +5876,13 @@ if (!window.Plotly) (function () {
     };
     // an unplugged pot has no numbers (not zeros)
     for (const [k, sfx] of [['front', 'F'], ['rear', 'R']]) if (!on[k]) for (const key of Object.keys(out)) if (key.endsWith(sfx) && key !== 'kmh') out[key] = null;
+    // front vs rear harshness from the frame IMU (orientation judged on the whole recording)
+    try {
+      const h = SA.harshness ? SA.harshness(parsed, a, p) : null;
+      if (h) { out.harshF = round(h.front.rms, 0); out.harshR = round(h.rear.rms, 0); out.harshShare = round(h.share, 0); out.harshSure = h.ori.how !== 'not confirmed' && !h.ori.warn.length; }
+    } catch (err) {}
     out.potOff = !on.front ? 'front' : !on.rear ? 'rear' : null;
+    out.zeroWarn = zero && zero.warn ? zero.warn.slice(0, 3) : [];     // zero checks of the whole recording
     return out;
   }
 
@@ -5571,7 +6060,9 @@ if (!window.Plotly) (function () {
   function riderName(id) { return (riders[id] && riders[id].name) || (id === 'me' ? 'Me (files)' : id); }
   const whenOf = r => r ? (r.recordedAt || r.importedAt || 0) : 0;
   const rideByKey = k => rides.find(r => r.key === k);
-  function pkey() { const p = A.params(); return JSON.stringify(['frontTravel', 'rearTravel', 'frontPotStroke', 'rearPotStroke', 'invertFront', 'invertRear', 'frontPot', 'rearPot', 'rearA', 'rearB', 'rearC', 'rearD', 'velocityFilterWindow', 'filterType'].map(k => p[k])); }
+  function pkey() { const p = A.params(); return JSON.stringify(['frontTravel', 'rearTravel', 'frontPotStroke', 'rearPotStroke', 'invertFront', 'invertRear', 'swapPots', 'frontPot', 'rearPot', 'rearA', 'rearB', 'rearC', 'rearD', 'velocityFilterWindow', 'filterType'].map(k => p[k])); }
+  // run numbers also depend on these (front/rear harshness); 'h1' = run-stats version
+  function skey() { const p = A.params(); return pkey() + JSON.stringify(['h1', p.wheelbase, p.imuFromFront, p.imuForward, p.jerkCutoff, p.harshHit]); }
   function fmtT(s) { if (!isFinite(s)) return '–'; const neg = s < 0; s = Math.abs(s); const m = Math.floor(s / 60), r = s - m * 60; return (neg ? '−' : '') + m + ':' + (r < 10 ? '0' : '') + r.toFixed(2); }
   const fmtGap = g => !isFinite(g) ? '–' : Math.abs(g) < 0.005 ? '±0.00' : (g > 0 ? '+' : '−') + Math.abs(g).toFixed(2);
   const fmtDate = ms => { try { return new Date(ms).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }); } catch (e) { return ''; } };
@@ -5690,7 +6181,7 @@ if (!window.Plotly) (function () {
         renderReport();
         // 2. automatic segments: descents ridden at least twice
         if (A.LS.get('trAuto', true)) { try { await autoSegments(); } catch (err) { console.warn('Trails auto segments:', err); } }
-        const live = segs.slice(), pk = pkey();
+        const live = segs.slice(), pk = skey();
         if (!live.length) { busy(false, ''); break; }
         const scans = new Map((await DB.all('scans')).map(s => [s.id, s]));
         const todo = [];
@@ -5794,7 +6285,8 @@ if (!window.Plotly) (function () {
   // A session: one rider's recordings with less than 2 h between them (you can stop and start, or power off, between runs)
   function sessions() {
     const by = new Map();
-    for (const r of rides) { const k = riderOf(r); if (!by.has(k)) by.set(k, []); by.get(k).push(r); }
+    for (const r of rides) { if (A.boxShown && !A.boxShown(r)) continue;   // the box picked in Rides
+      const k = riderOf(r); if (!by.has(k)) by.set(k, []); by.get(k).push(r); }
     const out = [];
     for (const [rider, list] of by) {
       list.sort((a, b) => whenOf(a) - whenOf(b));
@@ -5816,18 +6308,64 @@ if (!window.Plotly) (function () {
     const st = SEG.effortStats(ctx.parsed, A.params(), { t0: d.t0, t1: d.t1, time: d.t1 - d.t0 }, null, ctx.r.zero);
     quick.set(k, st); return st;
   }
-  let reportSession = null;
+  let reportSession = null, reportGen = 0;
+  const pct = x => Math.round(x) + '%';
+  // Plain-language takeaways from the runs' numbers (the first 2–4 things a rider wants to know)
+  function takeaways(S, runs, stats, E) {
+    const out = [];                       // [kind, text, action?]
+    const lab = i => { const { r, d } = runs[i]; const e = E.find(x => x.rideKey === r.key && x.t0 < d.t1 && x.t1 > d.t0); const s = e && segs.find(x => x.id === e.segId); return s ? s.name : 'run ' + (i + 1); };
+    // personal bests / timed runs
+    const prs = E.filter(e => { const prior = efforts.filter(x => x.segId === e.segId && x.rider === e.rider && x.when < e.when); return prior.length && e.time < Math.min(...prior.map(x => x.time)) - 0.05; });
+    if (prs.length) out.push(['good', A.plural(prs.length, 'personal best') + ': ' + prs.map(e => { const s = segs.find(x => x.id === e.segId); return (s ? s.name : '?') + ' ' + fmtT(e.time); }).join(', ') + '.']);
+    else if (E.length) {
+      const near = E.map(e => { const prior = efforts.filter(x => x.segId === e.segId && x.rider === e.rider && x.when < e.when); return prior.length ? [e, e.time - Math.min(...prior.map(x => x.time))] : null; }).filter(Boolean).sort((a, b) => a[1] - b[1])[0];
+      if (near) { const s = segs.find(x => x.id === near[0].segId); out.push(['info', (s ? s.name : 'Segment') + ': ' + fmtT(near[0].time) + ', ' + near[1].toFixed(2) + ' s off your best.']); }
+    }
+    // zero (full extension) checks: sensor at its end-stop, direction reversed
+    { const zw = [...new Set(stats.filter(Boolean).flatMap(st => st.zeroWarn || []))];
+      zw.slice(0, 2).forEach(w => out.push(['warn', w, ['Check sensors', () => A.showView('setup')]])); }
+    // travel and bottom-outs, per end
+    const have = stats.map((st, i) => [st, i]).filter(([st]) => st);
+    for (const [k, name, setting] of [['F', 'Fork', 'Front travel'], ['R', 'Rear', 'Rear travel']]) {
+      const vals = have.filter(([st]) => st['travel' + k] != null);
+      if (!have.length) break;
+      // recordings where this end's sensor gave nothing on every run
+      const off = S.rides.filter(r => { const L = have.filter(([, i]) => runs[i].r === r); return L.length && L.every(([st]) => st['travel' + k] == null); });
+      if (off.length) out.push(['warn', (k === 'F' ? 'Front' : 'Rear') + ' sensor not connected on ' + (off.length === S.rides.length ? 'this ride' : off.map(r => r.name).join(', ')) + ', so its numbers are left out.', ['Check sensors', () => A.showView('setup')]]);
+      if (!vals.length) continue;
+      const [mx, iMax] = vals.reduce((b, [st, i]) => st['travel' + k] > b[0] ? [st['travel' + k], i] : b, [-1, 0]);
+      const bo = vals.reduce((a, [st]) => a + (st['bottom' + k] || 0), 0);
+      const boMost = vals.reduce((b, [st, i]) => (st['bottom' + k] || 0) > b[0] ? [st['bottom' + k] || 0, i] : b, [0, -1]);
+      if (mx > 105) out.push(['warn', name + ' reads ' + pct(mx) + ' of its travel, more than it has. Check ' + setting + ' and the sensor length in Settings.', ['Fix in Settings', () => A.showView('setup')]]);
+      else if (bo) out.push([bo >= 3 ? 'warn' : 'info', name + ' used ' + pct(mx) + ' of its travel and bottomed out ' + (bo === 1 ? 'once' : bo + '×') + (vals.length > 1 && boMost[1] >= 0 ? ', most on ' + lab(boMost[1]) : ' on ' + lab(iMax)) + '.']);
+      else out.push(['info', name + ' used up to ' + pct(mx) + ' of its travel' + (mx < 70 ? ', with plenty left over' : '') + ', no bottom-outs.']);
+    }
+    // packing (rebound too slow to recover between hits)
+    const pk = have.reduce((b, [st, i]) => st.packing > b[0] ? [st.packing, i] : b, [-1, -1]);
+    if (pk[0] >= 40) out.push(['warn', 'Suspension packed down on ' + lab(pk[1]) + ' (score ' + Math.round(pk[0]) + ' of 100): rebound may be too slow.']);
+    // missing GPS / IMU
+    const digs = S.rides.map(r => [r, digMem.get(r.key)]).filter(([, d]) => d);
+    const noGps = digs.filter(([, d]) => !d.bbox), noImu = digs.filter(([, d]) => d.hasImu === false);
+    const which = L => L.length === S.rides.length ? 'this ride' : L.map(([r]) => r.name).join(', ');
+    const same = noGps.length && noGps.length === noImu.length && noGps.every(([r], i) => noImu[i][0] === r);
+    if (same) out.push(['warn', 'No GPS and no motion sensor (IMU) on ' + which(noGps) + ': no map, no trail times. Check the logger\u2019s cables, and wait for the GPS light before you ride.']);
+    else {
+      if (noGps.length) out.push(['warn', 'No GPS on ' + which(noGps) + ': no map or trail times. Wait for the GPS light before you ride.']);
+      if (noImu.length) out.push(['warn', 'Motion sensor (IMU) missing on ' + which(noImu) + '. Check its cable.']);
+    }
+    // keep the problems, then the most useful others, max 4
+    const warn = out.filter(o => o[0] === 'warn'), rest = out.filter(o => o[0] !== 'warn');
+    return rest.slice(0, Math.max(1, 4 - warn.length)).concat(warn).slice(0, Math.max(4, warn.length));
+  }
   function renderReport() {
     const box = $('report'); if (!box || !ready) return;
     const all = sessions();
     if (!all.length) { box.textContent = ''; return; }
     const S = (reportSession && all.find(x => x.id === reportSession)) || all[0];
+    const gen = ++reportGen;
     box.textContent = '';
     const C = el('div', { class: 'card report' });
     box.append(C);
-    const sel = el('select', { 'aria-label': 'Session' });
-    all.slice(0, 30).forEach(x => sel.append(el('option', { value: x.id, selected: x === S ? true : null }, fmtDay(x.start) + ' · ' + riderName(x.rider) + ' · ' + A.plural(x.rides.length, 'recording'))));
-    sel.addEventListener('change', () => { reportSession = sel.value; renderReport(); });
     // runs: each timed run (its own gates), plus descents that no timed run covers
     const runs = [];
     for (const r of S.rides) {
@@ -5838,23 +6376,63 @@ if (!window.Plotly) (function () {
       for (const d of D) { const cov = wins.reduce((c, w) => c + Math.max(0, Math.min(w.t1, d.t1) - Math.max(w.t0, d.t0)), 0); if (cov < 0.3 * (d.t1 - d.t0)) wins.push({ t0: d.t0, t1: d.t1 }); }
       wins.sort((a, b) => a.t0 - b.t0).forEach(d => runs.push({ r, d }));
     }
-    const pending = S.rides.filter(r => !digMem.has(r.key)).length;
-    C.append(el('div', { class: 'row', style: 'justify-content:space-between' },
-      el('h2', { style: 'margin:0' }, all[0] === S ? 'Latest ride' : 'Ride'),
-      el('div', { style: 'min-width:200px;flex:0 1 320px' }, sel)),
-      el('div', { class: 'muted' }, fmtDay(S.start) + ' · ' + riderName(S.rider) + ' · ' + A.plural(S.rides.length, 'recording') + ' · ' + A.plural(runs.length, 'run') + (pending ? ' · reading ' + pending + ' more…' : '')));
+    const pendingR = S.rides.filter(r => !digMem.has(r.key)), pending = pendingR.length;
+    const ridden = runs.reduce((a, { d }) => a + d.t1 - d.t0, 0);
+    C.append(el('h2', { style: 'margin:0' }, all[0] === S ? 'Your latest ride' : 'Ride'),
+      el('div', { class: 'muted' }, [fmtDay(S.start) + ' ' + fmtClock(S.start), riderName(S.rider), A.plural(runs.length, 'downhill run') + (runs.length ? ' (' + A.fmtDur(ridden) + ')' : '')].join(' · ')));
+    // still reading: say what and how far, so a big ride doesn't look stuck
+    if (pending) {
+      const big = pendingR.reduce((a, r) => a + (r.size || 0), 0);
+      C.append(el('div', { class: 'working', role: 'status' }, el('span', { class: 'spin' }),
+        el('span', null, 'Reading ' + (pending === 1 ? pendingR[0].name : A.plural(pending, 'recording')) + (big > 20e6 ? ' (' + A.fmtBytes(big) + ', a big file: this can take a minute)' : '') + '…')));
+    }
     // battery over the session, from the logger's ride summaries (firmware 4.6.6+ with the divider on pin 11)
+    let battLow = null;
     const bs = S.rides.map(r => r.summary && r.summary.batt).filter(b => b && b.start_v > 0);
+    // takeaways (filled when the runs' numbers are ready)
+    const TK = el('ul', { class: 'takeaways' }, el('li', { class: 'info' }, pending ? 'Working out what happened…' : 'Adding up your runs…'));
+    C.append(TK);
     if (bs.length) {
       const v0 = bs[0].start_v, v1 = bs[bs.length - 1].end_v || bs[bs.length - 1].start_v, lo = Math.min(...bs.map(b => b.min_v || b.end_v || b.start_v));
       const cells = bs[bs.length - 1].cells || 1;
-      C.append(el('div', { class: 'muted' }, 'Battery ' + v0.toFixed(2) + ' → ' + v1.toFixed(2) + ' V over this ride' + (cells > 1 ? ' (' + cells + 'S)' : '') + (lo / cells < 3.4 ? ' · dipped to ' + lo.toFixed(2) + ' V: charge before the next ride' : '')));
+      if (lo / cells < 3.4) battLow = 'Logger battery dipped to ' + lo.toFixed(2) + ' V: charge it before the next ride.';
+      C.append(el('div', { class: 'muted' }, 'Logger battery ' + v0.toFixed(2) + ' → ' + v1.toFixed(2) + ' V' + (cells > 1 ? ' (' + cells + 'S)' : '')));
     }
+    // what next
+    const E = efforts.filter(e => S.rides.some(r => r.key === e.rideKey));
+    const acts = el('div', { class: 'nextacts' });
+    let lossRef = null;                   // the timed run with the most time lost to a best
+    for (const e of E) {
+      const prior = efforts.filter(x => x.segId === e.segId && x.rider === e.rider && x.when < e.when);
+      const ref = prior.length ? prior.reduce((b, x) => x.time < b.time ? x : b) : null;
+      if (ref && (!lossRef || e.time - ref.time > lossRef[0].time - lossRef[1].time)) lossRef = [e, ref];
+    }
+    if (lossRef) {
+      const [e, ref] = lossRef, s = segs.find(x => x.id === e.segId), r = rideByKey(e.rideKey), ro = rideByKey(ref.rideKey);
+      if (s && r && ro) {
+        const lbl = s.name + ': your best ' + fmtT(ref.time) + ' (A) vs this run ' + fmtT(e.time) + ' (B)';
+        acts.append(el('button', { class: 'btn primary', onclick: () => A.openCompare(ro.id, [ref.t0, ref.t1], r.id, [e.t0, e.t1], lbl, 'loss') }, 'Where did I lose time?'),
+          el('button', { class: 'btn', onclick: () => A.openCompare(ro.id, [ref.t0, ref.t1], r.id, [e.t0, e.t1], lbl, 'speed') }, 'Compare with my best'));
+      }
+    } else if (runs.length >= 2) {
+      // two runs of about the same length are most likely the same trail
+      let best = null;
+      for (let i = 0; i < runs.length; i++) for (let j = i + 1; j < runs.length; j++) {
+        const a = runs[i].d.t1 - runs[i].d.t0, b = runs[j].d.t1 - runs[j].d.t0, q = Math.abs(a - b) / Math.max(a, b);
+        if (!best || q < best[0]) best = [q, i, j];
+      }
+      if (best && best[0] < 0.3) {
+        const [, i, j] = best, x = runs[i], y = runs[j];
+        acts.append(el('button', { class: 'btn primary', onclick: () => A.openCompare(x.r.id, [x.d.t0, x.d.t1], y.r.id, [y.d.t0, y.d.t1], 'Run ' + (i + 1) + ' (A) vs run ' + (j + 1) + ' (B)', 'loss') }, 'Compare run ' + (i + 1) + ' with run ' + (j + 1)));
+      }
+    }
+    if (runs.length) acts.append(el('button', { class: 'btn' + (acts.childNodes.length ? '' : ' primary'), onclick: () => A.openAnalyzeParts(runs.map(({ r, d }) => ({ id: r.id, t0: d.t0, t1: d.t1 })), 'all ' + A.plural(runs.length, 'run') + ' of ' + fmtDay(S.start), 'charts') }, 'See the charts'));
+    if (acts.childNodes.length) C.append(acts);
     // setup: one tap
     C.append(setupPrompt(S));
     // runs
-    const E = efforts.filter(e => S.rides.some(r => r.key === e.rideKey));
     const list = el('div', { class: 'runlist' });
+    const statP = [];
     runs.forEach(({ r, d }, i) => {
       const mine = E.filter(e => e.rideKey === r.key && e.t0 < d.t1 && e.t1 > d.t0);
       const row = el('div', { class: 'runrow' });
@@ -5877,22 +6455,34 @@ if (!window.Plotly) (function () {
         }
       }
       const stats = mine.length && mine[0].stats ? mine[0].stats : null;
-      const nums = el('div', { class: 'runnums muted' });
-      const fill = st => { nums.textContent = st ? 'Travel used front ' + (st.travelF == null ? 'no pot' : Math.round(st.travelF) + '%') + ' · rear ' + (st.travelR == null ? 'no pot' : Math.round(st.travelR) + '%') + ' · bottom-outs ' + ((st.bottomF || 0) + (st.bottomR || 0)) + ' · packing ' + st.packing + (st.kmh ? ' · ' + st.kmh + ' km/h avg' : '') : ''; };
-      if (stats) fill(stats); else quickStats(r, d).then(fill).catch(() => {});
+      const nums = el('div', { class: 'runnums muted' }, 'Adding up…');
+      const fill = st => { nums.textContent = st ? ['Fork ' + (st.travelF == null ? 'no sensor' : pct(st.travelF) + ' travel'), 'rear ' + (st.travelR == null ? 'no sensor' : pct(st.travelR) + ' travel'), A.plural((st.bottomF || 0) + (st.bottomR || 0), 'bottom-out'), 'packing ' + Math.round(st.packing) + '/100', st.kmh ? st.kmh + ' km/h avg' : ''].filter(Boolean).join(' · ') : ''; return st; };
+      statP.push(stats ? Promise.resolve(fill(stats)) : quickStats(r, d).then(fill).catch(() => { nums.textContent = ''; return null; }));
       row.append(nums, el('div', { class: 'row', style: 'margin-top:4px' },
-        el('button', { class: 'btn small', onclick: () => A.openAnalyze(r.id, d.t0, d.t1, 'stats', 'Run ' + (i + 1) + ' (' + r.name + ')') }, 'Stats'),
+        el('button', { class: 'btn small', onclick: () => A.openAnalyze(r.id, d.t0, d.t1, 'stats', 'Run ' + (i + 1) + ' (' + r.name + ')') }, 'Numbers'),
         el('button', { class: 'btn small', onclick: () => A.openAnalyze(r.id, d.t0, d.t1, 'charts', 'Run ' + (i + 1) + ' (' + r.name + ')') }, 'Charts')));
       list.append(row);
     });
-    if (!runs.length) list.append(el('div', { class: 'muted' }, pending ? 'Working out your runs…' : 'No descents in these recordings (no riding at speed).'));
-    C.append(list);
-    // highlights
-    const hl = highlights(S, runs, E);
-    if (hl.length) C.append(el('ul', { class: 'insights' }, ...hl.map(h => el('li', null, h))));
-    C.append(el('div', { class: 'row', style: 'margin-top:8px' },
-      runs.length ? el('button', { class: 'btn primary', onclick: () => A.openAnalyzeParts(runs.map(({ r, d }) => ({ id: r.id, t0: d.t0, t1: d.t1 })), 'all ' + A.plural(runs.length, 'run') + ' of ' + fmtDay(S.start), 'stats') }, runs.length > 1 ? 'Analyze all runs together' : 'Analyze this run') : null,
-      el('button', { class: 'btn', onclick: () => A.showView('trails') }, 'Trails & leaderboards')));
+    if (!runs.length) list.append(el('div', { class: 'muted' }, pending ? 'Working out your runs…' : 'No downhill runs in these recordings (no riding at speed). Open the ride in Analyze to see all of it.'));
+    C.append(el('h3', null, 'Runs'), list);
+    // other highlights (segments made, changes vs your usual)
+    const hl = highlights(S, runs, E).filter(h => !/personal best|timed run/.test(h));
+    if (hl.length) C.append(el('ul', { class: 'insights plain' }, ...hl.map(h => el('li', null, h))));
+    // older rides
+    const sel = el('select', { 'aria-label': 'Show another ride' });
+    all.slice(0, 30).forEach(x => sel.append(el('option', { value: x.id, selected: x === S ? true : null }, fmtDay(x.start) + ' · ' + riderName(x.rider) + ' · ' + A.plural(x.rides.length, 'recording'))));
+    sel.addEventListener('change', () => { reportSession = sel.value; renderReport(); });
+    C.append(el('div', { class: 'row otherride' }, el('label', { class: 'f', style: 'margin:0' }, 'Show another day'), el('div', { class: 'grow', style: 'min-width:180px' }, sel)),
+      el('div', { class: 'row', style: 'margin-top:8px' }, el('button', { class: 'btn small', onclick: () => A.showView('trails') }, 'Trails & leaderboards')));
+    // fill the takeaways once the numbers are in
+    Promise.all(statP).then(stats => {
+      if (gen !== reportGen) return;
+      const items = takeaways(S, runs, stats, E);
+      if (battLow) items.push(['warn', battLow]);
+      TK.textContent = '';
+      if (!items.length) { TK.append(el('li', { class: 'info' }, pending ? 'Working out what happened…' : runs.length ? 'Nothing stood out on this ride.' : 'No riding at speed in these recordings.')); return; }
+      for (const [kind, text, act] of items) TK.append(el('li', { class: kind }, el('span', null, text), act ? el('button', { class: 'btn small', onclick: act[1] }, act[0]) : null));
+    });
   }
   function highlights(S, runs, E) {
     const out = [];
@@ -6092,7 +6682,7 @@ if (!window.Plotly) (function () {
     $('trMapTitle').textContent = 'Trails';
     const box = $('trList'); box.textContent = '';
     if (!segs.length) {
-      box.append(el('div', { class: 'empty' }, 'No segments yet. Ride a trail twice (with GPS) and it becomes a segment by itself: gates on features the logger finds again (a jump landing, a drop, a big hit), every run timed. Or make one by hand from a run.'));
+      box.append(el('div', { class: 'empty' }, 'No segments yet. Ride the same trail twice with GPS and it becomes a timed segment by itself, with a leaderboard. Or make one by hand from a run.'));
     }
     const groups = new Map();
     for (const s of segs) { const k = s.trail || 'Other segments'; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(s); }
@@ -6391,7 +6981,9 @@ if (!window.Plotly) (function () {
     ['Compression 95% (mm/s), front', e => e.stats && e.stats.compF, 0, 0], ['Compression 95% (mm/s), rear', e => e.stats && e.stats.compR, 0, 0],
     ['Rebound 95% (mm/s), front', e => e.stats && e.stats.rebF, 0, 0], ['Rebound 95% (mm/s), rear', e => e.stats && e.stats.rebR, 0, 0],
     ['Impacts, front', e => e.stats && e.stats.impactsF, 0, 0], ['Impacts, rear', e => e.stats && e.stats.impactsR, 0, 0],
-    ['Packing index (0–100)', e => e.stats && e.stats.packing, 0, -1]
+    ['Packing index (0–100)', e => e.stats && e.stats.packing, 0, -1],
+    ['Harshness, front (g/s)', e => e.stats && e.stats.harshF, 0, -1], ['Harshness, rear (g/s)', e => e.stats && e.stats.harshR, 0, -1],
+    ['Rear share of harshness (%)', e => e.stats && e.stats.harshShare, 0, 0]
   ];
   function effortCard(s, e, best, E) {
     const r = rideByKey(e.rideKey), su = setupFor(r);
@@ -6637,6 +7229,9 @@ if (!window.Plotly) (function () {
   const fmtBytes = b => b > 1e6 ? (b / 1e6).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1e3)) + ' KB';
   const fmtDur = s => { if (!isFinite(s)) return '–'; s = Math.round(s); const m = Math.floor(s / 60); return m ? m + ' min ' + (s % 60) + ' s' : s + ' s'; };
   function msg(id, text, kind) { const m = $(id); m.textContent = text || ''; m.className = 'msg' + (kind ? ' ' + kind : ''); }
+  // A message with a spinner, painted before heavy work starts (the spinner keeps turning while the work runs)
+  const paint = () => new Promise(res => requestAnimationFrame(() => setTimeout(res, 0)));
+  function busyMsg(id, text) { msg(id, text, 'busy'); return paint(); }
   const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
   // ======================================================= state
@@ -6666,7 +7261,7 @@ if (!window.Plotly) (function () {
   // Plotly needs a resize when a hidden chart becomes visible (only visible ones can be resized)
   function resizeIn(root) {
     setTimeout(() => (root ? root.querySelectorAll('.js-plotly-plot') : []).forEach(p => {
-      if (p.offsetParent !== null) Promise.resolve(Plotly.Plots.resize(p)).catch(() => {});
+      if (p.offsetParent !== null && window.Plotly) Promise.resolve(Plotly.Plots.resize(p)).catch(() => {});
     }), 30);
   }
   // Every view change is a history step, so the phone's Back gesture goes to
@@ -6739,7 +7334,7 @@ if (!window.Plotly) (function () {
     const p = r ? r.params : params, t = p.filterType;
     return 'Filtering: ' + (t === 'savgol' ? 'Savitzky-Golay' : t === 'moving_average' ? 'moving average' : 'none (raw)') +
       (t !== 'none' ? ' · position ' + p.positionFilterWindow + ' rows · velocity ' + (t === 'savgol' ? p.velocityWindow : p.velocityFilterWindow) + ' rows' : '') +
-      ' · zero ' + (p.autoZero ? 'on' : 'off') + (p.invertFront || p.invertRear ? ' · inverted: ' + [p.invertFront ? 'front' : '', p.invertRear ? 'rear' : ''].filter(Boolean).join(' & ') : '') +
+      ' · zero ' + (p.autoZero ? 'on' : 'off') + (p.swapPots ? ' · front/rear plugs swapped' : '') + (p.invertFront || p.invertRear ? ' · inverted: ' + [p.invertFront ? 'front' : '', p.invertRear ? 'rear' : ''].filter(Boolean).join(' & ') : '') +
       (r && r.potOn && (!r.potOn.front || !r.potOn.rear) ? ' · ' + (!r.potOn.front ? 'front' : 'rear') + ' pot not connected' : '');
   }
   let reTimer = 0;
@@ -6838,7 +7433,12 @@ if (!window.Plotly) (function () {
       el('span', { class: 'muted' }, el('span', { class: 'tag a' }, 'A'), ' ' + ra.name + '  ', el('span', { class: 'tag b' }, 'B'), ' ' + rb.name),
       el('button', { class: 'btn primary', type: 'button', onclick: () => { showView('compare', { from: 'Rides' }); runCompare(); } }, 'Compare A vs B \u2192')));
     renderBoxFilter();
-    if (!rides.length) { ul.append(el('li', { class: 'empty' }, 'No rides yet. Tap Get new rides, or open a CSV file.')); return; }
+    // first run: a 3-step start instead of empty cards and settings
+    const none = !rides.length;
+    $('start').classList.toggle('hidden', !none);
+    $('libCard').classList.toggle('hidden', none);
+    $('loggerCard').classList.toggle('hidden', none && !loggerCardWanted);
+    if (none) { ul.append(el('li', { class: 'empty' }, 'No rides yet. Tap Get new rides, or open a ride file.')); return; }
     const shown = rides.filter(boxShown);
     if (!shown.length) ul.append(el('li', { class: 'empty' }, 'No rides from ' + (boxFilter() === '-' ? 'opened files' : boxName(boxFilter())) + ' yet.'));
     for (const r of shown) {
@@ -6862,9 +7462,21 @@ if (!window.Plotly) (function () {
     }
   }
   $('boxFilter').addEventListener('change', e => {
-    LS.set('boxFilter', e.target.value); renderLibrary(); fillSelects(); devStatus();
+    LS.set('boxFilter', e.target.value); refreshLibrary().then(() => fillSelects()); devStatus();
     if (e.target.value && e.target.value !== '-' && cloudOn()) cloudSync(false);
   });
+  let loggerCardWanted = false;
+  function showLoggerCard() { loggerCardWanted = true; $('loggerCard').classList.remove('hidden'); }
+  $('stGetNew').addEventListener('click', () => { showLoggerCard(); $('btnGetNew').click(); scrollToEl($('loggerCard')); });
+  $('stCloud').addEventListener('click', () => {
+    msg('stMsg', 'Checking for uploaded rides…', 'busy');
+    cloudSync(true).then(() => { const c = $('cloudLine'); msg('stMsg', c.textContent || (cloudOn() ? 'No rides uploaded yet.' : 'Cloud isn\u2019t set up: see Settings.'), /err/.test(c.className) ? 'err' : ''); });
+  });
+  // offline: say so once, at the top (rides on the phone still work)
+  function offlineBar(off) { $('offlineBar').classList.toggle('hidden', !off); }
+  window.addEventListener('offline', () => offlineBar(true));
+  window.addEventListener('online', () => { offlineBar(false); cloudSync(false); devStatus(); });
+  if (!navigator.onLine) offlineBar(true);
   function fillSelects() {
     const fill = (sel, value) => {
       const cur = value != null ? String(value) : sel.value;
@@ -6888,10 +7500,51 @@ if (!window.Plotly) (function () {
       el('button', { class: 'btn small', onclick: () => { clearCmpWin(); runCompare(); } }, 'Use whole rides'));
   }
 
-  function deleteRide(r) {
-    if (!confirm('Delete ' + r.name + ' from this device? (The copy on the logger is not affected.)')) return;
-    Store.remove(r.id).then(() => { cache.delete(r.id); refreshLibrary(); });
+  // Rides deleted on this phone aren't downloaded from the cloud again
+  const skipKey = (host, name) => host + '/' + name;
+  function cloudSkipped() { return new Set(LS.get('cloudSkip', [])); }
+  function cloudSkip(host, name) { const k = cloudSkipped(); k.add(skipKey(host, name)); LS.set('cloudSkip', [...k].slice(-2000)); }
+  function cloudDelete(host, name) {
+    return cfetch('/ride/' + host + '/' + name, { method: 'DELETE' }).then(res => {
+      if (res.status === 401) throw new Error('wrong read key');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      cloudSkip(host, name);
+    });
   }
+  function deleteRide(r) {
+    const host = rideHost(r), inCloud = !!(host && cloudOn() && (r.cloud || r.source === 'logger'));
+    if (!confirm('Delete ' + r.name + ' from this phone?' + (inCloud ? '' : ' (The copy on the logger is not affected.)'))) return;
+    const alsoCloud = inCloud && confirm('Also delete ' + r.name + ' from the cloud?\n\nOK = delete it for every phone (the logger\'s SD card keeps its copy).\nCancel = only from this phone.');
+    const p = alsoCloud ? cloudDelete(host, r.name).then(() => msg('cloudLine', r.name + ' deleted from the cloud.', 'ok'), e => msg('cloudLine', 'Couldn’t delete ' + r.name + ' from the cloud (' + e.message + '). It was removed from this phone only.', 'err'))
+                        : Promise.resolve(host ? cloudSkip(host, r.name) : null);
+    p.then(() => Store.remove(r.id)).then(() => { cache.delete(r.id); refreshLibrary(); });
+  }
+  // Settings → Cloud: list every ride in the cloud, delete any of them
+  function renderCloudList() {
+    const box = $('cloudList'); box.textContent = 'Loading…';
+    return cfetch('/list').then(res => { if (!res.ok) throw new Error(res.status === 401 ? 'wrong read key' : 'HTTP ' + res.status); return res.json(); }).then(list => {
+      box.textContent = '';
+      if (!list.length) { box.append(el('div', { class: 'muted' }, 'No rides in the cloud.')); return; }
+      list.sort((a, b) => (b.time || 0) - (a.time || 0));
+      const t = el('table'), tb = el('tbody');
+      t.append(el('thead', null, el('tr', null, el('th', { class: 'l' }, 'Ride'), el('th', { class: 'l' }, 'Box'), el('th', null, 'Size'), el('th', null, ''))));
+      for (const r of list) {
+        const on = rides.some(x => rideHost(x) === r.host && x.name === r.name);
+        const del = el('button', { class: 'btn small danger', type: 'button' }, 'Delete');
+        del.addEventListener('click', () => {
+          if (!confirm('Delete ' + r.name + ' (' + boxName(r.host) + ') from the cloud for every phone? The logger\'s SD card keeps its copy.')) return;
+          del.disabled = true;
+          cloudDelete(r.host, r.name).then(() => { tr.remove(); msg('cloudMsg', r.name + ' deleted from the cloud.' + (on ? ' It is still on this phone (delete it in Rides).' : ''), 'ok'); },
+                                             e => { del.disabled = false; msg('cloudMsg', 'Couldn’t delete ' + r.name + ': ' + e.message, 'err'); });
+        });
+        const tr = el('tr', null, el('td', { class: 'l' }, r.name, r.time ? el('div', { class: 'muted' }, fmtWhen(r.time * 1000)) : null, !r.complete ? el('div', { class: 'muted' }, 'still uploading') : null),
+          el('td', { class: 'l' }, boxName(r.host)), el('td', null, fmtBytes(r.stored || r.size || 0)), el('td', null, del));
+        tb.append(tr);
+      }
+      t.append(tb); box.append(t);
+    }).catch(e => { box.textContent = ''; msg('cloudMsg', 'Couldn’t list the cloud: ' + e.message, 'err'); });
+  }
+  $('btnCloudList').addEventListener('click', () => { if (!cloudOn()) { msg('cloudMsg', 'The cloud isn’t set up on this phone.', 'err'); return; } renderCloudList(); });
   function downloadRide(id) {
     Store.get(id).then(r => {
       const h = rideHost(r), tag = h ? boxShort(h).replace(/^Box /, 'box').replace(/\s+/g, '').toLowerCase() + '_' : '';
@@ -6975,7 +7628,8 @@ if (!window.Plotly) (function () {
     };
   }
 
-  function showQuickLook(sum, name, id) {
+  function showQuickLook(sum, name, id) { qlShown = true; return (window.plotlyReady || Promise.resolve()).then(() => showQuickLook0(sum, name, id)); }
+  function showQuickLook0(sum, name, id) {
     qlShown = true; qlName = name; qlId = id; qlUploading = false;
     const box = $('quickLook'); box.textContent = ''; box.classList.remove('hidden');
     const F = qlSide(sum, 'front'), Rr = qlSide(sum, 'rear'), g = sum.gps || {}, imu = sum.imu || {};
@@ -7082,6 +7736,7 @@ if (!window.Plotly) (function () {
     return cfetch('/list').then(res => {
       if (res.status === 401) throw new Error('Cloud: wrong read key (Setup → Cloud).');
       if (!res.ok) throw new Error('Cloud: HTTP ' + res.status);
+      offlineBar(false);
       return res.json();
     }).then(list => {
       const have = new Set(rides.map(r => r.key));
@@ -7092,7 +7747,8 @@ if (!window.Plotly) (function () {
       // newest ride that is only partly uploaded: quick look now, full ride later
       const partial = list.filter(r => r.summary && !r.complete);
       waiting = partial.length;
-      const todo = list.filter(r => r.complete && !have.has(cloudRideKey(r))).slice(0, 20);
+      const skipped = cloudSkipped();
+      const todo = list.filter(r => r.complete && !have.has(cloudRideKey(r)) && !skipped.has(skipKey(r.host, r.name))).slice(0, 20);
       const first = list[0];
       const showFirst = first && first.summary && (!first.complete || !have.has(cloudRideKey(first)) || (focus && focus.name === first.name))
         ? cfetch('/ride/' + first.host + '/' + first.name + '/summary').then(r => r.ok ? r.json() : null).then(sum => {
@@ -7126,7 +7782,7 @@ if (!window.Plotly) (function () {
         const lib = rides.find(x => x.name === focus.name && x.source === 'logger' && (!focus.host || x.key.indexOf('logger:' + focus.host + ':') === 0));
         if (lib && lib.summary) showQuickLook(lib.summary, lib.name, lib.id);
       }
-    }).catch(e => { const off = !navigator.onLine || /fetch|network|load failed/i.test(e.message || ''); msg('cloudLine', off ? 'Offline — new rides will sync when you\u2019re back online.' : e.message, off ? '' : 'err'); }).finally(() => { cloudBusy = false; });
+    }).catch(e => { const off = !navigator.onLine || /fetch|network|load failed/i.test(e.message || ''); if (off) offlineBar(true); msg('cloudLine', off ? '' : e.message, off ? '' : 'err'); }).finally(() => { cloudBusy = false; });
   }
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') cloudSync(false); });
 
@@ -7261,9 +7917,10 @@ if (!window.Plotly) (function () {
       const lr = d.last_rec || {}, miss = [!lr.summary && 'ride summary', !lr.compress && 'compression', !lr.preroll && 'auto-pause'].filter(Boolean);
       if (lr.min_free && miss.length) line('Last recording ran without', miss.join(', ') + ' (not enough memory)', true);
       if (d.sd === false) line('SD card', 'not found', true);
+      if (d.last_crash) line('Last restart', d.last_crash, /while/.test(d.last_crash));
       line('Firmware', d.fw + ' · ' + d.host + (isFinite(d.rssi) ? ' · WiFi ' + d.rssi + ' dBm' : ''));
       if (others.length) line('Other boxes', others.map(x => boxName(x.host) + ' ' + ago(x.seen) + (x.batt && isFinite(x.batt.pct) ? ' (' + x.batt.pct + '%)' : '')).join(' · '));
-    }).catch(() => setChip('off', 'Logger: no internet', 'Can’t reach the cloud right now'))
+    }).catch(() => setChip('off', 'No signal', 'Can’t reach the cloud right now, so the logger’s status is unknown'))
       .finally(() => { if (document.visibilityState === 'visible') devTimer = setTimeout(devStatus, 60000); });
   }
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') devStatus(); });
@@ -7593,7 +8250,8 @@ if (!window.Plotly) (function () {
       const fl = gd._fullLayout; if (fl && fl.xaxis && fl.xaxis.autorange) { gd.__userZoom = false; gd.__showReset(); }
     }
   }
-  (function wrapPlotly() {
+  const plotlyReady = window.plotlyReady || Promise.resolve(!!window.Plotly);
+  plotlyReady.then(function wrapPlotly() {
     if (!window.Plotly || !Plotly.version || Plotly.__wrapped) return;
     Plotly.__wrapped = true;
     for (const fn of ['react', 'newPlot']) {
@@ -7604,7 +8262,7 @@ if (!window.Plotly) (function () {
         return Promise.resolve(orig.call(Plotly, node || gd, data, L, cfg)).then(r => { try { chartControls(node, L); } catch (e) {} return r; });
       };
     }
-  })();
+  });
   function line(name, x, y, color) {
     return { type: x.length > 4000 ? 'scattergl' : 'scatter', mode: 'lines', name, x, y,
              line: { color, width: 1.5 }, hovertemplate: '%{y:.1f}<extra>' + name + '</extra>' };
@@ -7658,7 +8316,7 @@ if (!window.Plotly) (function () {
   function fillParts(id, list) {
     const sel = $('anPart'), cur = sel.value || 'desc';
     sel.textContent = '';
-    sel.append(el('option', { value: 'desc' }, list && list.length > 1 ? 'Descents (all ' + list.length + ' runs)' : 'Descents'));
+    sel.append(el('option', { value: 'desc' }, list && list.length > 1 ? 'All ' + list.length + ' downhill runs' : 'Downhill run'));
     (list || []).forEach((d, i) => sel.append(el('option', { value: 'run' + i }, partLabel(d, i))));
     sel.append(el('option', { value: 'whole' }, 'Whole recording'));
     sel.value = [...sel.options].some(o => o.value === cur) ? cur : 'desc';
@@ -7675,22 +8333,21 @@ if (!window.Plotly) (function () {
       if ($('anPart').dataset.ride !== String(id)) fillParts(id, list);
       const part = $('anPart').value;
       $('trimBox').classList.toggle('hidden', part !== 'whole');
-      if (part === 'whole' || !list.length) { if (!list.length && part !== 'whole') { $('anPart').value = 'whole'; $('trimBox').classList.remove('hidden'); } return Object.assign(whole(), { note: list.length ? '' : 'No descents found (no riding at speed), so the whole recording is shown.' }); }
+      if (part === 'whole' || !list.length) { if (!list.length && part !== 'whole') { $('anPart').value = 'whole'; $('trimBox').classList.remove('hidden'); } return Object.assign(whole(), { note: list.length ? '' : 'No downhill runs found (no riding at speed), so the whole recording is shown.' }); }
       if (part === 'desc' && list.length > 1) {
         const comb = window.SEG.combineParts(list.map(d => ({ parsed, t0: d.t0, t1: d.t1, name: parsed.name })));
         comb.name = parsed.name + ' (descents)';
-        return { parsed: comb, p: Object.assign(base, { fixedZero: z }), note: 'Descents only: ' + plural(list.length, 'run') + ' joined (standing, climbs and lifts cut out). Pick one run or the whole recording under Part.' };
+        return { parsed: comb, p: Object.assign(base, { fixedZero: z }), note: plural(list.length, 'downhill run') + ' joined (standing, climbs and lifts cut out). Pick one run or the whole recording under Which part.' };
       }
       const d = part === 'desc' ? list[0] : list[+part.slice(3)] || list[0];
-      return { parsed, p: Object.assign(base, { trimStart: d.t0, trimEnd: d.t1, fixedZero: z }), note: (part === 'desc' ? 'Descent only' : partLabel(d, list.indexOf(d))) + ' (standing and climbing cut out).' };
+      return { parsed, p: Object.assign(base, { trimStart: d.t0, trimEnd: d.t1, fixedZero: z }), note: (part === 'desc' ? 'Downhill run only' : partLabel(d, list.indexOf(d))) + ' (standing and climbing cut out).' };
     });
   }
   function runAnalyze() {
     readParamInputs();
     if (anJob && anJob.parts) {                     // several rides' descents together
-      msg('anMsg', 'Analyzing ' + anJob.label + '…');
       const job = anJob;
-      return Promise.all(job.parts.map(q => getParsed(q.id).then(parsed => ({ parsed, t0: q.t0, t1: q.t1, name: parsed.name }))))
+      return Promise.all([busyMsg('anMsg', 'Analyzing ' + job.label + '…'), plotlyReady]).then(() => Promise.all(job.parts.map(q => getParsed(q.id).then(parsed => ({ parsed, t0: q.t0, t1: q.t1, name: parsed.name })))))
         .then(parts => (segOK() ? window.SegUI.zero(job.parts[0].id) : Promise.resolve(null)).then(z => {
           const comb = window.SEG.combineParts(parts); comb.name = job.label;
           return showAnalysis(comb, Object.assign({}, params, { fixedZero: z }), job.note || ('Analyzed ' + job.label + ': ' + plural(parts.length, 'run') + ' joined.'));
@@ -7698,23 +8355,28 @@ if (!window.Plotly) (function () {
     }
     const id = +$('anRide').value;
     if (!id) { msg('anMsg', 'Choose a ride first.', 'err'); return Promise.resolve(null); }
-    msg('anMsg', 'Analyzing…');
-    return getParsed(id).then(parsed => jobFor(id, parsed)).then(j => showAnalysis(j.parsed, j.p, j.note))
+    const big = (rides.find(r => r.id === id) || {}).size > 20e6;
+    return Promise.all([busyMsg('anMsg', big ? 'Analyzing a big ride… this can take a few seconds.' : 'Analyzing…'), plotlyReady]).then(() => getParsed(id)).then(parsed => jobFor(id, parsed)).then(j => showAnalysis(j.parsed, j.p, j.note))
       .catch(e => { console.error(e); msg('anMsg', e.message, 'err'); return null; });
   }
   function showAnalysis(parsed, p, note) {
     const t0 = performance.now();
     const r = SA.analyze(parsed, p);
     r.name = parsed.name;
+    const tk = r.potOn && (!r.potOn.front || !r.potOn.rear) ? (!r.potOn.front ? 'Front' : 'Rear') + ' sensor not connected on this ride, so its numbers are left out. ' : '';
+    const zw = (r.zero && r.zero.warn) || [];
+    const tkAll = tk + (zw.length ? zw.join(' ') + ' ' : '');
     if (r.rows < 10) { msg('anMsg', 'Not enough data after trimming (' + r.rows + ' rows).', 'err'); return null; }
     Object.defineProperty(r, '_parsed', { value: parsed, enumerable: false });
     try { r.track = TRACK.build(parsed, r); } catch (e) { console.warn(e); r.track = { ok: false, reason: 'The GPS track could not be read (' + e.message + ').' }; }
     try { r.imu = { frame: CMP.imuChannel(parsed, ['fax', 'fay', 'faz'], r.rate, 20), bar: CMP.imuChannel(parsed, ['bax', 'bay', 'baz'], r.rate, 20) }; } catch (e) { r.imu = null; }
+    try { r.harsh = SA.harshness(parsed, r, p); } catch (e) { console.warn(e); r.harsh = null; }
     lastAnalysis = r;
     $('anRate').textContent = Math.round(r.rate) + ' Hz' + (params.rateOverride > 0 ? ' (override)' : '');
     $('trimEnd').placeholder = fmt(parsed.time[parsed.rows - 1] - parsed.time[0], 1);
     renderAnalysis(r);
-    msg('anMsg', (note ? note + ' ' : '') + 'Analyzed ' + r.rows.toLocaleString() + ' rows in ' + Math.round(performance.now() - t0) + ' ms.', 'ok');
+    msg('anMsg', tkAll + (note ? note + ' ' : '') + 'Done in ' + ((performance.now() - t0) / 1000).toFixed(1) + ' s.', tkAll ? 'warn' : 'ok');
+    const lg = $('procLogText'); if (lg) lg.textContent = 'Analyzed ' + r.rows.toLocaleString() + ' rows in ' + Math.round(performance.now() - t0) + ' ms.\n' + lg.textContent;
     return r;
   }
   function clockS(t) { t = Math.max(0, Math.round(t)); return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0'); }
@@ -7756,6 +8418,12 @@ if (!window.Plotly) (function () {
       tile(String(ev.length), 'Packing events', 'front ' + r.events.front.length + ' · rear ' + r.events.rear.length),
       tile(String(impacts), 'Total impacts', 'front ' + r.impacts.front.length + ' · rear ' + r.impacts.rear.length),
       (r.potOn && !r.potOn.rear ? tile(fmt(r.stats.front.velocity.compression.max, 0), 'Front max comp. (mm/s)', 'rear pot not connected') : tile(fmt(r.stats.rear.velocity.compression.max, 0), 'Rear max comp. (mm/s)', 'front ' + fmt(r.stats.front.velocity.compression.max, 0))));
+    if (r.harsh) {
+      const ht = el('div', { class: 'tile', style: 'cursor:pointer', role: 'button', tabindex: '0', title: 'Open the IMU tab', onclick: () => showSub('imu') },
+        el('div', { class: 'v' }, fmt(r.harsh.front.rms, 0) + ' / ' + fmt(r.harsh.rear.rms, 0)), el('div', { class: 'l' }, 'Harshness front / rear (g/s)'),
+        el('div', { class: 's' }, harshShort(r.harsh)));
+      T.append(ht);
+    }
     $('filterStatus').textContent = filterStatus(r);
     $('procLogText').textContent = r.log.join('\n');
     prepareMap(r);
@@ -7765,7 +8433,7 @@ if (!window.Plotly) (function () {
   }
 
   // ---- position / velocity charts (+ IMU, zoomed together)
-  const ZOOM_GROUP = ['chPos', 'chVel', 'chImu'];
+  const ZOOM_GROUP = ['chPos', 'chVel', 'chImu', 'chHarsh'];
   let zoomBusy = false;
   function zoomAll(update, except) {
     const targets = ZOOM_GROUP.map(id => $(id)).filter(d => d !== except && d.data && d.layout);
@@ -7818,7 +8486,54 @@ if (!window.Plotly) (function () {
   const IMU_KEYS = { acc: { frame: ['fax', 'fay', 'faz'], bar: ['bax', 'bay', 'baz'] }, gyro: { frame: ['gfx', 'gfy', 'gfz'], bar: ['gbx', 'gby', 'gbz'] } };
   const IMU_COLS = { acc: { frame: 'acc_frame', bar: 'acc_bar' }, gyro: { frame: 'gyro_frame', bar: 'gyro_bar' } };
   ['imuSel', 'imuAxis', 'imuData'].forEach(id => { $(id).value = LS.get(id, $(id).value); $(id).addEventListener('change', () => { LS.set(id, $(id).value); if (lastAnalysis) renderImu(lastAnalysis); }); });
+  // ---- front vs rear harshness (frame IMU, see SA.harshness)
+  function harshShort(h) {
+    if (!h || !isFinite(h.share)) return '';
+    if (h.share >= 45 && h.share <= 55) return 'balanced · rear ' + Math.round(h.share) + '%';
+    return (h.share > 55 ? 'rear' : 'front') + ' harsher · rear ' + Math.round(h.share) + '%';
+  }
+  function harshText(h) {
+    if (!isFinite(h.share)) return '';
+    if (h.share >= 45 && h.share <= 55) return 'Balanced: the frame gets about the same harshness from both wheels.';
+    return h.share > 55 ? 'Rear is harsher: the frame gets ' + fmt(h.ratio, 1) + '× as much harshness over the rear wheel as over the front.'
+                        : 'Front is harsher: the frame gets ' + fmt(1 / h.ratio, 1) + '× as much harshness over the front wheel as over the rear.';
+  }
+  function renderHarsh(r) {
+    const box = $('harshBox'), ch = $('chHarsh'), h = r.harsh; box.textContent = '';
+    if (!h) {
+      Plotly.purge(ch); ch.__zoom = false; ch.classList.add('hidden'); $('harshNote').textContent = '';
+      box.append(el('div', { class: 'muted' }, 'Needs the frame IMU (acc_frame and gyro_frame columns with data). This ride has none, so there is no front/rear harshness.'));
+      return;
+    }
+    ch.classList.remove('hidden');
+    const s1 = cssVar('--s1'), s2 = cssVar('--s2'), F = h.front, R = h.rear;
+    const tiles = el('div', { class: 'tiles' });
+    tiles.append(tile(fmt(F.rms, 0), 'Front harshness (g/s)', '95% ' + fmt(F.p95, 0) + ' · ' + fmt(F.perMin, 0) + ' hits/min'),
+      tile(fmt(R.rms, 0), 'Rear harshness (g/s)', '95% ' + fmt(R.p95, 0) + ' · ' + fmt(R.perMin, 0) + ' hits/min'),
+      tile(fmt(h.share, 0) + '%', 'Rear share', h.share >= 45 && h.share <= 55 ? 'balanced (45–55%)' : (h.share > 55 ? 'rear' : 'front') + ' harsher'));
+    box.append(tiles);
+    if (isFinite(h.share)) {
+      const bar = el('div', { style: 'display:flex;height:14px;border-radius:7px;overflow:hidden;margin:10px 0 4px;border:1px solid var(--ring)', role: 'img', 'aria-label': 'Front ' + Math.round(100 - h.share) + '%, rear ' + Math.round(h.share) + '%' },
+        el('div', { style: 'width:' + (100 - h.share) + '%;background:' + s1 }), el('div', { style: 'width:' + h.share + '%;background:' + s2 }));
+      box.append(bar, el('div', { class: 'row', style: 'justify-content:space-between;font-size:12px;color:var(--ink2)' }, el('span', null, 'Front ' + Math.round(100 - h.share) + '%'), el('span', null, 'Rear ' + Math.round(h.share) + '%')));
+    }
+    box.append(el('p', { style: 'margin:8px 0 4px' }, harshText(h)));
+    const warns = (h.ori.warn || []).slice();
+    if (h.ori.how !== 'not confirmed' && warns.length) warns.push('Until that is sorted, read front and rear as possibly swapped.');
+    if (h.clipPct > 0.2) warns.push('The accelerometer hit its ±8 g limit on ' + fmt(h.clipPct, 1) + '% of this part, so the biggest hits read low.');
+    for (const w of warns) box.append(el('div', { style: 'margin:6px 0;padding:6px 10px;border-left:3px solid var(--warn);background:var(--surface);border-radius:4px;font-size:13.5px' }, w));
+    const L = baseLayout('Harshness (g/s)'); L.uirevision = rideKey(r) + 'harsh';
+    const rng = currentRange(); if (rng) L.xaxis.range = rng;
+    L.legend = { orientation: 'h', y: 1.12, x: 0 };
+    Plotly.react(ch, [line('Front', h.series.t, h.series.front, s1), line('Rear', h.series.t, h.series.rear, s2)], L, PLOT_CFG);
+    linkZoom('chHarsh');
+    $('harshNote').textContent = 'Harshness is the jerk (how fast the acceleration changes) of the frame over each axle: the IMU\'s up/down acceleration plus its pitch, '
+      + 'low-passed at ' + fmt(h.cutoff, 0) + ' Hz, shown as RMS over 0.5 s. A front hit pitches the nose up, a rear hit pitches it down. '
+      + 'IMU forward ' + h.ori.forwardAxis + ' (' + h.ori.how + '); wheelbase ' + fmt(h.wheelbase, 0) + ' mm, IMU ' + fmt(h.imuFromFront, 0) + ' mm behind the front axle (Settings → Sensors). '
+      + 'Hits are jerk peaks over ' + fmt(h.threshold, 0) + ' g/s. Time in the air (' + fmt(h.airPct, 1) + '%) is left out. Compare rides with the same IMU mount and cutoff.';
+  }
   function renderImu(r) {
+    try { renderHarsh(r); } catch (e) { console.warn(e); }
     const P = r._parsed, typ = $('imuData').value, which = $('imuSel').value, ax = $('imuAxis').value;
     const keys = IMU_KEYS[typ][which], cols = keys.map(k => P && P[k]);
     const name = (which === 'frame' ? 'Frame' : 'Bar') + ' ' + (typ === 'acc' ? 'accelerometer' : 'gyroscope') + ' ' + (ax === 'mag' ? 'total' : ax.toUpperCase());
@@ -8440,7 +9155,9 @@ if (!window.Plotly) (function () {
   function runCompare() {
     if (!selA || !selB) { msg('cmpMsg', 'Choose ride A and ride B (on this tab or in the Rides list).', 'err'); return; }
     readParamInputs();
-    msg('cmpMsg', 'Aligning (GPS or sensors, then pots + IMU) and matching hits…');
+    const big = [selA, selB].some(id => (rides.find(r => r.id === id) || {}).size > 20e6);
+    msg('cmpMsg', 'Lining up the two rides and comparing them…' + (big ? ' Big rides take a few seconds; the screen may pause.' : ''), 'busy');
+    cmpRefused(null);
     $('btnCompare').disabled = true;
     const mode = $('alignMode').value;
     const opts = { mode, refine: $('alignRefine').checked };
@@ -8451,7 +9168,7 @@ if (!window.Plotly) (function () {
     const zeroOf = id => cmpWin && window.SegUI && window.SegUI.ready() ? window.SegUI.zero(id).catch(() => null) : Promise.resolve(null);
     const cut = (p, w, name) => { if (!w || !window.SEG) return p; const c = window.SEG.combineParts([{ parsed: p, t0: w[0], t1: w[1], name }]); c.name = name; return c; };
     let zA = null, zB = null;
-    Promise.all([getParsed(selA), getParsed(selB), pathFile ? pathFile.text() : null, zeroOf(selA), zeroOf(selB)])
+    Promise.all([getParsed(selA), getParsed(selB), pathFile ? pathFile.text() : null, zeroOf(selA), zeroOf(selB), plotlyReady, paint()])
       .then(([pa, pb, pathText, za, zb]) => { zA = za; zB = zb; return new Promise(res => setTimeout(() => res([cmpWin ? cut(pa, cmpWin.A, pa.name) : pa, cmpWin ? cut(pb, cmpWin.B, pb.name) : pb, pathText]), 30)); })   // let the message paint
       .then(([pa, pb, pathText]) => {
         if (pathText != null) {
@@ -8476,11 +9193,33 @@ if (!window.Plotly) (function () {
         lastCompare = R;
         renderCompare(R);
         msg('cmpMsg', 'Done in ' + (R.ms / 1000).toFixed(1) + ' s.', 'ok');
+        if (curView === 'compare') scrollToEl($('cmpResults'));
       })
-      .catch(e => { console.error(e); msg('cmpMsg', e.message, 'err'); })
+      .catch(e => {
+        console.error(e);
+        if (/cannot be lined up reliably/.test(e.message)) { msg('cmpMsg', ''); $('cmpResults').classList.add('hidden'); cmpRefused(e.message); }
+        else msg('cmpMsg', e.message, 'err');
+      })
       .finally(() => { $('btnCompare').disabled = false; });
   }
 
+  // "These rides cannot be lined up reliably": say it plainly, with what to try
+  function cmpRefused(text) {
+    let box = $('cmpRefused');
+    if (!text) { if (box) box.remove(); return; }
+    if (!box) { box = el('div', { id: 'cmpRefused', class: 'card refused', role: 'alert' }); $('cmpMsg').closest('.card').after(box); }
+    box.textContent = '';
+    const noGps = /no GPS/.test(text);
+    box.append(el('h2', null, 'These two rides can\u2019t be lined up'),
+      el('p', null, noGps ? 'One ride has no GPS, and the suspension and motion sensors don\u2019t show a stretch of trail that matches in both rides. Rather than guess, no comparison is shown.'
+        : 'The sensors don\u2019t show a stretch of trail that matches in both rides. Rather than guess, no comparison is shown.'),
+      el('b', null, 'Things to try'),
+      el('ul', null, el('li', null, 'Pick two runs of the same trail (from a ride report or Trails, each run is cut gate to gate).'),
+        el('li', null, 'Record with GPS locked on both rides: wait for the logger\u2019s GPS light before you drop in.'),
+        el('li', null, 'If you know the rides start at the same spot, open Line-up options and choose \u201cBy hand: shift ride B\u201d.')),
+      el('details', { class: 'help' }, el('summary', null, 'Details'), el('div', { class: 'muted' }, text)));
+    scrollToEl(box);
+  }
   const sideName = s => s === 'front' ? 'Front' : 'Rear';
   const fmtP = p => !isFinite(p) ? '–' : p < 0.0001 ? '< 0.0001' : p < 0.001 ? p.toFixed(4) : p.toFixed(3);
   const signed = (x, d) => !isFinite(x) ? '–' : (x > 0 ? '+' : x < 0 ? '−' : '') + Math.abs(x).toFixed(d);
@@ -8500,8 +9239,15 @@ if (!window.Plotly) (function () {
 
     // ---- tiles
     const T = $('cmpTiles'); T.textContent = '';
+    const T2 = $('cmpTiles2'); T2.textContent = '';
     const O = R.pace.overall;
     const bFaster = O.gap < 0, pctW = bFaster ? O.pct : (O.TB / O.TA - 1) * 100;
+    // ---- the answer in one line
+    const H = $('cmpHead'); H.textContent = '';
+    const nmA = (R.A.name || 'A').replace(/\.csv$/i, ''), nmB = (R.B.name || 'B').replace(/\.csv$/i, '');
+    H.append(el('div', { class: 'big' }, O.sig ? el('span', { class: 'tag ' + (bFaster ? 'b' : 'a') }, bFaster ? 'B' : 'A') : null, ' ',
+      O.sig ? (bFaster ? nmB : nmA) + ' was ' + fmtSec(Math.abs(O.gap)) + ' s faster' : 'No clear difference in speed'),
+      el('div', { class: 'muted' }, (O.sig ? Math.abs(pctW).toFixed(1) + '% quicker over the ' : 'Over the ') + fmtDur(O.TA) + ' both rides cover' + ((O.stopA || 0) + (O.stopB || 0) > 0 ? ' (stops taken out)' : '') + '. Open Time lost to see where.'));
     const riding = (O.stopA || 0) + (O.stopB || 0) > 0;
     T.append(tile(O.sig ? (bFaster ? 'B ' : 'A ') + Math.abs(pctW).toFixed(1) + '%' : 'Even', O.sig ? (riding ? 'faster riding' : 'faster overall') : 'No clear overall difference',
       'B ' + (O.gap >= 0 ? '+' : '−') + fmtSec(O.gap) + ' s ± ' + fmtSec(1.96 * O.gapSd) + ' over ' + fmtDur(O.TA) + (riding ? ' of riding' : '')));
@@ -8515,20 +9261,21 @@ if (!window.Plotly) (function () {
     const secLen = R.section.a1 - R.section.a0;
     T.append(tile(fmtDur(secLen), 'Aligned section', 'A ' + fmt(R.section.a0, 0) + '–' + fmt(R.section.a1, 0) + ' s · B ' + fmt(R.section.b0, 0) + '–' + fmt(R.section.b1, 0) + ' s'));
     const tc = tile('–', 'Independent check', ' '), ta = tile('–', 'Timing where trusted', ' '); tc.id = 'tileCheck'; ta.id = 'tileAcc';
-    T.append(tc, ta);
-    T.append(tile(Math.round(O.sensorFrac * 100) + '%', 'Speed from pots/IMU', 'the rest from ' + (R.gps && R.gps.ok ? 'GPS (wider band)' : 'the rough alignment')));
+    T2.append(tc, ta);
+    T2.append(tile(Math.round(O.sensorFrac * 100) + '%', 'Speed from pots/IMU', 'the rest from ' + (R.gps && R.gps.ok ? 'GPS (wider band)' : 'the rough alignment')));
     const al = R.align;
-    if (al.conf && al.groups && al.conf.crossChecked) T.append(tile(Math.round(al.conf.agreed / al.conf.crossChecked * 100) + '%', al.groups[0] + ' vs ' + al.groups[1] + ' agree', 'within 60 ms, on ' + Math.round(al.conf.crossChecked * al.conf.step) + ' s both could check'));
-    if (R.gps && R.gps.ok) T.append(tile(fmt(R.gps.medianErr, 1) + ' m', 'GPS track match', '90% within ' + fmt(R.gps.p90Err, 1) + ' m · ' + R.gps.fixesA + ' / ' + R.gps.fixesB + ' fixes'));
-    else { const m0 = R.coarseMethod.split(' ')[0]; T.append(tile(m0.charAt(0).toUpperCase() + m0.slice(1), 'Rough alignment', R.coarseMethod)); }
+    if (al.conf && al.groups && al.conf.crossChecked) T2.append(tile(Math.round(al.conf.agreed / al.conf.crossChecked * 100) + '%', al.groups[0] + ' vs ' + al.groups[1] + ' agree', 'within 60 ms, on ' + Math.round(al.conf.crossChecked * al.conf.step) + ' s both could check'));
+    if (R.gps && R.gps.ok) T2.append(tile(fmt(R.gps.medianErr, 1) + ' m', 'GPS track match', '90% within ' + fmt(R.gps.p90Err, 1) + ' m · ' + R.gps.fixesA + ' / ' + R.gps.fixesB + ' fixes'));
+    else { const m0 = R.coarseMethod.split(' ')[0]; T2.append(tile(m0.charAt(0).toUpperCase() + m0.slice(1), 'Rough alignment', R.coarseMethod)); }
     const used = R.pairs.filter(p => p.used).length;
-    T.append(tile(String(used), 'Hit pairs used', 'front ' + R.counts.front.used + ' · rear ' + R.counts.rear.used));
+    T2.append(tile(String(used), 'Hit pairs used', 'front ' + R.counts.front.used + ' · rear ' + R.counts.rear.used));
     const sig = R.stats.filter(s => s.sig);
-    T.append(tile(String(sig.length), 'Significant hit changes', 'of ' + R.stats.length + ' metrics · q < ' + params.alpha));
+    T2.append(tile(String(sig.length), 'Significant hit changes', 'of ' + R.stats.length + ' metrics · q < ' + params.alpha));
 
     $('alignInfo').textContent = 'Rough: ' + R.coarseMethod + (R.fine ? ' → refined with ' + (al.channels || []).filter(c => c.weight > 0).map(c => c.label).join(', ') + ' (10 Hz, then ' + R.fine.rate + ' Hz).' : '.');
 
     fillCheckTiles(R);
+    { const tcv = $('tileCheck'); $('cmpSure').querySelector('summary').textContent = 'How sure is this?' + (tcv && !tcv.classList.contains('hidden') ? ' Checked a second way: ' + tcv.querySelector('.v').textContent.toLowerCase() + '.' : ''); }
     // each tab draws when it is first shown (hidden Plotly charts size badly)
     if (fly.R !== R) { flyStop(); fly.R = R; fly.F = null; fly.e = 0; lossWho = null; lossSel = null; }
     cDirty = new Set(CSUBS);
@@ -8539,7 +9286,7 @@ if (!window.Plotly) (function () {
   const CSUBS = ['speed', 'loss', 'map', 'hits', 'traces', 'align', 'whole'];
   let curCsub = LS.get('cmpSub', 'speed'); if (!CSUBS.includes(curCsub)) curCsub = 'speed';
   let cDirty = new Set();
-  const CSUB_RENDER = { speed: R => renderPace(R), loss: R => renderLoss(R), map: R => renderFly(R), hits: R => { renderSummary(R); renderEffects(R); renderHits(R); },
+  const CSUB_RENDER = { speed: R => renderPace(R), loss: R => renderLoss(R), map: R => renderFly(R), hits: R => { renderSummary(R); renderEffects(R); renderRoughness(R); renderHits(R); },
                         traces: R => renderOverlays(R), align: R => renderAlignment(R), whole: R => renderWhole(R) };
   function showCsub(name) {
     if (name !== 'map') flyStop();
@@ -9204,6 +9951,71 @@ if (!window.Plotly) (function () {
     p.append('.' + (sig.length > 3 ? ' ' + (sig.length - 3) + ' more below.' : ''));
   }
 
+  function renderRoughness(R) {
+    const card = $('roughCard'), t = $('cmpRough'), sum = $('roughSum'); if (!card || !t) return;
+    const L = R.roughness || [];
+    card.classList.toggle('hidden', !L.length);
+    t.textContent = ''; sum.textContent = '';
+    if (!L.length) return;
+    const pc = (x, d) => isFinite(x) ? signed(x, d == null ? 0 : d) + '%' : '\u2013';
+    const heads = ['IMU', 'From hits: score (d\u2009z)', 'Metrics at p < 0.10', 'Verdict', 'Whole run: accel RMS A \u2192 B (g)', 'Change', 'p', 'Jerk RMS A \u2192 B (g/s)', 'Change', 'p'];
+    t.append(el('thead', null, el('tr', null, ...heads.map((h, i) => el('th', { class: i === 0 ? 'l' : null }, h)))));
+    const tb = el('tbody'), said = [];
+    for (const o of L) {
+      const hasH = isFinite(o.score), a = o.acc, j = o.jerk;
+      const vcls = !hasH ? 'off' : o.clear ? 'sig' : 'off';
+      tb.append(el('tr', { class: hasH && o.clear ? 'sig' : null },
+        el('td', { class: 'l' }, o.label),
+        el('td', null, hasH ? signed(o.score, 2) : '\u2013'),
+        el('td', null, hasH ? o.sig + ' of ' + o.n + ' (' + Math.round(o.sigPct) + '%)' : '\u2013'),
+        el('td', null, hasH ? el('span', { class: 'pill ' + vcls }, o.verdict) : 'too few hits'),
+        el('td', null, a && isFinite(a.meanA) ? fmt(a.meanA, 2) + ' \u2192 ' + fmt(a.meanB, 2) : '\u2013'),
+        el('td', null, a ? pc(a.pct, 1) : '\u2013'), el('td', null, a ? fmtP(a.pT) : '\u2013'),
+        el('td', null, j && isFinite(j.meanA) ? fmt(j.meanA, 0) + ' \u2192 ' + fmt(j.meanB, 0) : '\u2013'),
+        el('td', null, j ? pc(j.pct, 1) : '\u2013'), el('td', null, j ? fmtP(j.pT) : '\u2013')));
+      const run = a && j && a.pT < 0.05 && j.pT < 0.05 && Math.sign(a.diff) === Math.sign(j.diff) ? (a.diff > 0 ? 'rougher' : 'smoother') : null;
+      if (hasH && o.clear) said.push(el('span', null, el('b', null, o.label), ': B ' + (o.score > 0 ? 'rougher' : 'smoother') + ' through the hits (score ' + signed(o.score, 2) + ', ' + o.sig + ' of ' + o.n + ' metrics)' +
+        (run ? (run === (o.score > 0 ? 'rougher' : 'smoother') ? ', and over the whole run (accel RMS ' + pc(a.pct, 0) + ')' : ', but ' + run + ' over the whole run (accel RMS ' + pc(a.pct, 0) + ')') : '')));
+      else if (run) said.push(el('span', null, el('b', null, o.label), ': B ' + run + ' over the whole run (accel RMS ' + pc(a.pct, 0) + ', jerk RMS ' + pc(j.pct, 0) + '); no clear difference through the hits'));
+    }
+    t.append(tb);
+    if (said.length) said.forEach((x, i) => { if (i) sum.append(el('br')); sum.append(x); });
+    else sum.append('No IMU shows a clear difference in roughness between the rides.');
+    renderHarshCmp(R, sum);
+    sum.append(el('br'), el('span', { class: 'muted' }, 'Rougher can mean a rougher line, more speed through the same bumps, or a harsher setup: check Speed and Time lost for the speed.'));
+  }
+  function renderHarshCmp(R, sum) {
+    const H = R.roughness && R.roughness.harsh, t = $('cmpHarsh'), w = $('harshCmpWarn');
+    [t, w, $('harshCmpHead')].forEach(x => x && x.classList.toggle('hidden', !H));
+    if (!t) return; t.textContent = ''; w.textContent = '';
+    if (!H) return;
+    if (!H.sure) w.append(el('div', { style: 'margin:6px 0;padding:6px 10px;border-left:3px solid var(--warn);background:var(--surface);border-radius:4px;font-size:13.5px' },
+      'Couldn\u2019t confirm which way the IMU faces' + (H.oriA.forwardAxis === H.oriB.forwardAxis ? ' (both rides read as forward ' + H.oriA.forwardAxis + ', so A vs B is like for like)' : ' and the two rides disagree (A ' + H.oriA.forwardAxis + ', B ' + H.oriB.forwardAxis + ')') + ', so front and rear could be swapped. Set \u201cIMU forward\u201d in Settings \u2192 Sensors.'));
+    const pc = x => isFinite(x) ? signed(x, 1) + '%' : '\u2013';
+    const heads = ['', 'Hits: peak A \u2192 B (g/s)', 'Change', 'q', 'Hits: RMS A \u2192 B', 'Change', 'q', 'Whole run: RMS A \u2192 B', 'Change', 'p'];
+    t.append(el('thead', null, el('tr', null, ...heads.map((h, i) => el('th', { class: i === 0 ? 'l' : null }, h)))));
+    const tb = el('tbody'), cell = (s, d) => s ? [el('td', null, fmt(s.meanA, d) + ' \u2192 ' + fmt(s.meanB, d)), el('td', null, pc(s.pct)), el('td', null, fmtP(s.q != null ? s.q : s.pT))] : [el('td', null, '\u2013'), el('td', null, '\u2013'), el('td', null, '\u2013')];
+    const runCell = s => s ? [el('td', null, fmt(s.meanA, 0) + ' \u2192 ' + fmt(s.meanB, 0)), el('td', null, pc(s.pct)), el('td', null, fmtP(s.pT))] : [el('td', null, '\u2013'), el('td', null, '\u2013'), el('td', null, '\u2013')];
+    const shareRun = H.share ? [el('td', null, fmt(H.share.meanA, 1) + ' \u2192 ' + fmt(H.share.meanB, 1) + '%'), el('td', null, signed(H.share.diff, 1) + ' pts'), el('td', null, fmtP(H.share.pT))] : runCell(null);
+    const shareHit = H.hits.harshShare;
+    tb.append(
+      el('tr', null, el('td', { class: 'l' }, 'Front'), ...cell(H.hits.harshFrontPeak, 0), ...cell(H.hits.harshFrontRms, 0), ...runCell(H.front)),
+      el('tr', null, el('td', { class: 'l' }, 'Rear'), ...cell(H.hits.harshRearPeak, 0), ...cell(H.hits.harshRearRms, 0), ...runCell(H.rear)),
+      el('tr', null, el('td', { class: 'l' }, 'Rear share'), el('td', null, '\u2013'), el('td', null, '\u2013'), el('td', null, '\u2013'),
+        shareHit ? el('td', null, fmt(shareHit.meanA, 1) + ' \u2192 ' + fmt(shareHit.meanB, 1) + '%') : el('td', null, '\u2013'),
+        el('td', null, shareHit ? signed(shareHit.diff, 1) + ' pts' : '\u2013'), el('td', null, shareHit ? fmtP(shareHit.q) : '\u2013'), ...shareRun));
+    t.append(tb);
+    // one line for the summary: which end got harsher, and did the balance move
+    const alpha = params.alpha || 0.05, f = H.hits.harshFrontRms, r = H.hits.harshRearRms, sh = H.hits.harshShare;
+    const sigF = f && f.q < alpha, sigR = r && r.q < alpha;
+    if (sigF || sigR) {
+      const part = (s, nm) => nm + ' ' + (s.diff > 0 ? '+' : '\u2212') + Math.abs(s.pct).toFixed(0) + '%';
+      const which = [sigF ? part(f, 'front') : null, sigR ? part(r, 'rear') : null].filter(Boolean).join(', ');
+      const bal = sh && sh.q < alpha ? 'the rear share moved ' + signed(sh.diff, 1) + ' pts (B ' + (sh.diff > 0 ? 'more' : 'less') + ' rear-biased)' : 'the front/rear balance stayed the same' + (sh ? ' (rear share ' + fmt(sh.meanA, 0) + '% \u2192 ' + fmt(sh.meanB, 0) + '%)' : '');
+      sum.append(el('br'), el('span', null, el('b', null, 'Front vs rear'), ': B harsher through the hits (' + which + ' RMS); ' + bal + '.' + (H.sure ? '' : ' (IMU direction not confirmed: front and rear may be swapped.)')));
+    }
+  }
+
   function statRowsFiltered(R) {
     const side = $('statSide').value, only = $('statSigOnly').checked, grp = $('statGroup').value;
     return R.stats.filter(s => (side === 'all' || s.side === side) && (grp === 'all' || s.group === grp) && (!only || s.sig));
@@ -9473,7 +10285,7 @@ if (!window.Plotly) (function () {
 
   // ======================================================= API for the Trails tab (trails.js)
   window.SA_APP = {
-    getParsed, rides: () => rides, params: () => params, el, fmt, fmtDur, fmtWhen, fmtBytes, msg, cssVar, LS, showView, plural,
+    getParsed, rides: () => rides, params: () => params, boxShown, boxName, rideHost, el, fmt, fmtDur, fmtWhen, fmtBytes, msg, cssVar, LS, showView, plural,
     cloud: { on: () => cloudOn(), fetch: (path, opts) => cfetch(path, opts) },
     refreshLibrary: () => refreshLibrary(),
     // Analyze one run: the ride cut to t0..t1, on a given sub-tab (e.g. 'stats')
