@@ -100,6 +100,39 @@ input[type=checkbox],input[type=radio]{width:20px;height:20px;padding:0;margin:0
 .rate-badge{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;border-radius:999px;padding:2px 10px;border:1px solid var(--ring)}
 .chart{width:100%;height:340px}
 .chart.short{height:260px}
+/* ---- Standard / Expert: body.std hides the workings (.xp); .stdonly is help just for Standard */
+body.std .xp{display:none!important}
+body:not(.std) .stdonly{display:none!important}
+p.stdonly.muted{margin:2px 0 8px;font-size:14px}
+.modepick{display:inline-flex;border:1px solid var(--ring);border-radius:999px;overflow:hidden}
+.modepick button{min-height:38px;padding:0 14px;border:0;background:transparent;color:var(--ink2);font-weight:600;font-size:14px;cursor:pointer}
+.modepick button.on{background:var(--accent);color:#fff}
+.cmpmode{display:flex;justify-content:flex-end;margin-top:6px}
+/* ---- phone: wide tables scroll sideways (label column pinned) instead of squeezing every cell */
+@media(max-width:700px){
+  .tbl table.scrollx{width:max-content;min-width:100%}
+  .tbl table.scrollx th,.tbl table.scrollx td{white-space:nowrap}
+  .tbl table.scrollx td:first-child,.tbl table.scrollx th:first-child{white-space:normal;min-width:110px;max-width:160px;position:sticky;left:0;background:var(--card);z-index:1}
+}
+/* ---- Trail times as a list (reads on a phone) */
+.trailtimes{display:grid;gap:10px}
+.trailtimes .tt{padding:10px 12px;border:1px solid var(--ring);border-radius:10px;cursor:pointer}
+.trailtimes .tt:hover{background:var(--chip)}
+.trailtimes .ttname{font-weight:700;font-size:15px}
+.trailtimes .ttbig{font-size:20px;font-weight:700;margin:2px 0}
+.trailtimes .ttsub{font-size:13.5px;color:var(--ink2)}
+.trailtimes .ttsec{display:flex;justify-content:space-between;gap:8px;font-size:14px;padding:6px 0 0;border-top:1px solid var(--grid);margin-top:6px}
+.trailtimes .ttsec span:last-child{text-align:right}
+/* ---- Compare: floating mini-map that follows the charts */
+.minimap{position:fixed;right:8px;bottom:8px;z-index:60;width:140px;background:var(--card);border:1px solid var(--ring);border-radius:12px;box-shadow:0 4px 18px rgba(0,0,0,.18);overflow:hidden}
+.minimap .mmbar{display:flex;align-items:center;gap:6px;padding:4px 6px 4px 10px;font-size:12.5px;color:var(--ink2);border-bottom:1px solid var(--ring)}
+.minimap .mmbar span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.minimap .mmbar button{min-height:40px;min-width:40px;padding:0 6px;border:0;background:transparent;font-size:16px;color:var(--ink);cursor:pointer}
+.minimap #chMini{width:100%;height:140px}
+@media(max-width:520px){.minimap .mmopen{display:none}}
+body.minion #view-compare{padding-bottom:200px}   /* the last rows aren't stuck under the map */
+.minimap.min{width:auto}.minimap.min #chMini,.minimap.min .mmopen{display:none}
+@media(min-width:900px){.minimap{width:260px}.minimap #chMini{height:240px}}
 .backbar{margin:-4px 0 10px}
 .backbar .btn{box-shadow:0 2px 8px rgba(0,0,0,.15)}
 .card,.subtabs,.chartwrap{scroll-margin-top:calc(var(--hdrH,96px) + 12px)}
@@ -489,7 +522,7 @@ ul.takeaways li.info{border-left-color:var(--s1)}
           <button type="button" role="tab" data-sub="stats">Statistics</button>
           <button type="button" role="tab" data-sub="events">Events</button>
           <button type="button" role="tab" data-sub="balance">Balance</button>
-          <button type="button" role="tab" data-sub="advanced">Advanced</button>
+          <button class="xp" type="button" role="tab" data-sub="advanced">Advanced</button>
         </nav>
 
         <!-- Charts -->
@@ -601,7 +634,7 @@ ul.takeaways li.info{border-left-color:var(--s1)}
         </div>
 
         <!-- Advanced -->
-        <div class="subview" id="sub-advanced" role="tabpanel">
+        <div class="xp subview" id="sub-advanced" role="tabpanel">
           <h3>Axle position histogram</h3>
           <div class="muted">Where each wheel spends its time across the full travel.</div>
           <div class="grid2c">
@@ -633,15 +666,20 @@ ul.takeaways li.info{border-left-color:var(--s1)}
 
   <!-- ============================== COMPARE ============================== -->
   <section class="view" id="view-compare">
+    <div id="miniMap" class="minimap hidden" role="region" aria-label="Where on the trail">
+      <div class="mmbar"><span id="miniLbl">Where</span><button type="button" class="mmopen" id="miniOpen" title="Open the Map tab" aria-label="Open the Map tab">&#8599;</button><button type="button" id="miniMin" title="Hide / show the map" aria-label="Hide or show the map">&ndash;</button></div>
+      <div id="chMini"></div><div id="miniTileNote" class="hidden" style="display:none!important"></div>
+    </div>
     <div id="cmpWinNote" class="banner hidden"></div>
     <div class="card">
       <div class="grid2">
         <div><label class="f" for="cmpA"><span class="tag a">A</span> Reference ride</label><select id="cmpA"></select></div>
         <div><label class="f" for="cmpB"><span class="tag b">B</span> Comparison ride</label><select id="cmpB"></select></div>
       </div>
+      <div id="cmpTrails" class="hidden" style="margin-top:10px"></div>
       <div class="row" style="margin-top:12px"><button class="btn primary wide1" id="btnCompare" type="button">Compare these rides</button></div>
       <div id="cmpMsg" class="msg" role="status"></div>
-      <details id="cmpOpts" style="margin-top:4px"><summary>Line-up options</summary>
+      <details class="xp" id="cmpOpts" style="margin-top:4px"><summary>Line-up options</summary>
         <div class="muted" style="margin-bottom:6px">To compare, the two rides are lined up so the same spot on the trail matches in both. Automatic works for most rides.</div>
       <div class="row">
         <div class="alignpick"><label class="f" for="alignMode">Line up by</label>
@@ -672,7 +710,7 @@ ul.takeaways li.info{border-left-color:var(--s1)}
         <div class="muted" style="margin-top:6px">GPS matches the two tracks by position and heading (resampled every 2&nbsp;m) and trims both rides to the section they share; every point gets a timing uncertainty from the GPS drift, speed and gaps between fixes. The pots and IMU then fine-tune the timing in two passes (10&nbsp;Hz inside that uncertainty, then the fine rate within &plusmn;0.35&nbsp;s), with the warp speed limited to 0.5&ndash;2&times; so it can&#39;t jitter on noise. The search window caps how far the sensors may move the timing from GPS. GPS drift: about 3.5&nbsp;m for a 1&nbsp;Hz receiver; lower it for a 10&nbsp;Hz or RTK unit.</div>
       </details>
       </details>
-      <details class="help"><summary>How lining up works</summary>
+      <details class="xp help"><summary>How lining up works</summary>
         <div class="muted">No two runs take exactly the same time, so the analyzer matches them up point by point. First it uses GPS (where you were on the trail). Then it fine-tunes with the suspension sensors and the motion sensors (IMU) in the logger box, which feel the same bumps in both rides. This stretching of one ride's clock to fit the other is called <i>time warping</i>. Every comparison is checked a second, independent way; if the rides can&#39;t be matched reliably, you&#39;re told instead of shown made-up numbers.</div>
         <div class="muted" id="alignInfo" style="margin-top:6px"></div>
       </details>
@@ -680,7 +718,7 @@ ul.takeaways li.info{border-left-color:var(--s1)}
 
     <div id="cmpResults" class="hidden">
       <div class="card"><div id="cmpHead" class="headline"></div><div class="tiles" id="cmpTiles"></div>
-        <details id="cmpSure"><summary>How sure is this?</summary><div class="tiles" id="cmpTiles2" style="margin-top:6px"></div></details>
+        <details class="xp" id="cmpSure"><summary>How sure is this?</summary><div class="tiles" id="cmpTiles2" style="margin-top:6px"></div></details>
         <div id="cmpNotes" class="notes hidden"></div></div>
       <div class="card tabcard">
         <nav class="subtabs" id="cmpTabs" role="tablist" aria-label="Comparison views">
@@ -689,14 +727,22 @@ ul.takeaways li.info{border-left-color:var(--s1)}
           <button type="button" role="tab" data-csub="map">Map</button>
           <button type="button" role="tab" data-csub="hits">Hits</button>
           <button type="button" role="tab" data-csub="traces">Traces</button>
-          <button type="button" role="tab" data-csub="align">Alignment</button>
+          <button class="xp" type="button" role="tab" data-csub="align">Alignment</button>
           <button type="button" role="tab" data-csub="whole">Stats</button>
         </nav>
+        <div class="cmpmode"><div class="modepick" role="group" aria-label="Display mode"><button type="button" data-mode="std">Standard</button><button type="button" data-mode="expert">Expert</button></div></div>
       </div>
 
       <div class="subview on" id="csub-speed" role="tabpanel">
+        <div class="card hidden" id="trailTimesCard">
+          <h2>Trail times</h2>
+          <p class="stdonly muted">Your time on each trail and its sectors. Below zero means B was faster. Tap one to zoom the charts to it.</p>
+          <div id="cmpTrailTimes" class="trailtimes"></div>
+          <div class="muted xp" style="margin-top:8px" id="trailTimesNote"></div>
+        </div>
         <div class="card">
           <h2>Speed difference along the run</h2>
+          <p class="stdonly muted">Where B was faster or slower than A along the run. A thick coloured line is a real difference (orange: B faster, blue: A faster); thin and inside the band is too close to call. Look for long thick stretches, then check the sectors below to see where and why.</p>
           <ul class="insights" id="paceInsights"></ul>
           <div class="row" style="margin-bottom:4px">
             <div style="width:130px"><label class="f" for="paceWin">Smoothing</label>
@@ -713,15 +759,17 @@ ul.takeaways li.info{border-left-color:var(--s1)}
             <span><span class="sw" style="background:var(--accent);opacity:.3"></span>95% band</span>
             <span><span class="sw" style="background:var(--grid)"></span><span id="greyLabel">No pot/IMU lock: GPS only, smoother and wider</span></span>
             <span id="stopLegend" class="hidden"><span class="sw" style="background:var(--ink2);opacity:.35"></span>Stop (taken out)</span>
-          <span id="checkLegend" class="hidden"><span class="sw" style="background:var(--surface);border:1.5px solid var(--ink);border-radius:50%;width:10px;height:10px"></span>Independent check (no DTW)</span>
+          <span id="checkLegend" class="xp hidden"><span class="sw" style="background:var(--surface);border:1.5px solid var(--ink);border-radius:50%;width:10px;height:10px"></span>Independent check (no DTW)</span>
           </div>
           <h3>Time gap</h3>
           <div id="chGap" class="chart short"></div>
-          <div class="muted" id="paceNote"></div>
+          <div class="muted xp" id="paceNote"></div>
+          <p class="stdonly muted">The time gap is the running total: going down means B is pulling ahead, going up means A is. Dots are hits timed in both rides.</p>
           <h3>Sectors: where and why</h3>
           <div class="muted" style="margin-bottom:6px">Tap a sector to zoom both charts to it.</div>
           <div class="tbl"><table id="cmpSectors" class="clickable sectors"></table></div>
-          <div class="muted" style="margin-top:8px"><b>Line:</b> on the same line the pots and IMU see the same bumps in the same order, so the two rides line up distinctively and pots-only and IMU-only alignments agree. On a different line they don&#39;t: the match is no better than a shifted one, the two sensor groups disagree, or the warp has to jerk to force a fit. GPS adds a lateral offset when B is several metres off A&#39;s line. <b>Why:</b> on the same line the terrain is identical, so a fork sitting deeper relative to the shock (more nose-down) points to braking or weight forward, and harder hits on the same bumps to more speed into them. Offsets that hold for the whole run (setup, sag) are taken out first. With GPS and a different line, the gain is split into line length and speed.</div>
+          <p class="stdonly muted"><b>Same line</b>: the same bumps in both rides, so the difference is speed, braking or setup. <b>Different line</b>: one rider took another way through there.</p>
+          <div class="xp muted" style="margin-top:8px"><b>Line:</b> on the same line the pots and IMU see the same bumps in the same order, so the two rides line up distinctively and pots-only and IMU-only alignments agree. On a different line they don&#39;t: the match is no better than a shifted one, the two sensor groups disagree, or the warp has to jerk to force a fit. GPS adds a lateral offset when B is several metres off A&#39;s line. <b>Why:</b> on the same line the terrain is identical, so a fork sitting deeper relative to the shock (more nose-down) points to braking or weight forward, and harder hits on the same bumps to more speed into them. Offsets that hold for the whole run (setup, sag) are taken out first. With GPS and a different line, the gain is split into line length and speed.</div>
           <div class="row" style="margin-top:10px">
             <button class="btn" id="btnExpPace">Download speed + sectors (CSV)</button>
           </div>
@@ -764,7 +812,7 @@ ul.takeaways li.info{border-left-color:var(--s1)}
             </div>
           </div>
           <div class="row" style="margin-top:10px"><button class="btn" id="btnExpLoss">Download time lost (CSV)</button></div>
-          <div class="muted" style="margin-top:8px">How it stays robust: everything comes from one fixed 4&nbsp;s version of the gap, whatever the Speed tab&#39;s smoothing. A mistake is measured as a step between the gap&#39;s level in the 2&nbsp;s before and the 2&nbsp;s after, against the pace around it (the median over 24&nbsp;s, where the pots/IMU count more than GPS), so an alignment wobble that comes straight back isn&#39;t a loss. It is listed when it is at least 0.2&nbsp;s, sharp (8% or more on top of that pace while it lasts) and 3.5&nbsp;sd clear of the alignment noise (the Monte Carlo draws). The bar is higher than usual because the biggest of many windows is picked, and the biggest bit of noise among them is itself 2.5–3&nbsp;sd. A slow stretch is the 10&nbsp;s or more with the most time lost above the rider&#39;s own average, with the listed mistakes taken out so nothing is counted twice. It is listed when it is at least 0.3&nbsp;s and 3&nbsp;sd clear. At most 3 mistakes and 2 slow stretches per rider. <b>Rough timing</b>: the pots/IMU don&#39;t lock on there, so it comes from GPS or the rough alignment and is good to a few seconds. Causes are what stands out against the other rider there, not proof.</div>
+          <div class="xp muted" style="margin-top:8px">How it stays robust: everything comes from one fixed 4&nbsp;s version of the gap, whatever the Speed tab&#39;s smoothing. A mistake is measured as a step between the gap&#39;s level in the 2&nbsp;s before and the 2&nbsp;s after, against the pace around it (the median over 24&nbsp;s, where the pots/IMU count more than GPS), so an alignment wobble that comes straight back isn&#39;t a loss. It is listed when it is at least 0.2&nbsp;s, sharp (8% or more on top of that pace while it lasts) and 3.5&nbsp;sd clear of the alignment noise (the Monte Carlo draws). The bar is higher than usual because the biggest of many windows is picked, and the biggest bit of noise among them is itself 2.5–3&nbsp;sd. A slow stretch is the 10&nbsp;s or more with the most time lost above the rider&#39;s own average, with the listed mistakes taken out so nothing is counted twice. It is listed when it is at least 0.3&nbsp;s and 3&nbsp;sd clear. At most 3 mistakes and 2 slow stretches per rider. <b>Rough timing</b>: the pots/IMU don&#39;t lock on there, so it comes from GPS or the rough alignment and is good to a few seconds. Causes are what stands out against the other rider there, not proof.</div>
         </div>
       </div>
 
@@ -807,7 +855,8 @@ ul.takeaways li.info{border-left-color:var(--s1)}
               <button type="button" class="btn small" id="fbFwd" aria-label="Forward 1 second">1 s &rsaquo;</button>
             </div>
             <div id="fbInfo" class="mapinfo" aria-live="polite"></div>
-            <div class="muted" style="margin-top:6px" id="fbHelp">Both riders start the compared section together; the dots show where each one is the same number of seconds later, both on the same trail. The colour is how much faster one rider was at each spot, in %, from the alignment (the curve on the Speed tab; the GPS only draws the trail), on a scale fixed for this comparison from the riding itself, so a stop or a glitch can&#39;t stretch it. Tap the track to jump there; scroll or pinch to zoom.</div>
+            <p class="stdonly muted" style="margin-top:6px">Press Play or drag the slider to watch both riders down the trail. The colour shows who was faster at each spot.</p>
+            <div class="muted xp" style="margin-top:6px" id="fbHelp">Both riders start the compared section together; the dots show where each one is the same number of seconds later, both on the same trail. The colour is how much faster one rider was at each spot, in %, from the alignment (the curve on the Speed tab; the GPS only draws the trail), on a scale fixed for this comparison from the riding itself, so a stop or a glitch can&#39;t stretch it. Tap the track to jump there; scroll or pinch to zoom.</div>
           </div>
         </div>
       </div>
@@ -823,28 +872,29 @@ ul.takeaways li.info{border-left-color:var(--s1)}
               <select id="statGroup"><option value="suspension">Suspension</option><option value="imu">IMU</option><option value="all">All</option></select></div>
             <label class="row" style="gap:6px;align-self:flex-end;min-height:42px"><input type="checkbox" id="statSigOnly"> Significant only</label>
           </div>
+          <p class="stdonly muted">Each hit measured in both rides. A filled dot is a real change, not chance. For a setup change, look first at travel used, peak compression speed and rebound speed.</p>
           <div id="chEffects" class="chart" style="height:420px"></div>
           <div class="legend"><span><span class="sw" style="background:var(--accent)"></span>Significant (q &lt; <span class="alphaTxt">0.05</span>)</span><span><span class="sw" style="background:var(--muted);opacity:.5"></span>Within chance</span><span>Bars: 95% confidence interval of the mean change</span></div>
-          <div class="tbl" style="margin-top:10px"><table id="cmpHitStats"></table></div>
-          <div class="muted" style="margin-top:8px">Each hit is measured in both rides and B &minus; A is taken per hit. <b>q</b> is the p-value corrected for testing many metrics at once (Benjamini&ndash;Hochberg); a metric counts as significant when q &lt; <span class="alphaTxt">0.05</span>. Phase counts and the IMU compression / rebound values use the split speed set in Setup (the Python tool used 10&nbsp;mm/s, which counts sensor noise as movement). IMU acceleration is the size of the acceleration vector minus 1&nbsp;g, so it doesn&#39;t depend on how the sensor is mounted. <b>d<sub>z</sub></b> is the mean change divided by its spread (0.2 small, 0.5 medium, 0.8 large). Hits a few seconds apart share speed, line and fatigue, so p-values are optimistic: ride each setup more than once (A, B, A, B) before trusting a small change.</div>
+          <div class="tbl" style="margin-top:10px"><table id="cmpHitStats" class="scrollx"></table></div>
+          <div class="xp muted" style="margin-top:8px">Each hit is measured in both rides and B &minus; A is taken per hit. <b>q</b> is the p-value corrected for testing many metrics at once (Benjamini&ndash;Hochberg); a metric counts as significant when q &lt; <span class="alphaTxt">0.05</span>. Phase counts and the IMU compression / rebound values use the split speed set in Setup (the Python tool used 10&nbsp;mm/s, which counts sensor noise as movement). IMU acceleration is the size of the acceleration vector minus 1&nbsp;g, so it doesn&#39;t depend on how the sensor is mounted. <b>d<sub>z</sub></b> is the mean change divided by its spread (0.2 small, 0.5 medium, 0.8 large). Hits a few seconds apart share speed, line and fatigue, so p-values are optimistic: ride each setup more than once (A, B, A, B) before trusting a small change.</div>
         </div>
 
         <div class="card" id="roughCard">
           <h2>Roughness (IMU)</h2>
           <p id="roughSum" style="margin:0 0 10px"></p>
-          <div class="tbl"><table id="cmpRough"></table></div>
+          <div class="tbl xp"><table id="cmpRough" class="scrollx"></table></div>
           <h3 id="harshCmpHead" style="margin-top:14px">Front vs rear (frame IMU)</h3>
           <div id="harshCmpWarn"></div>
-          <div class="tbl"><table id="cmpHarsh"></table></div>
-          <div class="muted" style="margin-top:8px"><b>From hits:</b> all of that IMU&rsquo;s hit metrics (accel and jerk peak, mean, RMS, SD, in compression and rebound) pooled into one score: the average effect size d<sub>z</sub> of B &minus; A, weighted by its size; + means B was rougher. The verdict needs &ge; 75% of those metrics at p &lt; 0.10 (&ge; 50%: a lean). They measure overlapping things, so read it as a summary, not as independent votes. <b>Whole run:</b> RMS of |a| &minus; 1 g and of jerk in 5 s stretches of A against the same stretch of B, paired over the stretches; it includes everything between hits (chatter, braking bumps). <b>Front vs rear:</b> the single frame IMU&rsquo;s up/down jerk over each axle, from its heave and pitch (as on Analyze; wheelbase, IMU position and which way it faces from Settings &rarr; Sensors). Through the hits: over each paired hit and the 0.3 s after it, so a front hit also catches the rear wheel on the same bump; q is corrected for all the hit metrics.</div>
+          <div class="tbl"><table id="cmpHarsh" class="scrollx"></table></div>
+          <div class="xp muted" style="margin-top:8px"><b>From hits:</b> all of that IMU&rsquo;s hit metrics (accel and jerk peak, mean, RMS, SD, in compression and rebound) pooled into one score: the average effect size d<sub>z</sub> of B &minus; A, weighted by its size; + means B was rougher. The verdict needs &ge; 75% of those metrics at p &lt; 0.10 (&ge; 50%: a lean). They measure overlapping things, so read it as a summary, not as independent votes. <b>Whole run:</b> RMS of |a| &minus; 1 g and of jerk in 5 s stretches of A against the same stretch of B, paired over the stretches; it includes everything between hits (chatter, braking bumps). <b>Front vs rear:</b> the single frame IMU&rsquo;s up/down jerk over each axle, from its heave and pitch (as on Analyze; wheelbase, IMU position and which way it faces from Settings &rarr; Sensors). Through the hits: over each paired hit and the 0.3 s after it, so a front hit also catches the rear wheel on the same bump; q is corrected for all the hit metrics.</div>
         </div>
 
         <div class="card">
           <h2>Hits</h2>
-          <div class="tbl"><table id="cmpCounts"></table></div>
+          <div class="tbl xp"><table id="cmpCounts" class="scrollx"></table></div>
           <h3>Paired hits</h3>
           <div class="muted" style="margin-bottom:6px">Tap a row to see that hit in both rides.</div>
-          <div class="tbl scroll"><table id="cmpHits" class="clickable"></table></div>
+          <div class="tbl scroll"><table id="cmpHits" class="clickable scrollx"></table></div>
           <div class="grid2c" style="margin-top:10px">
             <div><h3 id="hitTitle">Position</h3><div id="chHitP" class="chart short"></div></div>
             <div><h3>Velocity</h3><div id="chHitV" class="chart short"></div></div>
@@ -856,15 +906,20 @@ ul.takeaways li.info{border-left-color:var(--s1)}
         <div class="card">
           <h2>Front position</h2><div id="chCmpF" class="chart"></div>
           <h2 style="margin-top:14px">Rear position</h2><div id="chCmpR" class="chart"></div>
+          <div id="cmpHarshBox">
+            <h2 style="margin-top:14px">Front harshness</h2><div id="chCmpHarshF" class="chart short"></div>
+            <h2 style="margin-top:14px">Rear harshness</h2><div id="chCmpHarshR" class="chart short"></div>
+            <div class="muted" id="cmpHarshNote"></div>
+          </div>
           <div class="muted">B is drawn on A&#39;s timeline using the alignment. Dots mark paired hit peaks. Charts zoom together.</div>
         </div>
       </div>
 
-      <div class="subview" id="csub-align" role="tabpanel">
+      <div class="xp subview" id="csub-align" role="tabpanel">
         <div class="card">
           <h2>Alignment</h2>
           <h3>Sensor cross-check</h3>
-          <div class="tbl"><table id="cmpChannels"></table></div>
+          <div class="tbl"><table id="cmpChannels" class="scrollx"></table></div>
           <div class="muted" style="margin:6px 0 4px"><b>r</b> = how well each sensor matches between the rides (5&nbsp;s windows, busiest half). <b>Held out</b> = that sensor&#39;s match when the timing comes only from the <i>other</i> sensor group, so it had no say: a big rise from the rough map means the alignment is real, not fitted to noise. Weight 0 = the sensor didn&#39;t match and was left out.</div>
           <div class="grid2c">
             <div id="trackBox"><h3>GPS tracks</h3><div id="chTrack" class="chart short"></div></div>
@@ -908,6 +963,13 @@ ul.takeaways li.info{border-left-color:var(--s1)}
 
   <!-- ============================== SETUP ============================== -->
   <section class="view" id="view-setup">
+    <div class="card">
+      <h2>Display</h2>
+      <div class="row" style="align-items:center;gap:12px">
+        <div class="modepick" role="group" aria-label="Display mode"><button type="button" data-mode="std">Standard</button><button type="button" data-mode="expert">Expert</button></div>
+        <span class="muted" id="modeHelp" style="flex:1 1 200px"></span>
+      </div>
+    </div>
     <div class="card">
       <h2>Cloud &amp; notifications</h2>
       <div class="muted" id="offlineState" style="margin-bottom:6px"></div>
@@ -997,7 +1059,7 @@ ul.takeaways li.info{border-left-color:var(--s1)}
       <div id="linkageMsg" class="msg"></div>
       </details>
 
-      <details style="margin-top:10px"><summary>Filtering &amp; velocity</summary>
+      <details class="xp" style="margin-top:10px"><summary>Filtering &amp; velocity</summary>
         <div class="grid3">
           <div><label class="f" for="p_medianFilterSize">Median filter (rows)</label><input id="p_medianFilterSize" type="number" min="1" max="21" step="2"></div>
           <div><label class="f" for="p_maxPosChange">Max change per row (mm)</label><input id="p_maxPosChange" type="number" min="1"></div>
@@ -1006,7 +1068,7 @@ ul.takeaways li.info{border-left-color:var(--s1)}
           <div><label class="f" for="p_rateOverride">Sample rate override (Hz, 0 = auto)</label><input id="p_rateOverride" type="number" min="0"></div>
         </div>
       </details>
-      <details><summary>Stroke analysis</summary>
+      <details class="xp"><summary>Stroke analysis</summary>
         <div class="grid3">
           <div><label class="f" for="p_minStrokeDepth">Min stroke depth (mm)</label><input id="p_minStrokeDepth" type="number" min="0" step="1"></div>
           <div><label class="f" for="p_minStrokeSamples">Min stroke time (rows)</label><input id="p_minStrokeSamples" type="number" min="1" step="1"></div>
@@ -1015,7 +1077,7 @@ ul.takeaways li.info{border-left-color:var(--s1)}
         </div>
         <div class="muted" style="margin-top:6px">Logger files have 250 rows a second, so 5 rows = 20&nbsp;ms. Strokes shorter or shallower than these are ignored.</div>
       </details>
-      <details><summary>Packing detection</summary>
+      <details class="xp"><summary>Packing detection</summary>
         <div class="grid3">
           <div><label class="f" for="p_velocityThreshold">Velocity threshold (mm/s)</label><input id="p_velocityThreshold" type="number" min="0"></div>
           <div><label class="f" for="p_extensionThreshold">Extension threshold (mm)</label><input id="p_extensionThreshold" type="number" min="0"></div>
@@ -1025,7 +1087,7 @@ ul.takeaways li.info{border-left-color:var(--s1)}
           <div><label class="f" for="p_ratchetDelta">Ratchet delta (mm)</label><input id="p_ratchetDelta" type="number" min="0"></div>
         </div>
       </details>
-      <details><summary>Hit detection &amp; statistics (Compare)</summary>
+      <details class="xp"><summary>Hit detection &amp; statistics (Compare)</summary>
         <div class="grid3">
           <div><label class="f" for="p_hitVelocity">Hit starts above (mm/s)</label><input id="p_hitVelocity" type="number" min="50" step="10"></div>
           <div><label class="f" for="p_hitMinTravel">Minimum travel (mm)</label><input id="p_hitMinTravel" type="number" min="1" step="1"></div>
@@ -1048,7 +1110,7 @@ ul.takeaways li.info{border-left-color:var(--s1)}
         <span id="paramMsg" class="msg" style="margin:0"></span>
       </div>
     </div>
-    <div class="card">
+    <div class="xp card">
       <details id="aboutNums"><summary>How the numbers are worked out</summary>
       <div class="muted">Sample rate is read from each file&#39;s time column (logger files: 1000&nbsp;Hz sampled, 4 averaged &rarr; 250 rows/s). Velocity uses a Savitzky-Golay derivative computed for the chosen window and order. Positive velocity is compression everywhere. Results differ from the old SD-card analyzer, whose velocities were about 12&times; too high (it assumed 1000&nbsp;Hz and its filter weights summed to 3.14 instead of 1).</div>
       <div class="muted" style="margin-top:8px"><b>Compare</b> lines the rides up in two stages: GPS first (tracks matched by position and heading), then the pots and frame/bar IMU together (coarse-to-fine DTW with a limited warp speed). The pots-only and IMU-only alignments are also run separately as a cross-check. <b>Speed difference</b> is the slope of the time gap: the gap is fused from the sensor timing (where trusted) and GPS, smoothed, and differentiated; its band comes from 100 simulated re-runs with each input&#39;s own noise, widened so it holds for the whole run at once. Frame and bar IMU readings are converted to g (logger files are already in g; older files in m/s&sup2; are detected).</div>
@@ -4308,10 +4370,12 @@ window.plotlyReady = new Promise(function (done) {
     // rides, timed to a few ms at the logger rate. They pin the map down and
     // set the confidence where they are (see hitAnchors).
     try {
-      out.anchors = al.refined ? hitAnchors(A, B, al, hp.pairs, p) : null;
+      al.mapDtw = al.map;                                  // before any hit / gate correction
+      out.anchors = al.refined || (opts.gates && opts.gates.length) ? hitAnchors(A, B, al, hp.pairs, p, opts.gates) : null;
       if (out.anchors && out.anchors.used) { out.map = al.map; hp = pairHits(A, B, out.map, p); }
     } catch (e) { console.warn('Hit anchors:', e); out.anchors = null; }
     out.pairs = hp.pairs; out.counts = hp.counts;
+    try { out.trails = trailTimes(opts.trails, al, out.anchors); } catch (e) { console.warn('Trail times:', e); out.trails = null; }
     out.stats = compareStats(hp.pairs, p);
     out.section = { a0: out.map.a[0], a1: out.map.a[out.map.a.length - 1], b0: out.map.b[0], b1: out.map.b[out.map.b.length - 1] };
     try { out.roughness = imuRoughness(A, B, out.map, out.stats, al.paceSection || out.section, p); } catch (e) { console.warn('IMU roughness:', e); out.roughness = []; }
@@ -4343,7 +4407,7 @@ window.plotlyReady = new Promise(function (done) {
   //  2. set the confidence at each hit: fully trusted, timing sigma = the
   //     anchors' own scatter (neighbour differences);
   //  3. widen the compared section to the first / last anchor.
-  function hitAnchors(A, B, al, pairs, p) {
+  function hitAnchors(A, B, al, pairs, p, gates) {
     const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
     const fs = A.rate || 250, map = al.map, list = [], L = Math.round(0.08 * fs);
     const pear = (x, y) => { const n = x.length; let sx = 0, sy = 0; for (let i = 0; i < n; i++) { sx += x[i]; sy += y[i]; }
@@ -4382,10 +4446,26 @@ window.plotlyReady = new Promise(function (done) {
       a.ok = Math.abs(a.lag - m) <= Math.max(0.015, 3 * mad);
     }
     const good = list.filter(a => a.ok);
-    const res = { list, used: good.length, n: list.length };
-    if (good.length < 4) { res.used = 0; return res; }
+    const res = { list, used: good.length, n: list.length, gates: [] };
+    // Trail gates (segments found in both rides, each gate matched to its own
+    // snippet in each ride, ±10–30 ms): independent of this alignment, so they
+    // go in as they are, with their own precision. A gate more than 3 s from
+    // where the alignment puts it is left out (wrong run, or a bad match).
+    for (const g of gates || []) {
+      if (!isFinite(g.tA) || !isFinite(g.tB)) continue;
+      const m = mapAtoB(map, g.tA); if (!isFinite(m)) continue;
+      const a = { t: g.tA, side: 'gate', lag: g.tB - m, r: 1, ok: Math.abs(g.tB - m) < 3, kind: 'gate', sigma: Math.max(0.003, g.sigma || 0.02), label: g.label, trail: g.trail };
+      res.gates.push(a);
+      if (a.ok) good.push(a);
+    }
+    good.sort((x, y) => x.t - y.t);
+    for (let i = good.length - 1; i > 0; i--) if (good[i].kind !== 'gate' && good[i - 1].kind === 'gate' && good[i].t - good[i - 1].t < 0.15) good.splice(i, 1);   // a hit on top of a gate: the gate wins
+    res.nGates = good.filter(a => a.kind === 'gate').length;
+    if (good.length < 4 && !(res.nGates >= 2)) { res.used = 0; return res; }
+    res.used = good.length - res.nGates;
     // timing noise of one anchor, from neighbour differences
-    const dd = []; for (let i = 1; i < good.length; i++) if (good[i].t - good[i - 1].t < 2) dd.push(Math.abs(good[i].lag - good[i - 1].lag) / Math.SQRT2);
+    const hitsOnly = good.filter(a => a.kind !== 'gate');
+    const dd = []; for (let i = 1; i < hitsOnly.length; i++) if (hitsOnly[i].t - hitsOnly[i - 1].t < 2) dd.push(Math.abs(hitsOnly[i].lag - hitsOnly[i - 1].lag) / Math.SQRT2);
     const sA = Math.max(0.002, dd.length >= 3 ? 1.4826 * mid(dd) : 0.005);
     res.sigma = sA;
     // 1. corrected map
@@ -4403,14 +4483,14 @@ window.plotlyReady = new Promise(function (done) {
     al.map = newMap; if (al.maps) al.maps.all = newMap;
     // 2. confidence
     const c = al.conf; if (c) {
-      const near = t => { let m = Infinity; for (const a of good) { const d = Math.abs(a.t - t); if (d < m) m = d; } return m; };
+      const near = t => { let m = Infinity, best = null; for (const a of good) { const d = Math.abs(a.t - t); if (d < m) { m = d; best = a; } } near.a = best; return m; };
       let nT = 0;
       for (let g = 0; g < c.n; g++) {
         // only at the hit itself: between hits the map is the DTW's, which can
         // wander through flat stretches (fork topped out); the smoother bridges
         // from hit to hit there unless the sensors are trusted on their own
         const d = near(c.t0 + g * c.step); if (!(d <= 0.15)) continue;
-        const sg = sA, q = 1;
+        const sg = near.a && near.a.kind === 'gate' ? near.a.sigma : sA, q = 1;
         if (!(c.sigma[g] < sg && c.qAll[g] >= q)) { c.sigma[g] = Math.min(c.sigma[g] > 0 ? c.sigma[g] : Infinity, sg); c.qAll[g] = Math.max(c.qAll[g], q); }
         c.wF[g] = c.qAll[g] / (c.sigma[g] * c.sigma[g]); nT++;
       }
@@ -4526,6 +4606,59 @@ window.plotlyReady = new Promise(function (done) {
     let sa = 0, sj = 0, n = 0;
     for (let i = i0; i <= i1; i++) { const a = ch.acc[i] - 1, j = ch.jerk[i]; if (!isFinite(a) || !isFinite(j)) continue; sa += a * a; sj += j * j; n++; }
     return n > 10 ? { acc: Math.sqrt(sa / n), jerk: Math.sqrt(sj / n) } : null;
+  }
+
+  // Trail (segment) times, gate to gate, in both rides: straight from each
+  // ride's own gate matches, so they don't depend on the alignment at all.
+  // The alignment's own answer (before the gates and hits corrected it) is
+  // kept next to it as a cross-check.
+  // Trail (segment) times in both rides, between the most trustworthy points:
+  //  1. its gates, when each gate locked onto its snippet in both rides (each
+  //     ride timed on its own, ±10–30 ms, no alignment involved);
+  //  2. otherwise the timed hits nearest the gates (within 3 s, inside the
+  //     trail), read off the hit-corrected map (± the hit timing);
+  //  3. otherwise the GPS gates (±0.7 s).
+  // Sectors between splits the same way. The alignment's own answer (before
+  // gates and hits corrected it) is kept as a cross-check.
+  function trailTimes(trails, al, anc) {
+    if (!trails || !trails.length) return null;
+    const raw = al.mapDtw || al.map, fin = al.map, gap = (m, a0, a1) => (mapAtoB(m, a1) - mapAtoB(m, a0)) - (a1 - a0);
+    const hits = anc && anc.list ? anc.list.filter(a => a.ok) : [], sH = anc && anc.sigma ? anc.sigma : 0.01;
+    // Each boundary (start, splits, end) once, so sectors add up to the trail:
+    // a gate locked in both rides as it is; otherwise the nearest timed hit
+    // (within 3 s, or a fifth of the way to the next boundary, and never past
+    // a neighbouring boundary); otherwise the GPS gate.
+    const bound = (P, k) => {
+      const [a, b, sg, ok] = P[k];
+      if (!Number.isFinite(a)) return null;
+      if (ok && Number.isFinite(b)) return { a, b, sd: sg, how: 'gate' };
+      const prev = k > 0 && Number.isFinite(P[k - 1][0]) ? P[k - 1][0] : -Infinity, next = k < P.length - 1 && Number.isFinite(P[k + 1][0]) ? P[k + 1][0] : Infinity;
+      const span = Math.min(a - prev, next - a), reach = Math.max(3, 0.2 * (isFinite(span) ? span : 15));
+      const lo = Math.max(a - (k === 0 ? Math.max(2, reach) : reach), prev + 1), hi = Math.min(a + (k === P.length - 1 ? Math.max(2, reach) : reach), next - 1);
+      const c = hits.filter(h => h.t >= lo && h.t <= hi);
+      if (c.length) { const h = c.reduce((x, y) => Math.abs(y.t - a) < Math.abs(x.t - a) ? y : x); return { a: h.t, b: mapAtoB(fin, h.t), sd: sH, how: 'hit', moved: h.t - a }; }
+      return Number.isFinite(b) ? { a, b, sd: 0.7, how: 'gps' } : null;
+    };
+    const part = (x0, x1) => {
+      if (!x0 || !x1 || !(x1.a - x0.a > 1)) return null;
+      const tA = x1.a - x0.a, tB = x1.b - x0.b, kinds = [x0.how, x1.how];
+      const how = kinds.includes('gps') ? 'gps' : kinds.every(k => k === 'gate') ? 'gates' : 'hits';
+      return { how, tA, tB, diff: tB - tA, sd: Math.hypot(x0.sd, x1.sd), align: gap(raw, x0.a, x1.a), a0: x0.a, a1: x1.a, ends: kinds };
+    };
+    return trails.map(T => {
+      const nS = (T.A.splits || []).length;
+      const P = [[T.A.t0, T.B.t0, T.sig[0], T.ok[0]]];
+      for (let i = 0; i < nS; i++) {
+        let a = T.A.splits[i]; const b = T.B.splits ? T.B.splits[i] : null;
+        if (!Number.isFinite(a) && Number.isFinite(b)) a = mapBtoA(fin, b);       // split found only in B: place it in A through the line-up
+        P.push([a, b, T.sig[i + 1], T.ok[i + 1]]);
+      }
+      P.push([T.A.t1, T.B.t1, T.sig[T.sig.length - 1], T.ok[T.ok.length - 1]]);
+      const X = P.map((_, k) => bound(P, k));
+      const whole = part(X[0], X[X.length - 1]);
+      const sectors = []; for (let k = 1; k < X.length; k++) sectors.push(part(X[k - 1], X[k]));
+      return Object.assign({ segId: T.segId, name: T.name, trail: T.trail, gA: [T.A.t0, T.A.t1], gB: [T.B.t0, T.B.t1], sectors, note: T.note || '' }, whole || { how: 'none' });
+    });
   }
   const LOSS_WINDOW = 4;
   // Speed difference and sectors; cheap enough to redo when the window changes
@@ -5401,9 +5534,13 @@ window.plotlyReady = new Promise(function (done) {
   // Match a snippet around tGuess (±H s): best time of its centre, score (mean Pearson), pace, margin over the next-best spot
   function refine(snip, ctx, tGuess, H, win) {
     win = win || fineWin(ctx, tGuess - H - SNIP * 1.3 - 0.5, tGuess + H + SNIP * 1.3 + 0.5);
-    const keys = Object.keys(snip.ch).filter(k => win.ch[k]);
-    if (!keys.length) return { t: tGuess, ncc: 0, margin: 0 };
-    const half = snip.half, prep = keys.map(k => Object.assign(centre(snip.ch[k]), { k, w: W_CH[k] || 1 }));
+    // a channel that is flat in the gate's snippet (an unplugged pot reads all
+    // zeros) or not connected in this ride can't match: it is left out rather
+    // than scored 0, which used to cap a perfect match well under the 0.55 needed
+    const pot = ctx.r && ctx.r.potOn, off = k => pot && ((k === 'R' || k === 'RV') ? pot.rear === false : (k === 'F' || k === 'FV') ? pot.front === false : false);
+    const keys = Object.keys(snip.ch).filter(k => win.ch[k] && !off(k));
+    const half = snip.half, prep = keys.map(k => Object.assign(centre(snip.ch[k]), { k, w: W_CH[k] || 1 })).filter(q => q.n > 1e-6);
+    if (!prep.length) return { t: tGuess, ncc: 0, margin: 0 };
     const wsum = prep.reduce((s, q) => s + q.w, 0);
     const ys = new Float64Array(2 * half + 1);
     const score = (tc, tau) => {
@@ -6061,8 +6198,8 @@ window.plotlyReady = new Promise(function (done) {
   const whenOf = r => r ? (r.recordedAt || r.importedAt || 0) : 0;
   const rideByKey = k => rides.find(r => r.key === k);
   function pkey() { const p = A.params(); return JSON.stringify(['frontTravel', 'rearTravel', 'frontPotStroke', 'rearPotStroke', 'invertFront', 'invertRear', 'swapPots', 'frontPot', 'rearPot', 'rearA', 'rearB', 'rearC', 'rearD', 'velocityFilterWindow', 'filterType'].map(k => p[k])); }
-  // run numbers also depend on these (front/rear harshness); 'h1' = run-stats version
-  function skey() { const p = A.params(); return pkey() + JSON.stringify(['h1', p.wheelbase, p.imuFromFront, p.imuForward, p.jerkCutoff, p.harshHit]); }
+  // run numbers also depend on these (front/rear harshness); 'h2' = run-stats / matcher version (h2: gates ignore an unplugged pot)
+  function skey() { const p = A.params(); return pkey() + JSON.stringify(['h2', p.wheelbase, p.imuFromFront, p.imuForward, p.jerkCutoff, p.harshHit]); }
   function fmtT(s) { if (!isFinite(s)) return '–'; const neg = s < 0; s = Math.abs(s); const m = Math.floor(s / 60), r = s - m * 60; return (neg ? '−' : '') + m + ':' + (r < 10 ? '0' : '') + r.toFixed(2); }
   const fmtGap = g => !isFinite(g) ? '–' : Math.abs(g) < 0.005 ? '±0.00' : (g > 0 ? '+' : '−') + Math.abs(g).toFixed(2);
   const fmtDate = ms => { try { return new Date(ms).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }); } catch (e) { return ''; } };
@@ -7187,9 +7324,31 @@ window.plotlyReady = new Promise(function (done) {
     });
   }
   // For Analyze: a ride's descents (from its digest) and the zero of the whole recording
+  // Segments found in both rides (by app ride id), for Compare: each with the
+  // runs in A and B paired in order, and which gates locked in both
+  function trailsInBoth(idA, idB) {
+    const rA = rides.find(x => x.id === idA), rB = rides.find(x => x.id === idB);
+    if (!rA || !rB) return [];
+    const out = [];
+    for (const s of segs) {
+      const EA = efforts.filter(e => e.segId === s.id && e.rideKey === rA.key).sort((a, b) => a.t0 - b.t0);
+      const EB = efforts.filter(e => e.segId === s.id && e.rideKey === rB.key).sort((a, b) => a.t0 - b.t0);
+      if (!EA.length || !EB.length) continue;
+      const n = Math.min(EA.length, EB.length);
+      for (let k = 0; k < n; k++) {
+        const a = EA[k], b = EB[k];
+        const prec = [s.gates[0].precisionMs].concat(s.splits.map(x => x.precisionMs), [s.gates[1].precisionMs]).map(p => Math.SQRT2 * (p || 20) / 1000);
+        const ok = [!!(a.okS && b.okS)].concat(s.splits.map((_, i) => a.splits[i] != null && b.splits[i] != null), [!!(a.okE && b.okE)]);
+        out.push({ segId: s.id, name: s.name + (n > 1 ? ' (run ' + (k + 1) + ')' : ''), trail: s.trail || '', A: { t0: a.t0, t1: a.t1, splits: a.splits }, B: { t0: b.t0, t1: b.t1, splits: b.splits },
+                   sig: prec, ok, locked: ok[0] && ok[ok.length - 1], nGates: ok.filter(Boolean).length, nPts: ok.length,
+                   note: EA.length !== EB.length ? 'ridden ' + EA.length + '\u00d7 in A, ' + EB.length + '\u00d7 in B: paired in order' : '' });
+      }
+    }
+    return out.sort((x, y) => x.A.t0 - y.A.t0);
+  }
   function descentsById(id) { const r = rides.find(x => x.id === id); if (!r) return Promise.resolve([]); return digestFor(r).then(d => { digMem.set(r.key, d); return SEG.runs(d).sort((a, b) => a.t0 - b.t0); }); }
   function zeroById(id) { const r = rides.find(x => x.id === id); return r ? ctxFor(r).then(c => c.r.zero) : Promise.resolve(null); }
-  window.SegUI = { init, onRides, rideChips, editSetup, openSeg, ready: () => ready, descents: descentsById, zero: zeroById, renderReport,
+  window.SegUI = { init, onRides, rideChips, editSetup, openSeg, trailsInBoth, ready: () => ready, descents: descentsById, zero: zeroById, renderReport,
                    _state: () => ({ segs, efforts, setups, riders, scanning, view, sessions: sessions().map(S => ({ id: S.id, n: S.rides.length })) }) };
 })();
 </script>
@@ -7215,6 +7374,22 @@ window.plotlyReady = new Promise(function (done) {
     get(k, d) { try { const v = localStorage.getItem('sa.' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem('sa.' + k, JSON.stringify(v)); } catch (e) {} }
   };
+  // ---- Standard / Expert display mode. Standard keeps what each view is for and
+  // what to look for; Expert adds the workings (alignment, statistics, settings).
+  let uiMode = LS.get('uiMode', 'std') === 'expert' ? 'expert' : 'std';
+  const isStd = () => uiMode === 'std';
+  function applyMode(rerender) {
+    document.body.classList.toggle('std', isStd());
+    document.querySelectorAll('.modepick button').forEach(b => { const on = b.dataset.mode === uiMode; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+    const h = document.getElementById('modeHelp');
+    if (h) h.textContent = isStd() ? 'Standard: the results and what to look for. Switch to Expert for how they are worked out, the statistics and the fine settings.' : 'Expert: everything, including how rides are lined up, the statistics behind each result and the fine settings.';
+    if (!rerender) return;
+    try { if (isStd() && typeof curCsub !== 'undefined' && curCsub === 'align') showCsub('speed'); } catch (e) {}
+    try { if (isStd() && typeof curSub !== 'undefined' && curSub === 'advanced') showSub('charts'); } catch (e) {}
+    try { if (typeof lastCompare !== 'undefined' && lastCompare) renderCompare(lastCompare); } catch (e) { console.warn(e); }
+  }
+  document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('.modepick button[data-mode]'); if (!b || b.dataset.mode === uiMode) return; uiMode = b.dataset.mode; LS.set('uiMode', uiMode); applyMode(true); });
+  if (document.body) applyMode(false); else document.addEventListener('DOMContentLoaded', () => applyMode(false));
   function el(tag, attrs, ...kids) {
     const e = document.createElement(tag);
     if (attrs) for (const k in attrs) {
@@ -7283,6 +7458,8 @@ window.plotlyReady = new Promise(function (done) {
     backBar(v, opt.pop ? (history.state && history.state.from) : opt.from);
     if (changed && !opt.pop && !opt.keepScroll) window.scrollTo(0, 0);
     resizeIn($('view-' + v));
+    if (v === 'compare') { try { renderCmpTrails(); } catch (e) {} }
+    try { miniShow(); } catch (e) {}
   }
   // "← Back to …" at the top of a view opened from somewhere else (a ride report, a segment)
   function backBar(v, from) {
@@ -7488,8 +7665,8 @@ window.plotlyReady = new Promise(function (done) {
     };
     fill($('anRide'), null); fill($('cmpA'), selA); fill($('cmpB'), selB);
   }
-  $('cmpA').addEventListener('change', e => { selA = e.target.value ? +e.target.value : null; LS.set('selA', selA); clearCmpWin(); renderLibrary(); });
-  $('cmpB').addEventListener('change', e => { selB = e.target.value ? +e.target.value : null; LS.set('selB', selB); clearCmpWin(); renderLibrary(); });
+  $('cmpA').addEventListener('change', e => { selA = e.target.value ? +e.target.value : null; LS.set('selA', selA); clearCmpWin(); renderLibrary(); renderCmpTrails(); });
+  $('cmpB').addEventListener('change', e => { selB = e.target.value ? +e.target.value : null; LS.set('selB', selB); clearCmpWin(); renderLibrary(); renderCmpTrails(); });
   // A segment run opened from Trails: each ride is cut to its own run (gate to gate)
   let cmpWin = null;
   function clearCmpWin() { if (!cmpWin) return; cmpWin = null; $('cmpWinNote').classList.add('hidden'); }
@@ -8168,7 +8345,7 @@ window.plotlyReady = new Promise(function (done) {
   }
   // ---- every chart: zoom controls (wraps Plotly.react / newPlot once)
   // Charts where zooming adds nothing (bars, tables drawn as charts): fixed.
-  const NOZOOM = new Set(['chEffects', 'chCmpHF', 'chCmpHR', 'chHist', 'chHistF', 'chHistR', 'hCD', 'hCV', 'hRD', 'hRV', 'chQual', 'chBalance', 'trHist']);
+  const NOZOOM = new Set(['chMini', 'chEffects', 'chCmpHF', 'chCmpHR', 'chHist', 'chHistF', 'chHistR', 'hCD', 'hCV', 'hRD', 'hRV', 'chQual', 'chBalance', 'trHist']);
   const zoomOn = new Set();                       // chart ids with drag-to-zoom on (touch)
   const axesOf = L => Object.keys(L || {}).filter(k => /^[xy]axis\d*$/.test(k));
   const mapLike = L => !!(L && (L.dragmode === 'pan' || L.mapbox || L.map || L.geo));
@@ -8263,6 +8440,16 @@ window.plotlyReady = new Promise(function (done) {
       };
     }
   });
+  function thinMinMax(x, y, nb) {
+    const n = x.length, k = Math.max(1, Math.ceil(n / nb)), X = [], Y = [];
+    for (let s = 0; s < n; s += k) {
+      let lo = -1, hi = -1, gap = false;
+      for (let i = s; i < Math.min(n, s + k); i++) { const v = y[i]; if (v == null || !isFinite(v) || x[i] == null) { gap = true; continue; } if (lo < 0 || v < y[lo]) lo = i; if (hi < 0 || v > y[hi]) hi = i; }
+      if (lo >= 0) { const a = Math.min(lo, hi), b = Math.max(lo, hi); X.push(x[a]); Y.push(y[a]); if (b !== a) { X.push(x[b]); Y.push(y[b]); } }
+      if (gap) { X.push(null); Y.push(null); }
+    }
+    return [X, Y];
+  }
   function line(name, x, y, color) {
     return { type: x.length > 4000 ? 'scattergl' : 'scatter', mode: 'lines', name, x, y,
              line: { color, width: 1.5 }, hovertemplate: '%{y:.1f}<extra>' + name + '</extra>' };
@@ -9152,6 +9339,46 @@ window.plotlyReady = new Promise(function (done) {
     if (curCsub !== 'hits' || !lastCompare) return;
     const n = $('chEffects').clientWidth < 560; if (n !== lastNarrow) { lastNarrow = n; renderEffects(lastCompare); } }, 250); });
 
+  // ---- trails found in both rides: their gates line the rides up (timed in
+  // each ride on its own, ±10–30 ms) and each one gets a gate-to-gate time
+  const trailOff = () => new Set(LS.get('cmpTrailOff', []));
+  function cmpTrailList() { try { return window.SegUI && window.SegUI.ready() && selA && selB && window.SegUI.trailsInBoth ? window.SegUI.trailsInBoth(selA, selB) : []; } catch (e) { console.warn(e); return []; } }
+  function renderCmpTrails() {
+    const box = $('cmpTrails'); if (!box) return;
+    const L = cmpTrailList(); box.textContent = '';
+    box.classList.toggle('hidden', !L.length);
+    if (!L.length) return;
+    const off = trailOff(), fmtT = s => { const m = Math.floor(s / 60), r = s - m * 60; return m + ':' + (r < 10 ? '0' : '') + r.toFixed(1); };
+    box.append(el('div', { class: 'f', style: 'font-weight:600;margin-bottom:4px' }, 'Trails in both rides'),
+      el('div', { class: 'muted xp', style: 'font-size:13.5px;margin-bottom:6px' }, 'Ticked trails time themselves gate to gate, and gates that lock onto the same feature in both rides pin the line-up there.'),
+      el('div', { class: 'muted stdonly', style: 'font-size:13.5px;margin-bottom:6px' }, 'Tick the trails you want timed. Each gets its own time in the results; \u201cOnly this trail\u201d compares just that run.'));
+    for (const T of L) {
+      const id = 'ct_' + T.segId + '_' + Math.round(T.A.t0);
+      const cb = el('input', { type: 'checkbox', id }); cb.checked = !off.has(T.segId);
+      cb.addEventListener('change', () => { const o = trailOff(); if (cb.checked) o.delete(T.segId); else o.add(T.segId); LS.set('cmpTrailOff', [...o]); });
+      const q = T.locked ? T.nGates + ' of ' + T.nPts + ' gates locked in both' : T.nGates ? T.nGates + ' of ' + T.nPts + ' gates locked; the rest timed from hits' : 'gates not locked: timed from the nearest hits';
+      const only = el('button', { type: 'button', class: 'btn small', onclick: () => { cmpWin = { A: [T.A.t0, T.A.t1], B: [T.B.t0, T.B.t1], label: T.name + ' only' }; showCmpWin(); runCompare(); } }, 'Only this trail');
+      box.append(el('div', { class: 'row', style: 'gap:8px;align-items:center;flex-wrap:nowrap;margin:4px 0' }, cb,
+        el('label', { for: id, class: 'grow', style: 'font-size:14.5px' }, el('b', null, T.name), T.trail && T.trail !== T.name ? ' \u00b7 ' + T.trail : '',
+          el('div', { class: 'muted', style: 'font-size:13px' }, 'A ' + fmtT(T.A.t1 - T.A.t0) + ' \u00b7 B ' + fmtT(T.B.t1 - T.B.t0), el('span', { class: 'xp' }, ' \u00b7 ' + q), T.note ? ' \u00b7 ' + T.note : '')), only));
+    }
+  }
+  function cmpTrailOpts(pa, pb) {
+    // the rides may be cut to one run: gate times move to the cut clock, and trails outside it are dropped
+    const offA = pa.parts && pa.parts[0] ? pa.parts[0].srcT0 : 0, offB = pb.parts && pb.parts[0] ? pb.parts[0].srcT0 : 0;
+    const durA = pa.time[pa.rows - 1] - pa.time[0], durB = pb.time[pb.rows - 1] - pb.time[0];
+    const off = trailOff(), trails = [], gates = [];
+    const mv = (x, o) => x == null ? null : x - o;
+    for (const T of cmpTrailList()) {
+      if (off.has(T.segId)) continue;
+      const A = { t0: T.A.t0 - offA, t1: T.A.t1 - offA, splits: (T.A.splits || []).map(x => mv(x, offA)) }, B = { t0: T.B.t0 - offB, t1: T.B.t1 - offB, splits: (T.B.splits || []).map(x => mv(x, offB)) };
+      if (A.t0 < -0.5 || A.t1 > durA + 0.5 || B.t0 < -0.5 || B.t1 > durB + 0.5) continue;
+      trails.push(Object.assign({}, T, { A, B }));
+      const pts = [[A.t0, B.t0]].concat(A.splits.map((x, i) => [x, B.splits[i]]), [[A.t1, B.t1]]);
+      pts.forEach(([a, b], i) => { if (T.ok[i] && a != null && b != null) gates.push({ tA: a, tB: b, sigma: T.sig[i], label: T.name + (i === 0 ? ' start' : i === pts.length - 1 ? ' end' : ' split ' + i), trail: T.name }); });
+    }
+    return { trails, gates };
+  }
   function runCompare() {
     if (!selA || !selB) { msg('cmpMsg', 'Choose ride A and ride B (on this tab or in the Rides list).', 'err'); return; }
     readParamInputs();
@@ -9159,8 +9386,8 @@ window.plotlyReady = new Promise(function (done) {
     msg('cmpMsg', 'Lining up the two rides and comparing them…' + (big ? ' Big rides take a few seconds; the screen may pause.' : ''), 'busy');
     cmpRefused(null);
     $('btnCompare').disabled = true;
-    const mode = $('alignMode').value;
-    const opts = { mode, refine: $('alignRefine').checked };
+    const mode = isStd() ? 'gps' : $('alignMode').value;          // Standard: automatic line-up (the options are Expert)
+    const opts = { mode, refine: isStd() ? true : $('alignRefine').checked };
     if (mode === 'manual') opts.offset = parseFloat($('offset').value) || 0;
     const pathFile = mode === 'path' ? $('dtwFile').files[0] : null;
     if (mode === 'path' && !pathFile) { msg('cmpMsg', 'Choose the mapping file first.', 'err'); $('btnCompare').disabled = false; return; }
@@ -9181,6 +9408,7 @@ window.plotlyReady = new Promise(function (done) {
           opts.pathUnits = seconds ? 'seconds' : 'indices at ' + opts.pathRate + ' Hz';
         }
         const t0 = performance.now();
+        try { const tg = cmpTrailOpts(pa, pb); if (tg.trails.length) { opts.trails = tg.trails; opts.gates = tg.gates; } } catch (e) { console.warn('Trails for Compare:', e); }
         const win = z => z ? Object.assign({}, params, { fixedZero: z }) : params;
         const A = SA.analyze(pa, win(zA)), B = SA.analyze(pb, win(zB));
         A.name = pa.name; B.name = pb.name;
@@ -9286,7 +9514,7 @@ window.plotlyReady = new Promise(function (done) {
   const CSUBS = ['speed', 'loss', 'map', 'hits', 'traces', 'align', 'whole'];
   let curCsub = LS.get('cmpSub', 'speed'); if (!CSUBS.includes(curCsub)) curCsub = 'speed';
   let cDirty = new Set();
-  const CSUB_RENDER = { speed: R => renderPace(R), loss: R => renderLoss(R), map: R => renderFly(R), hits: R => { renderSummary(R); renderEffects(R); renderRoughness(R); renderHits(R); },
+  const CSUB_RENDER = { speed: R => { renderTrailTimes(R); renderPace(R); }, loss: R => renderLoss(R), map: R => renderFly(R), hits: R => { renderSummary(R); renderEffects(R); renderRoughness(R); renderHits(R); },
                         traces: R => renderOverlays(R), align: R => renderAlignment(R), whole: R => renderWhole(R) };
   function showCsub(name) {
     if (name !== 'map') flyStop();
@@ -9295,8 +9523,95 @@ window.plotlyReady = new Promise(function (done) {
     CSUBS.forEach(s => $('csub-' + s).classList.toggle('on', s === name));
     if (lastCompare && cDirty.has(name)) { cDirty.delete(name); CSUB_RENDER[name](lastCompare); }
     resizeIn($('csub-' + name));
+    try { miniShow(); miniHookAll(); } catch (e) { console.warn('mini-map:', e); }
   }
   document.querySelectorAll('#cmpTabs button').forEach(b => b.addEventListener('click', () => showCsub(b.dataset.csub)));
+  // ======================================================= mini-map
+  // A small map in the corner of Compare that follows the charts: a dot where
+  // you point (hover / tap) on any chart with A's time (or distance) along the
+  // bottom, and the stretch that's zoomed in drawn bold. Hidden on the Map tab.
+  const mini = { R: null, F: null, drawn: false, t: NaN, rng: null, tries: 0 };
+  function miniF(R) {
+    if (fly.R === R && fly.F) return fly.F;
+    try { return TRACK.flyby(R); } catch (e) { return { ok: false }; }
+  }
+  function miniShow() {
+    const box = $('miniMap'); if (!box) return;
+    const R = lastCompare, want = curView === 'compare' && R && curCsub !== 'map';
+    if (!want) { box.classList.add('hidden'); document.body.classList.remove('minion'); return; }
+    if (mini.R !== R) { mini.R = R; mini.F = miniF(R); mini.drawn = false; mini.t = NaN; mini.rng = null; }
+    const F = mini.F; if (!F || !F.ok) { box.classList.add('hidden'); document.body.classList.remove('minion'); return; }
+    box.classList.remove('hidden'); document.body.classList.toggle('minion', !LS.get('miniMin', false));
+    box.classList.toggle('min', !!LS.get('miniMin', false));
+    $('miniMin').innerHTML = LS.get('miniMin', false) ? '&#9634;' : '&ndash;';
+    if (!LS.get('miniMin', false) && !mini.drawn) miniDraw();
+  }
+  function miniDraw() {
+    const F = mini.F, R = mini.R; if (!F || !F.ok) return;
+    const lat = [], lon = [];
+    const step = Math.max(1, Math.ceil(F.n / 1500));
+    for (let i = 0; i < F.n; i += step) { lat.push(isFinite(F.lat[i]) ? F.lat[i] : null); lon.push(isFinite(F.lon[i]) ? F.lon[i] : null); }
+    const out = outside(F, R), lat0 = (F.bounds.lat0 + F.bounds.lat1) / 2, padLa = (F.bounds.lat1 - F.bounds.lat0) * 0.08 + 1e-5, padLo = (F.bounds.lon1 - F.bounds.lon0) * 0.08 + 1e-5;
+    const s1 = cssVar('--s1'), acc = cssVar('--accent');
+    const traces = [
+      { type: 'scatter', mode: 'lines', x: out.lon, y: out.lat, line: { color: 'rgba(110,108,102,0.45)', width: 2 }, hoverinfo: 'skip' },
+      { type: 'scatter', mode: 'lines', x: lon, y: lat, line: { color: 'rgba(11,11,11,0.55)', width: 3 }, hoverinfo: 'skip', connectgaps: false },
+      { type: 'scatter', mode: 'lines', x: [null], y: [null], line: { color: acc, width: 6 }, hoverinfo: 'skip' },
+      { type: 'scatter', mode: 'markers', x: [lon.find(v => v != null)], y: [lat.find(v => v != null)], marker: { size: 9, color: '#ffffff', line: { color: '#0b0b0b', width: 1.5 } }, hoverinfo: 'skip' },
+      { type: 'scatter', mode: 'markers', x: [null], y: [null], marker: { size: 13, color: s1, line: { color: '#ffffff', width: 2 } }, hoverinfo: 'skip' }
+    ];
+    const layout = { margin: { t: 0, r: 0, b: 0, l: 0 }, showlegend: false, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: '#e9e7e0', dragmode: false, hovermode: false,
+      xaxis: { visible: false, fixedrange: true, range: [F.bounds.lon0 - padLo, F.bounds.lon1 + padLo] },
+      yaxis: { visible: false, fixedrange: true, range: [F.bounds.lat0 - padLa, F.bounds.lat1 + padLa], scaleanchor: 'x', scaleratio: 1 / Math.cos(lat0 * Math.PI / 180) } };
+    mini.drawn = true;
+    Promise.resolve(Plotly.react('chMini', traces, layout, { displayModeBar: false, displaylogo: false, responsive: true, scrollZoom: false }))
+      .then(() => { try { plainTiles('chMini', 'map', 'miniTileNote'); } catch (e) {} if (mini.rng) miniRange(mini.rng); if (isFinite(mini.t)) miniAt(mini.t); })
+      .catch(e => { mini.drawn = false; console.warn('mini-map:', e); });
+  }
+  const miniIdx = t => { const F = mini.F; if (!F || !F.ok || !isFinite(t)) return -1; const i = Math.round((t - F.a0) * F.fs); return i >= 0 && i < F.n ? i : -1; };
+  let miniRaf = 0, miniArg = NaN;
+  function miniAt(t) {
+    mini.t = t; miniArg = t;
+    if (miniRaf) return;
+    miniRaf = requestAnimationFrame(() => {
+      miniRaf = 0; const F = mini.F, i = miniIdx(miniArg);
+      if (!mini.drawn || i < 0 || !isFinite(F.lat[i])) return;
+      $('miniLbl').textContent = 'A ' + fmt(miniArg, 1) + ' s' + (isFinite(F.dist[i]) && isFinite(F.d0) ? ' · ' + fmt(F.dist[i] - F.d0, 0) + ' m' : '');
+      Plotly.restyle('chMini', { x: [[F.lon[i]]], y: [[F.lat[i]]] }, [4]).catch(() => {});
+    });
+  }
+  function miniRange(r) {
+    mini.rng = r; const F = mini.F; if (!mini.drawn || !F || !F.ok) return;
+    if (!r) { Plotly.restyle('chMini', { x: [[null]], y: [[null]] }, [2]).catch(() => {}); return; }
+    const i0 = Math.max(0, miniIdx(Math.max(r[0], F.a0)) ), i1 = miniIdx(Math.min(r[1], F.a0 + (F.n - 1) / F.fs));
+    if (i1 <= i0) return;
+    const x = [], y = [], step = Math.max(1, Math.ceil((i1 - i0) / 600));
+    for (let i = i0; i <= i1; i += step) { x.push(isFinite(F.lon[i]) ? F.lon[i] : null); y.push(isFinite(F.lat[i]) ? F.lat[i] : null); }
+    Plotly.restyle('chMini', { x: [x], y: [y] }, [2]).catch(() => {});
+  }
+  // charts on A's time (or distance) axis that drive the map
+  const MINI_CHARTS = ['chPace', 'chGap', 'chLoss', 'chCmpF', 'chCmpR', 'chCmpHarshF', 'chCmpHarshR', 'chOffset', 'chQual'];
+  function miniX2t(id, x) {
+    const R = mini.R; if (!R || !isFinite(x)) return NaN;
+    if (['chPace', 'chGap', 'chLoss'].includes(id) && $('paceX').value === 'dist' && R.pace && R.pace.dist) return CMP.interp(R.pace.dist, R.pace.t, x);
+    return x;
+  }
+  function miniHookAll() {
+    for (const id of MINI_CHARTS) {
+      const d = $(id); if (!d || !d.on || d.__mini) continue;
+      d.__mini = true;
+      d.on('plotly_hover', e => { const p = e && e.points && e.points[0]; if (p) miniAt(miniX2t(id, +p.x)); });
+      d.on('plotly_relayout', ev => {
+        if (!ev) return;
+        if (ev['xaxis.autorange']) { miniRange(null); return; }
+        const r = ev['xaxis.range[0]'] != null ? [ev['xaxis.range[0]'], ev['xaxis.range[1]']] : ev['xaxis.range'] || null;
+        if (r) miniRange([miniX2t(id, +r[0]), miniX2t(id, +r[1])]);
+      });
+    }
+  }
+  $('miniMin').addEventListener('click', () => { LS.set('miniMin', !LS.get('miniMin', false)); miniShow(); });
+  $('miniOpen').addEventListener('click', () => { showCsub('map'); scrollToEl($('cmpTabs')); });
+
 
   // ======================================================= where time was lost
   // From ALIGN.timeLoss (on a fixed 4 s curve) with causes from
@@ -9843,7 +10158,7 @@ window.plotlyReady = new Promise(function (done) {
     ];
     // independent check (plain cross-correlation, no DTW): open circles
     const ck = R.checkStats;
-    if (ck && ck.pace && ck.pace.t.length && ck.verdict !== 'noisy') {
+    if (!isStd() && ck && ck.pace && ck.pace.t.length && ck.verdict !== 'noisy') {
       const cx = useDist ? ck.pace.t.map(t => CMP.interp(pc.t, pc.dist, t)) : ck.pace.t;
       traces.push({ type: 'scatter', mode: 'markers', x: cx, y: ck.pace.pct, name: 'Independent check', marker: { size: 6, color: cssVar('--surface'), line: { color: cssVar('--ink'), width: 1.2 } },
                     hovertemplate: '%{y:+.1f}%<extra>independent check</extra>' });
@@ -9902,7 +10217,15 @@ window.plotlyReady = new Promise(function (done) {
     const ul = $('paceInsights'); ul.textContent = '';
     const ins = SEC.insights.slice(), ct = checkText(R.checkStats, pc.window);
     if (ct) ins.splice(1, 0, ct);
-    ins.forEach(s => ul.append(el('li', null, s)));
+    // Standard: the result and the sectors; the alignment checks are Expert
+    const TECH = /independent check|cross-correlation|pots and imu|pots\/imu|rests on the|gps only|no dtw|alignment noise/i;
+    ins.forEach(s => {
+      if (TECH.test(String(s))) { ul.append(el('li', { class: 'xp' }, s)); return; }
+      // Standard: the same line without the sensor-signature details in brackets
+      const plain = String(s).replace(/\s*\((sensor signatures|signatures match)[^)]*\)/i, '');
+      if (plain !== String(s)) { ul.append(el('li', { class: 'stdonly' }, plain), el('li', { class: 'xp' }, s)); return; }
+      ul.append(el('li', null, s));
+    });
     renderSectors(R, X, useDist);
   }
   const LINE_PILL = { same: ['same', 'Same line'], different: ['diff', 'Different line'], partial: ['part', 'Partly different'], unknown: ['off', 'Can’t tell'] };
@@ -9920,10 +10243,10 @@ window.plotlyReady = new Promise(function (done) {
         el('td', null, signed(S.gain, 2) + ' s', el('div', { class: 'muted' }, signed(S.gain - 1.96 * S.sd, 2) + ' to ' + signed(S.gain + 1.96 * S.sd, 2)),
           S.stopA || S.stopB ? el('div', { class: 'muted' }, 'riding; ' + [S.stopA ? 'A' : '', S.stopB ? 'B' : ''].filter(Boolean).join(' and ') + ' also stopped ' + fmtSec(S.stopA + S.stopB) + ' s') : null),
         el('td', null, S.sig ? el('span', { class: 'pill ' + (who === 'B' ? 'b' : 'a') }, who + ' +' + Math.abs(pctW).toFixed(1) + '%') : el('span', { class: 'pill off' }, 'even')),
-        el('td', { class: 'l' }, el('span', { class: 'pill ' + pill[0] }, pill[1]), isFinite(S.lineMatch) && S.line !== 'unknown' ? el('div', { class: 'muted' }, 'match ' + Math.round(S.lineMatch * 100) + '%') : null));
+        el('td', { class: 'l' }, el('span', { class: 'pill ' + pill[0] }, pill[1]), isFinite(S.lineMatch) && S.line !== 'unknown' ? el('div', { class: 'muted xp' }, 'match ' + Math.round(S.lineMatch * 100) + '%') : null));
       // the "why" gets its own full-width row so it stays readable on a phone
       const why = el('td', { class: 'l why', colspan: 7 }, el('b', null, S.headline));
-      if (S.lineReasons.length) why.append(el('span', { class: 'muted' }, ' \u00b7 ' + S.lineReasons.join(' \u00b7 ')));
+      if (S.lineReasons.length) why.append(el('span', { class: 'muted xp' }, ' \u00b7 ' + S.lineReasons.join(' \u00b7 ')));
       S.drivers.forEach(d => why.append(el('div', null, '\u2022 ' + d)));
       const tr2 = el('tr', { class: 'whyrow' }, why);
       const zoom = () => {
@@ -9937,6 +10260,37 @@ window.plotlyReady = new Promise(function (done) {
     t.append(tb);
   }
 
+  function renderTrailTimes(R) {
+    const card = $('trailTimesCard'), box = $('cmpTrailTimes'); if (!card || !box) return;
+    const L = (R.trails || []).filter(x => x.how && x.how !== 'none');
+    card.classList.toggle('hidden', !L.length); box.textContent = '';
+    if (!L.length) return;
+    const ft = x => { if (!isFinite(x)) return '–'; const m = Math.floor(x / 60), r = x - m * 60; return m + ':' + (r < 10 ? '0' : '') + r.toFixed(2); };
+    const pm = sd => '±' + (1.96 * sd < 0.1 ? Math.max(1, Math.round(1.96 * sd * 1000)) + ' ms' : fmt(1.96 * sd, 2) + ' s');
+    const sg = d => (d > 0 ? '+' : d < 0 ? '−' : '') + fmt(Math.abs(d), 2) + ' s';
+    const how = o => o.how === 'gates' ? 'gates' : o.how === 'hits' ? (o.ends || []).map((k, i) => (k === 'gate' ? 'gate' : 'hit') + ' at ' + fmt(i ? o.a1 : o.a0, 1) + ' s').join(', ') : 'GPS gates';
+    const who = o => Math.abs(o.diff) <= 1.96 * o.sd ? 'too close to call' : o.diff < 0 ? 'B faster' : 'A faster';
+    const zoom = (a0, a1) => { const r = [a0 - 1, a1 + 1]; for (const id of ['chPace', 'chGap']) { try { Plotly.relayout(id, Object.assign({ 'xaxis.range': r }, fitY($(id), r))); } catch (e) {} } miniRange(r); scrollToEl($('chPace')); };
+    for (const o of L) {
+      const item = el('div', { class: 'tt', tabindex: 0, role: 'button' },
+        el('div', { class: 'ttname' }, o.name),
+        el('div', { class: 'ttbig' }, 'B ' + sg(o.diff), el('span', { class: 'muted', style: 'font-size:14px;font-weight:400' }, ' ' + pm(o.sd) + ' · ' + who(o))),
+        el('div', { class: 'ttsub' }, 'A ' + ft(o.tA) + ' · B ' + ft(o.tB)),
+        el('div', { class: 'ttsub xp' }, 'Timed from ' + how(o) + (isFinite(o.align) ? ' · line-up alone ' + sg(o.align) : '')));
+      item.addEventListener('click', () => zoom(o.a0, o.a1));
+      item.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); zoom(o.a0, o.a1); } });
+      if ((o.sectors || []).length > 1) o.sectors.forEach((x, k) => {
+        const row = el('div', { class: 'ttsec' }, el('span', null, 'Sector ' + (k + 1) + (x ? ' · A ' + ft(x.tA) + ' · B ' + ft(x.tB) : '')),
+          el('span', null, x ? el('b', null, sg(x.diff)) : el('span', { class: 'muted' }, 'split not found'), x ? el('span', { class: 'muted' }, ' ' + pm(x.sd)) : null));
+        if (x) row.addEventListener('click', e => { e.stopPropagation(); zoom(x.a0, x.a1); });
+        item.append(row);
+      });
+      box.append(item);
+    }
+    const A = R.anchors || {};
+    $('trailTimesNote').textContent = 'B − A: + means B took longer. Gates are each matched in their own ride, so a time from gates doesn’t depend on the line-up at all; where a gate didn’t lock in both rides, the trail is timed between the timed hits nearest to it (±' + Math.round(1.96 * Math.SQRT2 * (A.sigma || 0.01) * 1000) + ' ms). ' +
+      (A.nGates ? A.nGates + ' locked gate' + (A.nGates > 1 ? 's' : '') + ' also pin the line-up. ' : '') + '“Line-up alone” is what the alignment said before hits and gates corrected it.';
+  }
   function renderSummary(R) {
     const sig = R.stats.filter(s => s.sig).sort((a, b) => Math.abs(b.dz) - Math.abs(a.dz));
     const p = $('cmpSummary'); p.textContent = '';
@@ -9993,17 +10347,17 @@ window.plotlyReady = new Promise(function (done) {
       'Couldn\u2019t confirm which way the IMU faces' + (H.oriA.forwardAxis === H.oriB.forwardAxis ? ' (both rides read as forward ' + H.oriA.forwardAxis + ', so A vs B is like for like)' : ' and the two rides disagree (A ' + H.oriA.forwardAxis + ', B ' + H.oriB.forwardAxis + ')') + ', so front and rear could be swapped. Set \u201cIMU forward\u201d in Settings \u2192 Sensors.'));
     const pc = x => isFinite(x) ? signed(x, 1) + '%' : '\u2013';
     const heads = ['', 'Hits: peak A \u2192 B (g/s)', 'Change', 'q', 'Hits: RMS A \u2192 B', 'Change', 'q', 'Whole run: RMS A \u2192 B', 'Change', 'p'];
-    t.append(el('thead', null, el('tr', null, ...heads.map((h, i) => el('th', { class: i === 0 ? 'l' : null }, h)))));
-    const tb = el('tbody'), cell = (s, d) => s ? [el('td', null, fmt(s.meanA, d) + ' \u2192 ' + fmt(s.meanB, d)), el('td', null, pc(s.pct)), el('td', null, fmtP(s.q != null ? s.q : s.pT))] : [el('td', null, '\u2013'), el('td', null, '\u2013'), el('td', null, '\u2013')];
-    const runCell = s => s ? [el('td', null, fmt(s.meanA, 0) + ' \u2192 ' + fmt(s.meanB, 0)), el('td', null, pc(s.pct)), el('td', null, fmtP(s.pT))] : [el('td', null, '\u2013'), el('td', null, '\u2013'), el('td', null, '\u2013')];
-    const shareRun = H.share ? [el('td', null, fmt(H.share.meanA, 1) + ' \u2192 ' + fmt(H.share.meanB, 1) + '%'), el('td', null, signed(H.share.diff, 1) + ' pts'), el('td', null, fmtP(H.share.pT))] : runCell(null);
+    t.append(el('thead', null, el('tr', null, ...heads.map((h, i) => el('th', { class: i === 0 ? 'l' : i === 3 || i === 6 || i === 9 ? 'xp' : null }, h)))));
+    const tb = el('tbody'), cell = (s, d) => s ? [el('td', null, fmt(s.meanA, d) + ' \u2192 ' + fmt(s.meanB, d)), el('td', null, pc(s.pct)), el('td', { class: 'xp' }, fmtP(s.q != null ? s.q : s.pT))] : [el('td', null, '\u2013'), el('td', null, '\u2013'), el('td', { class: 'xp' }, '\u2013')];
+    const runCell = s => s ? [el('td', null, fmt(s.meanA, 0) + ' \u2192 ' + fmt(s.meanB, 0)), el('td', null, pc(s.pct)), el('td', { class: 'xp' }, fmtP(s.pT))] : [el('td', null, '\u2013'), el('td', null, '\u2013'), el('td', { class: 'xp' }, '\u2013')];
+    const shareRun = H.share ? [el('td', null, fmt(H.share.meanA, 1) + ' \u2192 ' + fmt(H.share.meanB, 1) + '%'), el('td', null, signed(H.share.diff, 1) + ' pts'), el('td', { class: 'xp' }, fmtP(H.share.pT))] : runCell(null);
     const shareHit = H.hits.harshShare;
     tb.append(
       el('tr', null, el('td', { class: 'l' }, 'Front'), ...cell(H.hits.harshFrontPeak, 0), ...cell(H.hits.harshFrontRms, 0), ...runCell(H.front)),
       el('tr', null, el('td', { class: 'l' }, 'Rear'), ...cell(H.hits.harshRearPeak, 0), ...cell(H.hits.harshRearRms, 0), ...runCell(H.rear)),
-      el('tr', null, el('td', { class: 'l' }, 'Rear share'), el('td', null, '\u2013'), el('td', null, '\u2013'), el('td', null, '\u2013'),
+      el('tr', null, el('td', { class: 'l' }, 'Rear share'), el('td', null, '\u2013'), el('td', null, '\u2013'), el('td', { class: 'xp' }, '\u2013'),
         shareHit ? el('td', null, fmt(shareHit.meanA, 1) + ' \u2192 ' + fmt(shareHit.meanB, 1) + '%') : el('td', null, '\u2013'),
-        el('td', null, shareHit ? signed(shareHit.diff, 1) + ' pts' : '\u2013'), el('td', null, shareHit ? fmtP(shareHit.q) : '\u2013'), ...shareRun));
+        el('td', null, shareHit ? signed(shareHit.diff, 1) + ' pts' : '\u2013'), el('td', { class: 'xp' }, shareHit ? fmtP(shareHit.q) : '\u2013'), ...shareRun));
     t.append(tb);
     // one line for the summary: which end got harsher, and did the balance move
     const alpha = params.alpha || 0.05, f = H.hits.harshFrontRms, r = H.hits.harshRearRms, sh = H.hits.harshShare;
@@ -10045,16 +10399,16 @@ window.plotlyReady = new Promise(function (done) {
 
     const t = $('cmpHitStats'); t.textContent = '';
     const heads = ['Metric', 'Hits', 'A mean', 'B mean', 'B − A (95% CI)', 'Change', 'dz', 'p (t-test)', 'p (Wilcoxon)', 'q', 'B higher in', ''];
-    t.append(el('thead', null, el('tr', null, ...heads.map((h, i) => el('th', { class: i === 0 ? 'l' : null }, h)))));
+    t.append(el('thead', null, el('tr', null, ...heads.map((h, i) => el('th', { class: i === 0 ? 'l' : i >= 6 && i <= 10 ? 'xp' : null }, h)))));
     const tb = el('tbody');
     for (const s of statRowsFiltered(R)) {
       tb.append(el('tr', { class: s.sig ? 'sig' : null },
         el('td', { class: 'l' }, sideName(s.side) + ' · ' + s.label + ' (' + s.unit + ')'),
         el('td', null, s.n), el('td', null, fmt(s.meanA, s.d)), el('td', null, fmt(s.meanB, s.d)),
         el('td', null, signed(s.diff, s.d) + ' (' + signed(s.ciLo, s.d) + ' to ' + signed(s.ciHi, s.d) + ')'),
-        el('td', null, isFinite(s.pct) ? signed(s.pct, 1) + '%' : '–'), el('td', null, signed(s.dz, 2)),
-        el('td', null, fmtP(s.pT)), el('td', null, fmtP(s.pW)), el('td', null, fmtP(s.q)),
-        el('td', null, Math.round(s.shareUp * 100) + '%'),
+        el('td', null, isFinite(s.pct) ? signed(s.pct, 1) + '%' : '–'), el('td', { class: 'xp' }, signed(s.dz, 2)),
+        el('td', { class: 'xp' }, fmtP(s.pT)), el('td', { class: 'xp' }, fmtP(s.pW)), el('td', { class: 'xp' }, fmtP(s.q)),
+        el('td', { class: 'xp' }, Math.round(s.shareUp * 100) + '%'),
         el('td', null, el('span', { class: 'pill ' + (s.sig ? 'sig' : 'off') }, s.sig ? 'significant' : 'within chance'))));
     }
     if (!tb.children.length) tb.append(el('tr', null, el('td', { class: 'l', colspan: 12 }, 'Nothing to show with this filter.')));
@@ -10068,18 +10422,18 @@ window.plotlyReady = new Promise(function (done) {
     if (hasTrack) {
       const L = baseLayout('North (m)', 'East (m)');
       L.yaxis.scaleanchor = 'x'; L.yaxis.scaleratio = 1; L.hovermode = 'closest'; L.xaxis.showspikes = false;
-      const tr = (name, P, c) => ({ type: 'scattergl', mode: 'lines', name, x: P.map(p => p.x), y: P.map(p => p.y), line: { color: c, width: 2 }, hovertemplate: name + ' %{text}<extra></extra>', text: P.map(p => 't ' + p.t.toFixed(0) + ' s') });
+      const tr = (name, P, c) => ({ type: TOUCH ? 'scatter' : 'scattergl', mode: 'lines', name, x: P.map(p => p.x), y: P.map(p => p.y), line: { color: c, width: 2 }, hovertemplate: name + ' %{text}<extra></extra>', text: P.map(p => 't ' + p.t.toFixed(0) + ' s') });
       Plotly.react('chTrack', [tr('A', R.gps.trackA, s1), tr('B', R.gps.trackB, s2)], L, PLOT_CFG);
     }
     // B − A time offset: rough, each sensor group, fused
     const Lo = baseLayout('B − A (s)', 'Time in A (s)');
     const ds = (m, step) => { const x = [], y = []; const k = Math.max(1, Math.floor(m.a.length / step)); for (let i = 0; i < m.a.length; i += k) { x.push(m.a[i]); y.push(m.b[i] - m.a[i]); } return [x, y]; };
-    const [cx, cy] = ds(R.coarse, 3000), traces = [{ type: 'scattergl', mode: R.coarse.a.length < 400 ? 'lines+markers' : 'lines', name: 'Rough (' + R.coarseMethod.split(' ')[0] + ')', x: cx, y: cy, line: { color: cssVar('--muted'), width: 1.5, dash: 'dot' }, marker: { size: 4 } }];
+    const [cx, cy] = ds(R.coarse, 3000), traces = [{ type: TOUCH ? 'scatter' : 'scattergl', mode: R.coarse.a.length < 400 ? 'lines+markers' : 'lines', name: 'Rough (' + R.coarseMethod.split(' ')[0] + ')', x: cx, y: cy, line: { color: cssVar('--muted'), width: 1.5, dash: 'dot' }, marker: { size: 4 } }];
     // each group's own lag around the fused map (0.2 s grid, only where it locks on): dots, so gaps stay gaps
     if (al.maps && al.maps.g1 && al.maps.g2) { const [x1, y1] = ds(al.maps.g1, 3000), [x2, y2] = ds(al.maps.g2, 3000);
-      traces.push({ type: 'scattergl', mode: 'markers', name: al.groups[0] + ' only', x: x1, y: y1, marker: { color: s1, size: 3 } });
-      traces.push({ type: 'scattergl', mode: 'markers', name: al.groups[1] + ' only', x: x2, y: y2, marker: { color: s2, size: 3 } }); }
-    if (R.fine) { const [fx, fy] = ds(R.map, 4000); traces.push({ type: 'scattergl', mode: 'lines', name: 'Fused', x: fx, y: fy, line: { color: cssVar('--ink'), width: 2 } }); }
+      traces.push({ type: TOUCH ? 'scatter' : 'scattergl', mode: 'markers', name: al.groups[0] + ' only', x: x1, y: y1, marker: { color: s1, size: 3 } });
+      traces.push({ type: TOUCH ? 'scatter' : 'scattergl', mode: 'markers', name: al.groups[1] + ' only', x: x2, y: y2, marker: { color: s2, size: 3 } }); }
+    if (R.fine) { const [fx, fy] = ds(R.map, 4000); traces.push({ type: TOUCH ? 'scatter' : 'scattergl', mode: 'lines', name: 'Fused', x: fx, y: fy, line: { color: cssVar('--ink'), width: 2 } }); }
     Plotly.react('chOffset', traces, Lo, PLOT_CFG);
     // Confidence along the ride: three stacked panels on one time axis
     //   trust · timing error (analyzer σ, pots vs IMU, independent check) · speed uncertainty
@@ -10139,10 +10493,28 @@ window.plotlyReady = new Promise(function (done) {
       L.xaxis.range = [R.section.a0, R.section.a1];
       const lb = line(TOUCH || window.innerWidth < 640 ? 'B' : nameB, bx, by, s2); lb.opacity = 0.75;
       Plotly.react(div, [line(TOUCH || window.innerWidth < 640 ? 'A' : nameA, A.time, A[side], s1), lb,
-        { type: 'scattergl', mode: 'markers', name: 'A hit peaks', x: pa.x, y: pa.y, marker: { color: s1, size: 6, line: { color: cssVar('--surface'), width: 1 } }, showlegend: false, hoverinfo: 'skip' },
-        { type: 'scattergl', mode: 'markers', name: 'B hit peaks', x: pb.x, y: pb.y, marker: { color: s2, size: 6, line: { color: cssVar('--surface'), width: 1 } }, showlegend: false, hoverinfo: 'skip' }], L, PLOT_CFG);
+        { type: 'scatter', mode: 'markers', name: 'A hit peaks', x: pa.x, y: pa.y, marker: { color: s1, size: 6, line: { color: cssVar('--surface'), width: 1 } }, showlegend: false, hoverinfo: 'skip' },
+        { type: 'scatter', mode: 'markers', name: 'B hit peaks', x: pb.x, y: pb.y, marker: { color: s2, size: 6, line: { color: cssVar('--surface'), width: 1 } }, showlegend: false, hoverinfo: 'skip' }], L, PLOT_CFG);
     }
-    if (!$('chCmpF').__synced) { syncZoom([$('chCmpF'), $('chCmpR')]); $('chCmpF').__synced = true; }
+    // front / rear harshness over time from the frame IMU (as on Analyze), B on A's timeline
+    const hA = A.harsh, hB = B.harsh, hasH = !!(hA && hB && hA.series && hB.series);
+    $('cmpHarshBox').classList.toggle('hidden', !hasH);
+    if (!hasH) for (const div of ['chCmpHarshF', 'chCmpHarshR']) Plotly.react(div, [], baseLayout('', 'Time in A (s)'), PLOT_CFG);   // drawn empty so the zoom link holds
+    if (hasH) {
+      const onA = S => { const x = [], i = []; S.t.forEach((t, k) => { const a = CMP.mapBtoA(R.map, t); if (isFinite(a)) { x.push(a); i.push(k); } else if (x.length && x[x.length - 1] !== null) { x.push(null); i.push(-1); } }); return { x, i }; };
+      const mB = onA(hB.series);
+      for (const [div, side, title] of [['chCmpHarshF', 'front', 'Front harshness (g/s)'], ['chCmpHarshR', 'rear', 'Rear harshness (g/s)']]) {
+        const L = baseLayout(title, 'Time in A (s)');
+        L.xaxis.range = [R.section.a0, R.section.a1];
+        const lb = line(TOUCH || window.innerWidth < 640 ? 'B' : nameB, mB.x, mB.i.map(k => k < 0 ? null : hB.series[side][k]), s2); lb.opacity = 0.8;
+        Plotly.react(div, [line(TOUCH || window.innerWidth < 640 ? 'A' : nameA, hA.series.t, hA.series[side], s1), lb], L, PLOT_CFG);
+      }
+      const H = R.roughness && R.roughness.harsh;
+      $('cmpHarshNote').textContent = (isStd() ? 'How hard the bike was shaken at each end. Where one line sits clearly above the other, that rider took a rougher hit there. ' : 'Harshness: the frame IMU\u2019s up/down jerk over each axle (heave + pitch), RMS over 0.5 s, as on Analyze. ') +
+        (H && H.front && H.rear ? 'Over the compared run B is ' + (H.front.pct >= 0 ? '+' : '\u2212') + Math.abs(H.front.pct).toFixed(0) + '% at the front and ' + (H.rear.pct >= 0 ? '+' : '\u2212') + Math.abs(H.rear.pct).toFixed(0) + '% at the rear (Hits \u2192 Roughness has the tests). ' : '') +
+        (hA.ori.how === 'not confirmed' || hB.ori.how === 'not confirmed' ? 'Which way the IMU faces wasn\u2019t confirmed, so front and rear could be swapped (Settings \u2192 Sensors).' : '');
+    }
+    if (!$('chCmpF').__synced) { syncZoom([$('chCmpF'), $('chCmpR'), $('chCmpHarshF'), $('chCmpHarshR')]); $('chCmpF').__synced = true; }
   }
 
   function renderHits(R) {
