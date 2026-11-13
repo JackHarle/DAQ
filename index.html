@@ -112,8 +112,43 @@ p.stdonly.muted{margin:2px 0 8px;font-size:14px}
 @media(max-width:700px){
   .tbl table.scrollx{width:max-content;min-width:100%}
   .tbl table.scrollx th,.tbl table.scrollx td{white-space:nowrap}
-  .tbl table.scrollx td:first-child,.tbl table.scrollx th:first-child{white-space:normal;min-width:110px;max-width:160px;position:sticky;left:0;background:var(--card);z-index:1}
+  .tbl table.scrollx:not(.nopin) td:first-child,.tbl table.scrollx:not(.nopin) th:first-child{white-space:normal;min-width:110px;max-width:160px;position:sticky;left:0;background:var(--card);z-index:1}
 }
+/* ---- Speed / Time lost: verdict, section bars, "where you lost time" cards */
+.verdict{font-size:17px;font-weight:700;line-height:1.35;margin:2px 0 4px}
+.verdict .sub{display:block;font-size:14.5px;font-weight:500;color:var(--ink2);margin-top:4px}
+.chipc{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:2px 8px;white-space:nowrap;vertical-align:1px}
+.chipc.clear{background:var(--ink);color:var(--card)}.chipc.likely{background:transparent;border:1.5px solid var(--ink);color:var(--ink)}.chipc.close{background:var(--chip);color:var(--muted)}
+.secbars{display:grid;gap:2px;margin:10px 0 12px}
+.secbar{display:grid;grid-template-columns:74px 1fr 92px;align-items:center;gap:8px;min-height:44px;padding:2px 6px;border-radius:8px;cursor:pointer}
+.secbar:hover,.secbar.sel{background:var(--chip)}
+.secbar .lbl{font-size:13px;line-height:1.2}.secbar .lbl b{font-size:14px}.secbar .lbl span{display:block;color:var(--muted);font-size:12px}
+.secbar .track{position:relative;height:16px}
+.secbar .track::before{content:"";position:absolute;left:50%;top:-4px;bottom:-4px;border-left:1px solid var(--axis)}
+.secbar .fill{position:absolute;top:2px;height:12px;border-radius:3px}
+.secbar .val{text-align:right;font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.2}.secbar .val span{display:block;font-weight:400}
+.secbar.faint .fill{opacity:.3}.secbar.faint .val{font-weight:400;color:var(--muted)}
+.secaxis{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding:0 6px}
+.lcards{display:grid;gap:10px;margin:10px 0}
+.lcard{border:1px solid var(--ring);border-left:5px solid var(--s1);border-radius:10px;padding:10px 12px;background:var(--surface)}
+.lcard.b{border-left-color:var(--s2)}
+.lcard.gain{border-left-style:double;border-left-width:6px}
+h3.lgroup{font-size:15px;margin:14px 0 2px;color:var(--ink)}
+.lcard .lhead{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}
+.lcard .lcost{font-size:20px;font-weight:700}
+.lcard .lwhere{font-size:13.5px;color:var(--ink2)}
+.lcard ul{margin:6px 0 2px;padding-left:18px;font-size:14px}.lcard li{margin:3px 0}
+.lcard .lwhy{margin-top:8px}
+.lcard .lfoot{display:flex;flex-wrap:wrap;gap:6px;align-items:flex-start;margin-top:8px}
+.lcard .lfoot .lwhy{margin:0}.lcard .lfoot .lwhy[open]{flex-basis:100%;order:3}
+.lcard .lwhy>summary{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 12px;border:1px solid var(--axis);border-radius:999px;font-size:13.5px;font-weight:600;color:var(--ink);list-style:none;cursor:pointer}
+.lcard .lwhy>summary::-webkit-details-marker{display:none}
+.lcard .lwhy>summary::after{content:"\25BE";font-size:12px}
+.lcard .lwhy[open]>summary::after{content:"\25B4"}
+.lcard .lwhy[open]>summary{background:var(--chip)}
+.lcard .kind{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-right:4px}
+.lcard .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.lsmall{font-size:14px;color:var(--ink2);margin:4px 0 0}
 /* ---- Trail times as a list (reads on a phone) */
 .trailtimes{display:grid;gap:10px}
 .trailtimes .tt{padding:10px 12px;border:1px solid var(--ring);border-radius:10px;cursor:pointer}
@@ -129,9 +164,22 @@ p.stdonly.muted{margin:2px 0 8px;font-size:14px}
 .minimap .mmbar span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .minimap .mmbar button{min-height:40px;min-width:40px;padding:0 6px;border:0;background:transparent;font-size:16px;color:var(--ink);cursor:pointer}
 .minimap #chMini{width:100%;height:140px}
-@media(max-width:520px){.minimap .mmopen{display:none}}
+.minimap:not(.full):not(.min) #miniLbl{position:absolute;left:6px;bottom:6px;z-index:3;max-width:calc(100% - 12px);background:rgba(255,255,255,.88);color:#222;border-radius:6px;padding:1px 6px;font-size:11.5px;pointer-events:none}
+.minimap:not(.full):not(.min) .mmbar{display:contents}
+.minimap:not(.full):not(.min) .mmbar button{position:absolute;top:3px;z-index:3;min-height:40px;min-width:40px;background:rgba(255,255,255,.88);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.minimap:not(.full):not(.min) #miniMin{right:3px}.minimap:not(.full):not(.min) #miniFull{right:47px}
+.minimap{bottom:calc(8px + env(safe-area-inset-bottom))!important}
+/* full screen: pan by dragging, zoom with + / − (or pinch / wheel), Done goes back to the corner */
+.minimap .mmbig{display:none}
+.minimap.full{inset:0;width:auto;border-radius:0;display:flex;flex-direction:column;z-index:200;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+.minimap.full .mmsmall{display:none}
+.minimap.full .mmbig{display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:44px;padding:0 10px;font-size:15px;font-weight:600;border:1px solid var(--ring);border-radius:10px;background:var(--surface)}
+.minimap.full .mmdone{background:var(--accent);color:#fff;border-color:transparent}
+.minimap.full .mmbar{gap:6px;padding:8px;font-size:14px}
+.minimap.full #chMini{flex:1 1 auto;height:auto!important;touch-action:none}
+body.minifull{overflow:hidden}
 body.minion #view-compare{padding-bottom:200px}   /* the last rows aren't stuck under the map */
-.minimap.min{width:auto}.minimap.min #chMini,.minimap.min .mmopen{display:none}
+.minimap.min{width:auto}.minimap.min #chMini,.minimap.min #miniFull{display:none}
 @media(min-width:900px){.minimap{width:260px}.minimap #chMini{height:240px}}
 .backbar{margin:-4px 0 10px}
 .backbar .btn{box-shadow:0 2px 8px rgba(0,0,0,.15)}
@@ -224,7 +272,7 @@ input[type=range]{padding:0;border:0;background:none;accent-color:var(--accent);
 .mapinfo .side .ttl{font-weight:700;font-size:14px;margin-bottom:2px}
 .mapinfo .side .big{font-size:20px;font-weight:700;line-height:1.2}
 .mapinfo .extra{margin-top:6px;font-size:13px;color:var(--ink2)}
-.tabcard{padding:2px 10px 0}.tabcard .subtabs{margin:0;border-bottom:0}
+.tabcard{padding:2px 10px 0;position:sticky;top:var(--hdrH,96px);z-index:15;box-shadow:0 2px 6px rgba(0,0,0,.06)}.tabcard .subtabs{margin:0;border-bottom:0}
 @media(max-width:520px){.tabcard{padding:2px 2px 0}.tabcard .subtabs{gap:0;flex-wrap:wrap;overflow:visible}.tabcard .subtabs button{padding:9px 8px;flex:1 1 auto}}
 ol.losses{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:8px}
 ol.losses>li.unlisted{border-style:dashed;opacity:.85}
@@ -263,7 +311,7 @@ ol.losses .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 /* ---- Trails */
 .trmap{width:100%;height:52vh;min-height:300px;max-height:620px;border-radius:10px;overflow:hidden;margin-top:8px;background:var(--surface);border:1px solid var(--ring);position:relative;z-index:0;isolation:isolate}
 .trmap.nomap{height:60px;min-height:0}
-@media(max-width:640px){.trmap{height:38vh;min-height:220px}}
+@media(max-width:640px){.trmap{height:30vh;min-height:200px}}
 @media(max-height:500px){.trmap{height:60vh;min-height:0}}
 #trNew,#trSeg{scroll-margin-top:110px}
 nav.tabs button.dotted::after{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--crit);margin-left:5px;vertical-align:2px}
@@ -352,9 +400,10 @@ ul.takeaways li.info{border-left-color:var(--s1)}
   #chPace{height:290px} #chGap{height:200px}
 }
 @media(max-width:520px){.tiles{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.tile{padding:8px 6px}.tile .v{font-size:19px}.tile .l,.tile .s{font-size:11.5px}}
-@media(max-width:520px){#anTabs{flex-wrap:wrap;overflow:visible;gap:0}#anTabs button{flex:1 1 auto;padding:9px 8px}}
+@media(max-width:520px){#anTabs{flex-wrap:nowrap;overflow-x:auto;gap:0}#anTabs button{flex:0 0 auto;padding:9px 10px}}
 #anEvents td{white-space:nowrap}
 @media(pointer:coarse){
+  .chartctl button,.modepick button,#fbSpeed{min-height:44px}
   #btnResetZoom,#btnResetZoom2{display:none}
   .subtabs button{min-height:44px}
   label.row{min-height:40px}
@@ -505,7 +554,7 @@ ul.takeaways li.info{border-left-color:var(--s1)}
         <button class="btn primary" id="btnAnalyze" style="align-self:flex-end">Analyze</button>
       </div>
       <div id="anMsg" class="msg"></div>
-      <details id="procLog"><summary>Technical details</summary><div class="muted" id="filterStatus" style="margin-top:4px"></div><pre id="procLogText" class="log"></pre></details>
+      <details class="xp" id="procLog"><summary>Technical details</summary><div class="muted" id="filterStatus" style="margin-top:4px"></div><pre id="procLogText" class="log"></pre></details>
     </div>
 
     <div id="anResults" class="hidden">
@@ -529,7 +578,7 @@ ul.takeaways li.info{border-left-color:var(--s1)}
         <div class="subview on" id="sub-charts" role="tabpanel">
           <div class="row">
             <button type="button" class="btn small" id="btnResetZoom">Reset zoom</button>
-            <label class="row" style="gap:6px"><input type="checkbox" id="rawToggle"> Raw data overlay</label>
+            <label class="xp row" style="gap:6px"><input type="checkbox" id="rawToggle"> Raw data overlay</label>
           </div>
           <h3>Position</h3>
           <div id="chPos" class="chart"></div>
@@ -577,7 +626,9 @@ ul.takeaways li.info{border-left-color:var(--s1)}
           <h3>Front vs rear harshness</h3>
           <div id="harshBox"></div>
           <div id="chHarsh" class="chart short"></div>
-          <div class="muted" id="harshNote"></div>
+          <div class="muted xp" id="harshNote"></div>
+          <div class="muted stdonly">How hard the bike is shaken at each end. Look for where one line sits above the other: that end took the harsher hits.</div>
+          <div class="xp">
           <h3 style="margin-top:16px">Raw IMU</h3>
           <div class="row">
             <div><label class="f" for="imuSel">IMU</label><select id="imuSel" style="width:auto"><option value="frame">Frame</option><option value="bar">Bar</option></select></div>
@@ -588,6 +639,7 @@ ul.takeaways li.info{border-left-color:var(--s1)}
           <h3 id="imuTitle">Frame accelerometer X</h3>
           <div id="chImu" class="chart"></div>
           <div class="muted" id="imuNote">Zooms together with the position and velocity charts.</div>
+          </div>
         </div>
 
         <!-- Statistics -->
@@ -596,9 +648,9 @@ ul.takeaways li.info{border-left-color:var(--s1)}
           <div class="tbl"><table id="statsFront" class="stats3"></table></div>
           <h3>Rear suspension</h3>
           <div class="tbl"><table id="statsRear" class="stats3"></table></div>
-          <div class="muted" style="margin-top:6px">Strokes run from one velocity zero-crossing to the next (compression or rebound); see Setup &rarr; Stroke analysis for the limits. Dynamic sag = mean position while riding.</div>
-          <h3>More statistics</h3>
-          <div class="tbl"><table id="anStats"></table></div>
+          <div class="xp muted" style="margin-top:6px">Strokes run from one velocity zero-crossing to the next (compression or rebound); see Settings &rarr; Stroke analysis (Expert) for the limits. Dynamic sag = mean position while riding.</div>
+          <div class="xp"><h3>More statistics</h3>
+          <div class="tbl"><table id="anStats"></table></div></div>
         </div>
 
         <!-- Events -->
@@ -624,12 +676,12 @@ ul.takeaways li.info{border-left-color:var(--s1)}
             <label class="row" style="gap:5px"><input type="radio" name="speedFilter" value="low"> Low speed</label>
             <label class="row" style="gap:5px"><input type="radio" name="speedFilter" value="high"> High speed</label>
           </div>
-          <div class="row" style="margin-top:6px">
+          <div class="xp row" style="margin-top:6px">
             <div style="width:170px"><label class="f" for="p_frontSpeedThreshold">Front threshold (mm/s)</label><input id="p_frontSpeedThreshold" type="number" min="0" step="100"></div>
             <div style="width:190px"><label class="f" for="p_rearShockSpeedThreshold">Rear shock threshold (mm/s)</label><input id="p_rearShockSpeedThreshold" type="number" min="0" step="50"></div>
           </div>
-          <div class="muted">Front uses wheel speed; rear uses shock (pot) speed, worked back through the linkage.</div>
-          <div class="balstats" id="balStats"></div>
+          <div class="xp muted">Front uses wheel speed; rear uses shock (pot) speed, worked back through the linkage.</div>
+          <div class="xp balstats" id="balStats"></div>
           <div id="chBalance" class="chart" style="height:440px"></div>
         </div>
 
@@ -667,7 +719,8 @@ ul.takeaways li.info{border-left-color:var(--s1)}
   <!-- ============================== COMPARE ============================== -->
   <section class="view" id="view-compare">
     <div id="miniMap" class="minimap hidden" role="region" aria-label="Where on the trail">
-      <div class="mmbar"><span id="miniLbl">Where</span><button type="button" class="mmopen" id="miniOpen" title="Open the Map tab" aria-label="Open the Map tab">&#8599;</button><button type="button" id="miniMin" title="Hide / show the map" aria-label="Hide or show the map">&ndash;</button></div>
+      <div class="mmbar"><span id="miniLbl">Where</span><button type="button" class="mmsmall" id="miniFull" title="Full screen map" aria-label="Open the map full screen">&#x26F6;</button><button type="button" class="mmsmall" id="miniMin" title="Hide / show the map" aria-label="Hide or show the map">&ndash;</button>
+        <button type="button" class="mmbig" id="miniZoomOut" aria-label="Zoom out">&minus;</button><button type="button" class="mmbig" id="miniZoomIn" aria-label="Zoom in">+</button><button type="button" class="mmbig" id="miniFitBtn" aria-label="Fit the trail">Fit</button><button type="button" class="mmbig" id="miniOpen" aria-label="Open the Map tab">Map tab</button><button type="button" class="mmbig mmdone" id="miniBack" aria-label="Back to the charts">Done</button></div>
       <div id="chMini"></div><div id="miniTileNote" class="hidden" style="display:none!important"></div>
     </div>
     <div id="cmpWinNote" class="banner hidden"></div>
@@ -719,19 +772,19 @@ ul.takeaways li.info{border-left-color:var(--s1)}
     <div id="cmpResults" class="hidden">
       <div class="card"><div id="cmpHead" class="headline"></div><div class="tiles" id="cmpTiles"></div>
         <details class="xp" id="cmpSure"><summary>How sure is this?</summary><div class="tiles" id="cmpTiles2" style="margin-top:6px"></div></details>
-        <div id="cmpNotes" class="notes hidden"></div></div>
+        <div id="cmpNotes" class="xp notes hidden"></div></div>
       <div class="card tabcard">
         <nav class="subtabs" id="cmpTabs" role="tablist" aria-label="Comparison views">
           <button type="button" role="tab" data-csub="speed" class="on">Speed</button>
-          <button type="button" role="tab" data-csub="loss">Time lost</button>
+          <button type="button" role="tab" data-csub="loss">Gain/loss</button>
           <button type="button" role="tab" data-csub="map">Map</button>
           <button type="button" role="tab" data-csub="hits">Hits</button>
           <button type="button" role="tab" data-csub="traces">Traces</button>
           <button class="xp" type="button" role="tab" data-csub="align">Alignment</button>
           <button type="button" role="tab" data-csub="whole">Stats</button>
         </nav>
-        <div class="cmpmode"><div class="modepick" role="group" aria-label="Display mode"><button type="button" data-mode="std">Standard</button><button type="button" data-mode="expert">Expert</button></div></div>
       </div>
+      <div class="cmpmode" style="margin:-6px 0 10px"><div class="modepick" role="group" aria-label="Display mode"><button type="button" data-mode="std">Standard</button><button type="button" data-mode="expert">Expert</button></div></div>
 
       <div class="subview on" id="csub-speed" role="tabpanel">
         <div class="card hidden" id="trailTimesCard">
@@ -742,16 +795,18 @@ ul.takeaways li.info{border-left-color:var(--s1)}
         </div>
         <div class="card">
           <h2>Speed difference along the run</h2>
-          <p class="stdonly muted">Where B was faster or slower than A along the run. A thick coloured line is a real difference (orange: B faster, blue: A faster); thin and inside the band is too close to call. Look for long thick stretches, then check the sectors below to see where and why.</p>
-          <ul class="insights" id="paceInsights"></ul>
-          <div class="row" style="margin-bottom:4px">
+          <div id="paceVerdict"></div>
+          <div id="secBars" class="secbars" aria-label="Time gained or lost in each section"></div>
+          <p class="stdonly muted">Each bar is one section of the run: orange, B was quicker there; blue, A was. <b>Clear</b> means it's well beyond the measuring error. Tap a section to see it on the charts and the map.</p>
+          <ul class="insights xp" id="paceInsights"></ul>
+          <details class="chartopts" id="paceOpts"><summary>Chart options</summary><div class="row" style="margin-bottom:4px">
             <div style="width:130px"><label class="f" for="paceWin">Smoothing</label>
               <select id="paceWin"><option value="1.5">1.5 s</option><option value="3">3 s</option><option value="5">5 s</option><option value="10">10 s</option></select></div>
-            <div style="width:110px"><label class="f" for="paceSec">Sectors</label>
+            <div style="width:110px"><label class="f" for="paceSec">Sections</label>
               <select id="paceSec"><option value="4">4</option><option value="6">6</option><option value="8">8</option><option value="12">12</option><option value="16">16</option></select></div>
             <div style="width:170px"><label class="f" for="paceX">Along</label>
               <select id="paceX"><option value="time">Time in A</option><option value="dist">Distance (GPS)</option></select></div>
-          </div>
+          </div></details>
           <div id="chPace" class="chart"></div>
           <div class="legend">
             <span><span class="sw" style="background:var(--s2)"></span>B clearly faster</span>
@@ -765,10 +820,10 @@ ul.takeaways li.info{border-left-color:var(--s1)}
           <div id="chGap" class="chart short"></div>
           <div class="muted xp" id="paceNote"></div>
           <p class="stdonly muted">The time gap is the running total: going down means B is pulling ahead, going up means A is. Dots are hits timed in both rides.</p>
-          <h3>Sectors: where and why</h3>
-          <div class="muted" style="margin-bottom:6px">Tap a sector to zoom both charts to it.</div>
-          <div class="tbl"><table id="cmpSectors" class="clickable sectors"></table></div>
-          <p class="stdonly muted"><b>Same line</b>: the same bumps in both rides, so the difference is speed, braking or setup. <b>Different line</b>: one rider took another way through there.</p>
+          <h3 class="xp">Sections: where and why</h3>
+          <div class="muted xp" style="margin-bottom:6px">Tap a section to zoom both charts to it.</div>
+          <div class="tbl xp"><table id="cmpSectors" class="clickable sectors"></table></div>
+
           <div class="xp muted" style="margin-top:8px"><b>Line:</b> on the same line the pots and IMU see the same bumps in the same order, so the two rides line up distinctively and pots-only and IMU-only alignments agree. On a different line they don&#39;t: the match is no better than a shifted one, the two sensor groups disagree, or the warp has to jerk to force a fit. GPS adds a lateral offset when B is several metres off A&#39;s line. <b>Why:</b> on the same line the terrain is identical, so a fork sitting deeper relative to the shock (more nose-down) points to braking or weight forward, and harder hits on the same bumps to more speed into them. Offsets that hold for the whole run (setup, sag) are taken out first. With GPS and a different line, the gain is split into line length and speed.</div>
           <div class="row" style="margin-top:10px">
             <button class="btn" id="btnExpPace">Download speed + sectors (CSV)</button>
@@ -778,7 +833,12 @@ ul.takeaways li.info{border-left-color:var(--s1)}
 
       <div class="subview" id="csub-loss" role="tabpanel">
         <div class="card">
-          <h2>Where time was lost</h2>
+          <h2>Where time was lost and gained</h2>
+          <div id="lossVerdict"></div>
+          <div id="lossCards" class="lcards"></div>
+          <div id="lossSmall"></div>
+          <p class="stdonly muted">Where the ride you pick lost and gained time, biggest first. Open <b>Possible reasons</b> or <b>Why it was quicker</b> on a card to see what the sensors saw there.</p>
+          <div class="xp"><h3 style="margin-top:14px">Mistakes and slow stretches</h3>
           <div class="muted" id="lossIntro" style="margin-bottom:8px">Just the few that matter, from the alignment (not the GPS). <b>Mistakes</b>: time lost within a few seconds, over and above the pace around it. <b>Slow stretches</b>: 10&nbsp;s or more where a rider kept losing time faster than their own average, small slips included. Each one lists what stood out against the other rider there.</div>
           <div class="row" id="lossCtl" style="margin-bottom:4px">
             <span class="muted">Time lost by</span>
@@ -811,7 +871,8 @@ ul.takeaways li.info{border-left-color:var(--s1)}
               <span><span class="sw" style="background:var(--ink);opacity:.15"></span><span id="lossDetailBand">Where it could start</span></span>
             </div>
           </div>
-          <div class="row" style="margin-top:10px"><button class="btn" id="btnExpLoss">Download time lost (CSV)</button></div>
+          </div>
+          <div class="row xp" style="margin-top:10px"><button class="btn" id="btnExpLoss">Download time lost (CSV)</button></div>
           <div class="xp muted" style="margin-top:8px">How it stays robust: everything comes from one fixed 4&nbsp;s version of the gap, whatever the Speed tab&#39;s smoothing. A mistake is measured as a step between the gap&#39;s level in the 2&nbsp;s before and the 2&nbsp;s after, against the pace around it (the median over 24&nbsp;s, where the pots/IMU count more than GPS), so an alignment wobble that comes straight back isn&#39;t a loss. It is listed when it is at least 0.2&nbsp;s, sharp (8% or more on top of that pace while it lasts) and 3.5&nbsp;sd clear of the alignment noise (the Monte Carlo draws). The bar is higher than usual because the biggest of many windows is picked, and the biggest bit of noise among them is itself 2.5–3&nbsp;sd. A slow stretch is the 10&nbsp;s or more with the most time lost above the rider&#39;s own average, with the listed mistakes taken out so nothing is counted twice. It is listed when it is at least 0.3&nbsp;s and 3&nbsp;sd clear. At most 3 mistakes and 2 slow stretches per rider. <b>Rough timing</b>: the pots/IMU don&#39;t lock on there, so it comes from GPS or the rough alignment and is good to a few seconds. Causes are what stands out against the other rider there, not proof.</div>
         </div>
       </div>
@@ -869,32 +930,23 @@ ul.takeaways li.info{border-left-color:var(--s1)}
             <div style="width:150px"><label class="f" for="statSide">Show</label>
               <select id="statSide"><option value="all">Front and rear</option><option value="front">Front</option><option value="rear">Rear</option></select></div>
             <div style="width:190px"><label class="f" for="statGroup">Metrics</label>
-              <select id="statGroup"><option value="suspension">Suspension</option><option value="imu">IMU</option><option value="all">All</option></select></div>
+              <select id="statGroup" style="width:100%"><option value="suspension">Suspension</option><option value="imu">IMU</option><option value="all">All</option></select></div>
             <label class="row" style="gap:6px;align-self:flex-end;min-height:42px"><input type="checkbox" id="statSigOnly"> Significant only</label>
           </div>
           <p class="stdonly muted">Each hit measured in both rides. A filled dot is a real change, not chance. For a setup change, look first at travel used, peak compression speed and rebound speed.</p>
           <div id="chEffects" class="chart" style="height:420px"></div>
-          <div class="legend"><span><span class="sw" style="background:var(--accent)"></span>Significant (q &lt; <span class="alphaTxt">0.05</span>)</span><span><span class="sw" style="background:var(--muted);opacity:.5"></span>Within chance</span><span>Bars: 95% confidence interval of the mean change</span></div>
-          <div class="tbl" style="margin-top:10px"><table id="cmpHitStats" class="scrollx"></table></div>
+          <div class="legend"><span><span class="sw" style="background:var(--ink)"></span>Significant (q &lt; <span class="alphaTxt">0.05</span>)</span><span><span class="sw" style="background:var(--muted);opacity:.5"></span>Within chance</span><span>Bars: 95% confidence interval of the mean change</span></div>
+          <details id="hitStatsBox" style="margin-top:10px"><summary>All metrics (table)</summary><div class="tbl"><table id="cmpHitStats" class="scrollx"></table></div></details>
           <div class="xp muted" style="margin-top:8px">Each hit is measured in both rides and B &minus; A is taken per hit. <b>q</b> is the p-value corrected for testing many metrics at once (Benjamini&ndash;Hochberg); a metric counts as significant when q &lt; <span class="alphaTxt">0.05</span>. Phase counts and the IMU compression / rebound values use the split speed set in Setup (the Python tool used 10&nbsp;mm/s, which counts sensor noise as movement). IMU acceleration is the size of the acceleration vector minus 1&nbsp;g, so it doesn&#39;t depend on how the sensor is mounted. <b>d<sub>z</sub></b> is the mean change divided by its spread (0.2 small, 0.5 medium, 0.8 large). Hits a few seconds apart share speed, line and fatigue, so p-values are optimistic: ride each setup more than once (A, B, A, B) before trusting a small change.</div>
         </div>
 
-        <div class="card" id="roughCard">
-          <h2>Roughness (IMU)</h2>
-          <p id="roughSum" style="margin:0 0 10px"></p>
-          <div class="tbl xp"><table id="cmpRough" class="scrollx"></table></div>
-          <h3 id="harshCmpHead" style="margin-top:14px">Front vs rear (frame IMU)</h3>
-          <div id="harshCmpWarn"></div>
-          <div class="tbl"><table id="cmpHarsh" class="scrollx"></table></div>
-          <div class="xp muted" style="margin-top:8px"><b>From hits:</b> all of that IMU&rsquo;s hit metrics (accel and jerk peak, mean, RMS, SD, in compression and rebound) pooled into one score: the average effect size d<sub>z</sub> of B &minus; A, weighted by its size; + means B was rougher. The verdict needs &ge; 75% of those metrics at p &lt; 0.10 (&ge; 50%: a lean). They measure overlapping things, so read it as a summary, not as independent votes. <b>Whole run:</b> RMS of |a| &minus; 1 g and of jerk in 5 s stretches of A against the same stretch of B, paired over the stretches; it includes everything between hits (chatter, braking bumps). <b>Front vs rear:</b> the single frame IMU&rsquo;s up/down jerk over each axle, from its heave and pitch (as on Analyze; wheelbase, IMU position and which way it faces from Settings &rarr; Sensors). Through the hits: over each paired hit and the 0.3 s after it, so a front hit also catches the rear wheel on the same bump; q is corrected for all the hit metrics.</div>
-        </div>
 
         <div class="card">
           <h2>Hits</h2>
           <div class="tbl xp"><table id="cmpCounts" class="scrollx"></table></div>
           <h3>Paired hits</h3>
           <div class="muted" style="margin-bottom:6px">Tap a row to see that hit in both rides.</div>
-          <div class="tbl scroll"><table id="cmpHits" class="clickable scrollx"></table></div>
+          <div class="tbl scroll"><table id="cmpHits" class="clickable scrollx nopin"></table></div>
           <div class="grid2c" style="margin-top:10px">
             <div><h3 id="hitTitle">Position</h3><div id="chHitP" class="chart short"></div></div>
             <div><h3>Velocity</h3><div id="chHitV" class="chart short"></div></div>
@@ -905,13 +957,23 @@ ul.takeaways li.info{border-left-color:var(--s1)}
       <div class="subview" id="csub-traces" role="tabpanel">
         <div class="card">
           <h2>Front position</h2><div id="chCmpF" class="chart"></div>
-          <h2 style="margin-top:14px">Rear position</h2><div id="chCmpR" class="chart"></div>
+          <h2 style="margin-top:14px" id="chCmpRHead">Rear position</h2><div id="chCmpR" class="chart"></div>
           <div id="cmpHarshBox">
             <h2 style="margin-top:14px">Front harshness</h2><div id="chCmpHarshF" class="chart short"></div>
             <h2 style="margin-top:14px">Rear harshness</h2><div id="chCmpHarshR" class="chart short"></div>
             <div class="muted" id="cmpHarshNote"></div>
           </div>
-          <div class="muted">B is drawn on A&#39;s timeline using the alignment. Dots mark paired hit peaks. Charts zoom together.</div>
+          <div class="muted stdonly">Both rides on the same timeline. Charts zoom together.</div>
+          <div class="xp muted">B is drawn on A&#39;s timeline using the alignment. Dots mark paired hit peaks. Charts zoom together.</div>
+        </div>
+        <div class="card" id="roughCard">
+          <h2>Roughness (IMU)</h2>
+          <p id="roughSum" style="margin:0 0 10px"></p>
+          <div class="tbl xp"><table id="cmpRough" class="scrollx"></table></div>
+          <h3 id="harshCmpHead" style="margin-top:14px">Front vs rear (frame IMU)</h3>
+          <div id="harshCmpWarn"></div>
+          <div class="tbl"><table id="cmpHarsh" class="scrollx"></table></div>
+          <div class="xp muted" style="margin-top:8px"><b>From hits:</b> all of that IMU&rsquo;s hit metrics (accel and jerk peak, mean, RMS, SD, in compression and rebound) pooled into one score: the average effect size d<sub>z</sub> of B &minus; A, weighted by its size; + means B was rougher. The verdict needs &ge; 75% of those metrics at p &lt; 0.10 (&ge; 50%: a lean). They measure overlapping things, so read it as a summary, not as independent votes. <b>Whole run:</b> RMS of |a| &minus; 1 g and of jerk in 5 s stretches of A against the same stretch of B, paired over the stretches; it includes everything between hits (chatter, braking bumps). <b>Front vs rear:</b> the single frame IMU&rsquo;s up/down jerk over each axle, from its heave and pitch (as on Analyze; wheelbase, IMU position and which way it faces from Settings &rarr; Sensors). Through the hits: over each paired hit and the 0.3 s after it, so a front hit also catches the rear wheel on the same bump; q is corrected for all the hit metrics.</div>
         </div>
       </div>
 
@@ -969,32 +1031,6 @@ ul.takeaways li.info{border-left-color:var(--s1)}
         <div class="modepick" role="group" aria-label="Display mode"><button type="button" data-mode="std">Standard</button><button type="button" data-mode="expert">Expert</button></div>
         <span class="muted" id="modeHelp" style="flex:1 1 200px"></span>
       </div>
-    </div>
-    <div class="card">
-      <h2>Cloud &amp; notifications</h2>
-      <div class="muted" id="offlineState" style="margin-bottom:6px"></div>
-      <div class="muted" style="margin-bottom:8px">Your logger uploads each ride over your hotspot when you stop recording. With this set, new rides show up here by themselves.</div>
-      <details class="help"><summary>Using your own cloud</summary><div class="muted">The rides go to a Cloudflare Worker (logger firmware 4.4 or newer). To use your own, enter its address and read key below. Setup steps: FIRMWARE_SUMMARY.md, section 13.</div></details>
-      <div class="grid3">
-        <div style="grid-column:span 2"><label class="f" for="cloudUrl">Worker address</label><input id="cloudUrl" type="url" inputmode="url" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="https://suspension-logger.NAME.workers.dev"></div>
-        <div><label class="f" for="cloudKey">Read key</label><input id="cloudKey" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off"></div>
-      </div>
-      <div class="row" style="margin-top:8px">
-        <button class="btn primary" id="btnCloudSave">Save &amp; check</button>
-        <button class="btn" id="btnCloudSync">Get new rides from the cloud</button>
-      </div>
-      <h3>Rides in the cloud</h3>
-      <div class="muted">Every ride your loggers have uploaded. Deleting one here removes it for every phone; the copy on the logger's SD card stays.</div>
-      <div class="row" style="margin-top:8px"><button class="btn" id="btnCloudList" type="button">Show rides in the cloud</button></div>
-      <div id="cloudList" class="tbl" style="margin-top:8px"></div>
-      <h3>Ride notifications</h3>
-      <div class="muted">A notification when the logger uploads a ride: tap it to open that ride. <span id="pushState"></span></div>
-      <div class="row" style="margin-top:8px">
-        <button class="btn primary" id="btnPushOn">Turn on</button>
-        <button class="btn" id="btnPushTest">Send a test</button>
-        <button class="btn" id="btnPushOff">Turn off</button>
-      </div>
-      <div id="cloudMsg" class="msg" role="status"></div>
     </div>
     <div class="card">
       <h2>Bike setup</h2>
@@ -1109,6 +1145,32 @@ ul.takeaways li.info{border-left-color:var(--s1)}
         <button class="btn" id="btnResetParams">Reset to defaults</button>
         <span id="paramMsg" class="msg" style="margin:0"></span>
       </div>
+    </div>
+    <div class="card">
+      <h2>Cloud &amp; notifications</h2>
+      <div class="muted" id="offlineState" style="margin-bottom:6px"></div>
+      <div class="muted" style="margin-bottom:8px">Your logger uploads each ride over your hotspot when you stop recording. With this set, new rides show up here by themselves.</div>
+      <details class="help"><summary>Using your own cloud</summary><div class="muted">The rides go to a Cloudflare Worker (logger firmware 4.4 or newer). To use your own, enter its address and read key below. Setup steps: FIRMWARE_SUMMARY.md, section 13.</div></details>
+      <div class="grid3">
+        <div style="grid-column:span 2"><label class="f" for="cloudUrl">Worker address</label><input id="cloudUrl" type="url" inputmode="url" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="https://suspension-logger.NAME.workers.dev"></div>
+        <div><label class="f" for="cloudKey">Read key</label><input id="cloudKey" type="password" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off"></div>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button class="btn primary" id="btnCloudSave">Save &amp; check</button>
+        <button class="btn" id="btnCloudSync">Get new rides from the cloud</button>
+      </div>
+      <h3>Rides in the cloud</h3>
+      <div class="muted">Every ride your loggers have uploaded. Deleting one here removes it for every phone; the copy on the logger's SD card stays.</div>
+      <div class="row" style="margin-top:8px"><button class="btn" id="btnCloudList" type="button">Show rides in the cloud</button></div>
+      <div id="cloudList" class="tbl" style="margin-top:8px"></div>
+      <h3>Ride notifications</h3>
+      <div class="muted">A notification when the logger uploads a ride: tap it to open that ride. <span id="pushState"></span></div>
+      <div class="row" style="margin-top:8px">
+        <button class="btn primary" id="btnPushOn">Turn on</button>
+        <button class="btn" id="btnPushTest">Send a test</button>
+        <button class="btn" id="btnPushOff">Turn off</button>
+      </div>
+      <div id="cloudMsg" class="msg" role="status"></div>
     </div>
     <div class="xp card">
       <details id="aboutNums"><summary>How the numbers are worked out</summary>
@@ -7665,7 +7727,7 @@ window.plotlyReady = new Promise(function (done) {
     };
     fill($('anRide'), null); fill($('cmpA'), selA); fill($('cmpB'), selB);
   }
-  $('cmpA').addEventListener('change', e => { selA = e.target.value ? +e.target.value : null; LS.set('selA', selA); clearCmpWin(); renderLibrary(); renderCmpTrails(); });
+  $('cmpA').addEventListener('change', e => { foldCmpSetup(false); selA = e.target.value ? +e.target.value : null; LS.set('selA', selA); clearCmpWin(); renderLibrary(); renderCmpTrails(); });
   $('cmpB').addEventListener('change', e => { selB = e.target.value ? +e.target.value : null; LS.set('selB', selB); clearCmpWin(); renderLibrary(); renderCmpTrails(); });
   // A segment run opened from Trails: each ride is cut to its own run (gate to gate)
   let cmpWin = null;
@@ -9379,6 +9441,20 @@ window.plotlyReady = new Promise(function (done) {
     }
     return { trails, gates };
   }
+  // the ride pickers fold to one line once there are results ("Change" opens them again)
+  function foldCmpSetup(on) {
+    const card = $('cmpA').closest('.card'); if (!card) return;
+    let bar = $('cmpFold');
+    if (!bar) {
+      bar = el('div', { id: 'cmpFold', class: 'card row hidden', style: 'justify-content:space-between;gap:8px;padding:8px 12px' },
+        el('span', { id: 'cmpFoldTxt', class: 'grow', style: 'font-size:14px;min-width:0' }),
+        el('button', { type: 'button', class: 'btn small', onclick: () => foldCmpSetup(false) }, 'Change'));
+      card.before(bar);
+    }
+    const name = id => { const r = rides.find(x => x.id === id); return r ? r.name.replace(/\.csv$/i, '') : '?'; };
+    $('cmpFoldTxt').textContent = ''; $('cmpFoldTxt').append(el('span', { class: 'tag a' }, 'A'), ' ' + name(selA) + '  ', el('span', { class: 'tag b' }, 'B'), ' ' + name(selB) + (cmpWin ? ' \u00b7 ' + (cmpWin.label || 'one run') : ''));
+    bar.classList.toggle('hidden', !on); card.classList.toggle('hidden', !!on);
+  }
   function runCompare() {
     if (!selA || !selB) { msg('cmpMsg', 'Choose ride A and ride B (on this tab or in the Rides list).', 'err'); return; }
     readParamInputs();
@@ -9420,7 +9496,8 @@ window.plotlyReady = new Promise(function (done) {
         R.ms = performance.now() - t0;
         lastCompare = R;
         renderCompare(R);
-        msg('cmpMsg', 'Done in ' + (R.ms / 1000).toFixed(1) + ' s.', 'ok');
+        msg('cmpMsg', isStd() ? '' : 'Done in ' + (R.ms / 1000).toFixed(1) + ' s.', 'ok');
+        foldCmpSetup(true);
         if (curView === 'compare') scrollToEl($('cmpResults'));
       })
       .catch(e => {
@@ -9514,8 +9591,8 @@ window.plotlyReady = new Promise(function (done) {
   const CSUBS = ['speed', 'loss', 'map', 'hits', 'traces', 'align', 'whole'];
   let curCsub = LS.get('cmpSub', 'speed'); if (!CSUBS.includes(curCsub)) curCsub = 'speed';
   let cDirty = new Set();
-  const CSUB_RENDER = { speed: R => { renderTrailTimes(R); renderPace(R); }, loss: R => renderLoss(R), map: R => renderFly(R), hits: R => { renderSummary(R); renderEffects(R); renderRoughness(R); renderHits(R); },
-                        traces: R => renderOverlays(R), align: R => renderAlignment(R), whole: R => renderWhole(R) };
+  const CSUB_RENDER = { speed: R => { renderTrailTimes(R); renderPace(R); }, loss: R => renderLoss(R), map: R => renderFly(R), hits: R => { renderSummary(R); renderEffects(R); renderHits(R); },
+                        traces: R => { renderOverlays(R); renderRoughness(R); }, align: R => renderAlignment(R), whole: R => renderWhole(R) };
   function showCsub(name) {
     if (name !== 'map') flyStop();
     curCsub = name; LS.set('cmpSub', name);
@@ -9523,7 +9600,10 @@ window.plotlyReady = new Promise(function (done) {
     CSUBS.forEach(s => $('csub-' + s).classList.toggle('on', s === name));
     if (lastCompare && cDirty.has(name)) { cDirty.delete(name); CSUB_RENDER[name](lastCompare); }
     resizeIn($('csub-' + name));
-    try { miniShow(); miniHookAll(); } catch (e) { console.warn('mini-map:', e); }
+    try { miniShow(); miniHookAll(); if (mini.drawn && isFinite(mini.t)) miniAt(mini.t, mini.lbl); } catch (e) { console.warn('mini-map:', e); }
+    // start the tab at its top, just under the sticky tab bar (not wherever the last tab was scrolled to)
+    try { const tc = $('cmpTabs').closest('.tabcard'), panel = $('csub-' + name), hdr = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hdrH')) || 96;
+      if (curView === 'compare' && panel && tc && lastCompare) { const y = panel.getBoundingClientRect().top + scrollY - hdr - tc.offsetHeight - 8; if (scrollY > y + 4) window.scrollTo(0, Math.max(0, y)); } } catch (e) {}
   }
   document.querySelectorAll('#cmpTabs button').forEach(b => b.addEventListener('click', () => showCsub(b.dataset.csub)));
   // ======================================================= mini-map
@@ -9538,7 +9618,7 @@ window.plotlyReady = new Promise(function (done) {
   function miniShow() {
     const box = $('miniMap'); if (!box) return;
     const R = lastCompare, want = curView === 'compare' && R && curCsub !== 'map';
-    if (!want) { box.classList.add('hidden'); document.body.classList.remove('minion'); return; }
+    if (!want) { if (mini.full) miniFullOn(false); box.classList.add('hidden'); document.body.classList.remove('minion'); return; }
     if (mini.R !== R) { mini.R = R; mini.F = miniF(R); mini.drawn = false; mini.t = NaN; mini.rng = null; }
     const F = mini.F; if (!F || !F.ok) { box.classList.add('hidden'); document.body.classList.remove('minion'); return; }
     box.classList.remove('hidden'); document.body.classList.toggle('minion', !LS.get('miniMin', false));
@@ -9551,7 +9631,10 @@ window.plotlyReady = new Promise(function (done) {
     const lat = [], lon = [];
     const step = Math.max(1, Math.ceil(F.n / 1500));
     for (let i = 0; i < F.n; i += step) { lat.push(isFinite(F.lat[i]) ? F.lat[i] : null); lon.push(isFinite(F.lon[i]) ? F.lon[i] : null); }
-    const out = outside(F, R), lat0 = (F.bounds.lat0 + F.bounds.lat1) / 2, padLa = (F.bounds.lat1 - F.bounds.lat0) * 0.08 + 1e-5, padLo = (F.bounds.lon1 - F.bounds.lon0) * 0.08 + 1e-5;
+    // the compared section fills the map; a point outside it widens the view just enough (miniFit)
+    const out = outside(F, R), b = Object.assign({}, F.bounds), tA = R.trackA && R.trackA.ok ? R.trackA.bounds : null;
+    mini.b = b; mini.view = b;
+    const lat0 = (b.lat0 + b.lat1) / 2, padLa = (b.lat1 - b.lat0) * 0.08 + 1e-5, padLo = (b.lon1 - b.lon0) * 0.08 + 1e-5;
     const s1 = cssVar('--s1'), acc = cssVar('--accent');
     const traces = [
       { type: 'scatter', mode: 'lines', x: out.lon, y: out.lat, line: { color: 'rgba(110,108,102,0.45)', width: 2 }, hoverinfo: 'skip' },
@@ -9560,37 +9643,62 @@ window.plotlyReady = new Promise(function (done) {
       { type: 'scatter', mode: 'markers', x: [lon.find(v => v != null)], y: [lat.find(v => v != null)], marker: { size: 9, color: '#ffffff', line: { color: '#0b0b0b', width: 1.5 } }, hoverinfo: 'skip' },
       { type: 'scatter', mode: 'markers', x: [null], y: [null], marker: { size: 13, color: s1, line: { color: '#ffffff', width: 2 } }, hoverinfo: 'skip' }
     ];
-    const layout = { margin: { t: 0, r: 0, b: 0, l: 0 }, showlegend: false, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: '#e9e7e0', dragmode: false, hovermode: false,
-      xaxis: { visible: false, fixedrange: true, range: [F.bounds.lon0 - padLo, F.bounds.lon1 + padLo] },
-      yaxis: { visible: false, fixedrange: true, range: [F.bounds.lat0 - padLa, F.bounds.lat1 + padLa], scaleanchor: 'x', scaleratio: 1 / Math.cos(lat0 * Math.PI / 180) } };
+    const full = !!mini.full;
+    const layout = { margin: { t: 0, r: 0, b: 0, l: 0 }, showlegend: false, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: '#e9e7e0', dragmode: full ? 'pan' : false, hovermode: false,
+      xaxis: { visible: false, fixedrange: !full, range: [b.lon0 - padLo, b.lon1 + padLo] },
+      yaxis: { visible: false, fixedrange: !full, range: [b.lat0 - padLa, b.lat1 + padLa], scaleanchor: 'x', scaleratio: 1 / Math.cos(lat0 * Math.PI / 180) } };
+    if (full && mini.fullView) { layout.xaxis.range = mini.fullView.x; layout.yaxis.range = mini.fullView.y; }
     mini.drawn = true;
-    Promise.resolve(Plotly.react('chMini', traces, layout, { displayModeBar: false, displaylogo: false, responsive: true, scrollZoom: false }))
-      .then(() => { try { plainTiles('chMini', 'map', 'miniTileNote'); } catch (e) {} if (mini.rng) miniRange(mini.rng); if (isFinite(mini.t)) miniAt(mini.t); })
+    Promise.resolve(Plotly.react('chMini', traces, layout, { displayModeBar: false, displaylogo: false, responsive: true, scrollZoom: full }))
+      .then(() => { try { plainTiles('chMini', 'map', 'miniTileNote'); } catch (e) {} if (mini.rng) miniRange(mini.rng); if (isFinite(mini.t)) miniAt(mini.t, mini.lbl); })
       .catch(e => { mini.drawn = false; console.warn('mini-map:', e); });
   }
   const miniIdx = t => { const F = mini.F; if (!F || !F.ok || !isFinite(t)) return -1; const i = Math.round((t - F.a0) * F.fs); return i >= 0 && i < F.n ? i : -1; };
+  function miniPos(t) {
+    const F = mini.F, i = miniIdx(t);
+    if (i >= 0 && isFinite(F.lat[i])) return { lat: F.lat[i], lon: F.lon[i], m: isFinite(F.dist[i]) && isFinite(F.d0) ? F.dist[i] - F.d0 : NaN };
+    const tr = mini.R && mini.R.trackA, k = tr && tr.ok ? TRACK.indexAt(tr, t) : -1;
+    return k >= 0 ? { lat: tr.lat[k], lon: tr.lon[k], m: NaN, outside: true } : null;
+  }
   let miniRaf = 0, miniArg = NaN;
-  function miniAt(t) {
-    mini.t = t; miniArg = t;
+  function miniAt(t, lbl, pin) {
+    mini.t = t; miniArg = t; mini.lbl = lbl || ''; if (pin) mini.pin = Date.now();
     if (miniRaf) return;
     miniRaf = requestAnimationFrame(() => {
-      miniRaf = 0; const F = mini.F, i = miniIdx(miniArg);
-      if (!mini.drawn || i < 0 || !isFinite(F.lat[i])) return;
-      $('miniLbl').textContent = 'A ' + fmt(miniArg, 1) + ' s' + (isFinite(F.dist[i]) && isFinite(F.d0) ? ' · ' + fmt(F.dist[i] - F.d0, 0) + ' m' : '');
-      Plotly.restyle('chMini', { x: [[F.lon[i]]], y: [[F.lat[i]]] }, [4]).catch(() => {});
+      miniRaf = 0; const P = miniPos(miniArg);
+      if (!mini.drawn || !P) return;
+      $('miniLbl').textContent = (mini.lbl || 'A ' + fmt(miniArg, 1) + ' s') + (isFinite(P.m) ? ' \u00b7 ' + fmt(P.m, 0) + ' m' : '');
+      Plotly.restyle('chMini', { x: [[P.lon]], y: [[P.lat]] }, [4]).catch(() => {});
+      miniFit(P);
     });
+  }
+  // one call for anything picked from a list: its stretch bold, a dot where it matters, its name on top
+  function miniShowItem(t0, t1, t, lbl) {
+    try {
+      if (LS.get('miniMin', false)) { LS.set('miniMin', false); miniShow(); }
+      if (isFinite(t0) && isFinite(t1) && t1 > t0) miniRange([t0, t1]);
+      miniAt(isFinite(t) ? t : (t0 + t1) / 2, lbl, true);
+    } catch (e) { console.warn('mini-map:', e); }
+  }
+  // keep the dot in view: back to the section when it's inside, widened to include it when it isn't
+  function miniFit(P) {
+    const b0 = mini.b; if (!b0 || !P || mini.full) return;
+    const b = P.outside ? { lat0: Math.min(b0.lat0, P.lat), lat1: Math.max(b0.lat1, P.lat), lon0: Math.min(b0.lon0, P.lon), lon1: Math.max(b0.lon1, P.lon) } : b0;
+    const v = mini.view; if (v && v.lat0 === b.lat0 && v.lat1 === b.lat1 && v.lon0 === b.lon0 && v.lon1 === b.lon1) return;
+    mini.view = b;
+    const pa = (b.lat1 - b.lat0) * 0.08 + 1e-5, po = (b.lon1 - b.lon0) * 0.08 + 1e-5;
+    Plotly.relayout('chMini', { 'xaxis.range': [b.lon0 - po, b.lon1 + po], 'yaxis.range': [b.lat0 - pa, b.lat1 + pa] }).then(() => { try { plainTiles('chMini', 'map', 'miniTileNote'); } catch (e) {} }).catch(() => {});
   }
   function miniRange(r) {
     mini.rng = r; const F = mini.F; if (!mini.drawn || !F || !F.ok) return;
     if (!r) { Plotly.restyle('chMini', { x: [[null]], y: [[null]] }, [2]).catch(() => {}); return; }
-    const i0 = Math.max(0, miniIdx(Math.max(r[0], F.a0)) ), i1 = miniIdx(Math.min(r[1], F.a0 + (F.n - 1) / F.fs));
-    if (i1 <= i0) return;
-    const x = [], y = [], step = Math.max(1, Math.ceil((i1 - i0) / 600));
-    for (let i = i0; i <= i1; i += step) { x.push(isFinite(F.lon[i]) ? F.lon[i] : null); y.push(isFinite(F.lat[i]) ? F.lat[i] : null); }
+    const x = [], y = [], n = 300, dt = (r[1] - r[0]) / n;
+    if (!(dt > 0)) return;
+    for (let k = 0; k <= n; k++) { const P = miniPos(r[0] + k * dt); x.push(P ? P.lon : null); y.push(P ? P.lat : null); }
     Plotly.restyle('chMini', { x: [x], y: [y] }, [2]).catch(() => {});
   }
   // charts on A's time (or distance) axis that drive the map
-  const MINI_CHARTS = ['chPace', 'chGap', 'chLoss', 'chCmpF', 'chCmpR', 'chCmpHarshF', 'chCmpHarshR', 'chOffset', 'chQual'];
+  const MINI_CHARTS = ['chHitP', 'chHitV', 'chLossDetail', 'chPace', 'chGap', 'chLoss', 'chCmpF', 'chCmpR', 'chCmpHarshF', 'chCmpHarshR', 'chOffset', 'chQual'];
   function miniX2t(id, x) {
     const R = mini.R; if (!R || !isFinite(x)) return NaN;
     if (['chPace', 'chGap', 'chLoss'].includes(id) && $('paceX').value === 'dist' && R.pace && R.pace.dist) return CMP.interp(R.pace.dist, R.pace.t, x);
@@ -9600,17 +9708,50 @@ window.plotlyReady = new Promise(function (done) {
     for (const id of MINI_CHARTS) {
       const d = $(id); if (!d || !d.on || d.__mini) continue;
       d.__mini = true;
-      d.on('plotly_hover', e => { const p = e && e.points && e.points[0]; if (p) miniAt(miniX2t(id, +p.x)); });
+      // phones don't hover: a tap is a click, so both move the dot
+      const at = e => { const p = e && e.points && e.points[0]; if (p && isFinite(+p.x)) miniAt(miniX2t(id, +p.x)); };
+      d.on('plotly_hover', at); d.on('plotly_click', at);
       d.on('plotly_relayout', ev => {
         if (!ev) return;
         if (ev['xaxis.autorange']) { miniRange(null); return; }
         const r = ev['xaxis.range[0]'] != null ? [ev['xaxis.range[0]'], ev['xaxis.range[1]']] : ev['xaxis.range'] || null;
-        if (r) miniRange([miniX2t(id, +r[0]), miniX2t(id, +r[1])]);
+        if (!r) return;
+        const t0 = miniX2t(id, +r[0]), t1 = miniX2t(id, +r[1]);
+        if (!(isFinite(t0) && isFinite(t1))) return;
+        miniRange([t0, t1]);
+        if (!mini.pin || Date.now() - mini.pin > 600) miniAt((t0 + t1) / 2, 'A ' + fmt(t0, 0) + '\u2013' + fmt(t1, 0) + ' s');
       });
     }
   }
   $('miniMin').addEventListener('click', () => { LS.set('miniMin', !LS.get('miniMin', false)); miniShow(); });
-  $('miniOpen').addEventListener('click', () => { showCsub('map'); scrollToEl($('cmpTabs')); });
+  // full screen: the same map, free to pan and zoom; Done puts it back in the corner as it was
+  function miniFullOn(on) {
+    const box = $('miniMap'); if (!box) return;
+    mini.full = !!on; mini.fullView = null;
+    box.classList.toggle('full', mini.full); document.body.classList.toggle('minifull', mini.full);
+    box.setAttribute('aria-modal', mini.full ? 'true' : 'false');
+    if (!mini.full) { const v = mini.view; mini.view = null; if (v) miniFit({ lat: v.lat0, lon: v.lon0, outside: false }); }
+    mini.drawn = false; miniDraw();
+    setTimeout(() => { try { Plotly.Plots.resize('chMini'); if (mini.full) plainTiles('chMini', 'map', 'miniTileNote'); } catch (e) {} }, 60);
+  }
+  function miniZoom(f) {
+    const d = $('chMini'), fl = d && d._fullLayout; if (!fl) return;
+    const x = fl.xaxis.range.map(Number), y = fl.yaxis.range.map(Number);
+    const P = isFinite(mini.t) ? miniPos(mini.t) : null;               // zoom around the dot when it's on screen
+    let cx = (x[0] + x[1]) / 2, cy = (y[0] + y[1]) / 2;
+    if (P && P.lon > Math.min(...x) && P.lon < Math.max(...x) && P.lat > Math.min(...y) && P.lat < Math.max(...y)) { cx = P.lon; cy = P.lat; }
+    const hx = (x[1] - x[0]) / 2 * f, hy = (y[1] - y[0]) / 2 * f;
+    mini.fullView = { x: [cx - hx, cx + hx], y: [cy - hy, cy + hy] };
+    Plotly.relayout(d, { 'xaxis.range': mini.fullView.x, 'yaxis.range': mini.fullView.y }).catch(() => {});
+  }
+  $('miniFull').addEventListener('click', () => miniFullOn(true));
+  $('chMini').addEventListener('click', () => { if (!mini.full) miniFullOn(true); });     // tap the small map to open it
+  $('miniBack').addEventListener('click', () => miniFullOn(false));
+  $('miniZoomIn').addEventListener('click', () => miniZoom(0.5));
+  $('miniZoomOut').addEventListener('click', () => miniZoom(2));
+  $('miniFitBtn').addEventListener('click', () => { mini.fullView = null; mini.drawn = false; miniDraw(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && mini.full) miniFullOn(false); });
+  $('miniOpen').addEventListener('click', () => { if (mini.full) miniFullOn(false); showCsub('map'); scrollToEl($('cmpTabs')); });
 
 
   // ======================================================= where time was lost
@@ -9666,6 +9807,7 @@ window.plotlyReady = new Promise(function (done) {
   }
 
   function renderLoss(R) {
+    try { renderLossCards(R); } catch (e) { console.warn('loss cards:', e); }
     const pc = (R.losses && R.losses.pace) || R.pace, who = lossWho || lossDefaultWho(R), shown = lossShown(R), all = lossAll(R);
     lossSeg.forEach(b => b.setAttribute('aria-pressed', b.dataset.who === who ? 'true' : 'false'));
     const useDist = $('paceX').value === 'dist' && pc.dist;
@@ -9755,6 +9897,7 @@ window.plotlyReady = new Promise(function (done) {
     document.querySelectorAll('#lossM > li, #lossS > li').forEach(li => li.classList.toggle('sel', li.dataset.key === key));
     const box = $('lossDetail'); box.classList.remove('hidden');
     const isM = o.kind === 'mistake';
+    if (!quiet) { if (isM) miniShowItem(o.t, isFinite(o.tEnd) ? o.tEnd : o.t + (o.D || 2), o.t, lossName(o)); else miniShowItem(o.t0, o.t1, (o.t0 + o.t1) / 2, lossName(o)); }
     $('lossDetailTitle').textContent = lossName(o) + ' close up: ' + o.who + (isM ? ' at ' + fmt(o.t, 1) + ' s of A' : ', ' + fmt(o.t0, 1) + '–' + fmt(o.t1, 1) + ' s of A');
     $('lossDetailFit').textContent = isM ? 'Two-line fit (the start is the joint)' : 'Average over the stretch';
     $('lossDetailBand').textContent = isM ? 'Where it could start' : 'The stretch';
@@ -9810,6 +9953,7 @@ window.plotlyReady = new Promise(function (done) {
   }
   function speedTo(R, o) {
     showCsub('speed');
+    if (o.kind === 'mistake') miniShowItem(o.t, isFinite(o.tEnd) ? o.tEnd : o.t + 2, o.t, lossName(o)); else miniShowItem(o.t0, o.t1, NaN, lossName(o));
     const pc = R.pace, useDist = $('paceX').value === 'dist' && pc.dist;
     const ta = o.kind === 'mistake' ? o.t - 10 : o.t0 - 8, tb = o.kind === 'mistake' ? Math.min(o.tEnd + 8, o.t + 20) : o.t1 + 8;
     setTimeout(() => {
@@ -10018,6 +10162,7 @@ window.plotlyReady = new Promise(function (done) {
   function flySet(e, src) {
     const F = fly.F; if (!F || !F.ok || !isFinite(e)) return;
     const s = TRACK.flyAt(F, e); fly.e = s.e;
+    try { if (s.okA && isFinite(s.iA)) { mini.t = F.a0 + s.iA / F.fs; mini.lbl = ''; } } catch (err) {}
     if (fly.kind && !fly.busy) {
       const p = (ok, i) => ok ? [F.lat[i], F.lon[i]] : [null, null];
       const [la, lo] = p(s.okA, s.iA), [lb, lob] = p(s.okB, s.iB);
@@ -10164,7 +10309,7 @@ window.plotlyReady = new Promise(function (done) {
                     hovertemplate: '%{y:+.1f}%<extra>independent check</extra>' });
     }
     $('checkLegend').classList.toggle('hidden', !(ck && ck.pace && ck.pace.t.length && ck.verdict !== 'noisy'));
-    $('greyLabel').textContent = 'No pot/IMU lock: ' + (R.gps && R.gps.ok ? 'GPS only' : 'rough alignment only') + ', smoother and wider';
+    $('greyLabel').textContent = isStd() ? (R.gps && R.gps.ok ? 'GPS only here (less precise)' : 'Rough line-up only here (less precise)') : 'No pot/IMU lock: ' + (R.gps && R.gps.ok ? 'GPS only' : 'rough alignment only') + ', smoother and wider';
     fillCheckTiles(R);
     const L = baseLayout('B faster (%)', xTitle);
     L.yaxis.ticksuffix = '%'; L.yaxis.range = yr; L.yaxis.zeroline = true; L.yaxis.zerolinecolor = cssVar('--ink2');
@@ -10198,7 +10343,7 @@ window.plotlyReady = new Promise(function (done) {
     Plotly.react('chGap', [
       { type: 'scatter', mode: 'lines', x: X, y: Array.from(pc.gapHi), line: { width: 0 }, hoverinfo: 'skip' },
       { type: 'scatter', mode: 'lines', x: X, y: Array.from(pc.gapLo), fill: 'tonexty', fillcolor: alpha(cssVar('--accent'), 0.16), line: { width: 0 }, hoverinfo: 'skip' },
-      { type: 'scatter', mode: 'lines', x: X, y: Array.from(pc.gap), line: { color: cssVar('--accent'), width: 2 }, hovertemplate: '%{y:+.2f} s<extra>time gap</extra>' },
+      { type: 'scatter', mode: 'lines', x: X, y: Array.from(pc.gap), line: { color: cssVar('--ink'), width: 2 }, hovertemplate: '%{y:+.2f} s<extra>time gap</extra>' },
       // hits timed in both rides: the gap between any two of these is measured, not smoothed
       ...(() => {
         const H = R.anchors && R.anchors.used ? R.anchors.list.filter(a => a.ok && a.t >= pc.t[0] && a.t <= pc.t[pc.t.length - 1]) : [];
@@ -10227,6 +10372,7 @@ window.plotlyReady = new Promise(function (done) {
       ul.append(el('li', null, s));
     });
     renderSectors(R, X, useDist);
+    try { renderSpeedInsights(R); } catch (e) { console.warn('speed insights:', e); }
   }
   const LINE_PILL = { same: ['same', 'Same line'], different: ['diff', 'Different line'], partial: ['part', 'Partly different'], unknown: ['off', 'Can’t tell'] };
   function renderSectors(R, X, useDist) {
@@ -10251,7 +10397,9 @@ window.plotlyReady = new Promise(function (done) {
       const tr2 = el('tr', { class: 'whyrow' }, why);
       const zoom = () => {
         tb.querySelectorAll('tr.sel').forEach(r => r.classList.remove('sel')); tr.classList.add('sel'); tr2.classList.add('sel');
-        const r = [X[S.k0], X[S.k1]]; Plotly.relayout('chPace', Object.assign({ 'xaxis.range': r }, fitY($('chPace'), r))); Plotly.relayout('chGap', Object.assign({ 'xaxis.range': r }, fitY($('chGap'), r)));
+        const r = [X[S.k0], X[S.k1]];
+        miniShowItem(S.t0, S.t1, (S.t0 + S.t1) / 2, 'Sector ' + S.index);
+        Plotly.relayout('chPace', Object.assign({ 'xaxis.range': r }, fitY($('chPace'), r))); Plotly.relayout('chGap', Object.assign({ 'xaxis.range': r }, fitY($('chGap'), r)));
         scrollToEl($('chPace').closest('.chartwrap') || $('chPace'));
       };
       [tr, tr2].forEach(x => { x.addEventListener('click', zoom); x.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); zoom(); } }); });
@@ -10260,6 +10408,172 @@ window.plotlyReady = new Promise(function (done) {
     t.append(tb);
   }
 
+
+  // ======================================================= insights for Speed and Time lost
+  // Built from the sections (R.sectors), the time-lost analysis (R.losses) and
+  // GPS speed. One total everywhere: R.pace.overall.gap (+ = B slower).
+  const secCert = S => S.sig && Math.abs(S.gain) >= 0.1 && S.sensorShare >= 0.5 ? 'clear' : S.sig ? 'likely' : 'close';
+  const CERT_TXT = { clear: 'Clear', likely: 'Likely', close: 'Too close to call' };
+  const certChip = c => el('span', { class: 'chipc ' + c }, CERT_TXT[c]);
+  // "different line" only when GPS sees it, or most hits went missing; same bumps found on both = unclear
+  function lineOf(S) {
+    if (S.line === 'same') return { k: 'same', txt: 'same line' };
+    if (S.line === 'different') {
+      if (S.gpsLine) return { k: 'diff', txt: 'different line (GPS shows it)' };
+      if (S.hitsAll && S.hitsBoth / S.hitsAll >= 0.7) return { k: 'unclear', txt: 'line unclear' };
+      return { k: 'diff', txt: 'probably a different line' };
+    }
+    if (S.line === 'partial') return { k: 'part', txt: 'line partly different' };
+    return { k: 'unknown', txt: '' };
+  }
+  const secName = (a, b) => a === b ? 'Section ' + a : 'Sections ' + a + '–' + b;
+  const toSection = txt => String(txt).replace(/\bsector(s?)\b/g, 'section$1').replace(/\bSector(s?)\b/g, 'Section$1');
+  // GPS speed (km/h) of each ride at a time on A's clock, from distance along its own track
+  function gpsKmh(R) {
+    const g = R.gps; if (!g || !g.ok || !g.distA || !g.distB) return null;
+    const at = (D, t) => CMP.interp(D.t, D.s, Math.max(D.t[0], Math.min(D.t[D.t.length - 1], t)));
+    const v = (D, t) => (at(D, t + 1) - at(D, t - 1)) / 2 * 3.6;
+    return { A: t => v(g.distA, t), B: t => { const tb = CMP.mapAtoB(R.map, t); return isFinite(tb) ? v(g.distB, tb) : NaN; } };
+  }
+  function speedsIn(R, t0, t1) {
+    const K = gpsKmh(R); if (!K) return null;
+    const o = { A: { in: K.A(t0), out: K.A(t1), min: Infinity }, B: { in: K.B(t0), out: K.B(t1), min: Infinity } };
+    for (let t = t0; t <= t1 + 1e-6; t += 0.2) { const a = K.A(t), b = K.B(t); if (isFinite(a)) o.A.min = Math.min(o.A.min, a); if (isFinite(b)) o.B.min = Math.min(o.B.min, b); }
+    return [o.A.in, o.A.min, o.B.in, o.B.min].every(isFinite) ? o : null;
+  }
+  const kmh = x => Math.round(x);
+  function verdictBox(R) {
+    const O = R.pace.overall, gap = O.gap, w = gap < 0 ? 'B' : 'A', box = el('div', { class: 'verdict' });
+    if (!O.sig || Math.abs(gap) < 0.05) { box.append('No clear difference overall', el('span', { class: 'sub' }, 'A and B were within ' + fmtSec(1.96 * O.gapSd) + ' s over the ' + fmt(O.TA, 0) + ' s both rides cover.')); return box; }
+    box.append(el('span', { class: 'tag ' + w.toLowerCase() }, w), ' was ' + fmtSec(gap) + ' s quicker', el('span', { style: 'font-weight:500' }, ' over the ' + fmt(O.TA, 0) + ' s both rides cover.'));
+    // where most of it came from: the best run of 1–3 neighbouring sections
+    const L = (R.sectors && R.sectors.list) || [], g = L.map(S => (w === 'B' ? -S.gain : S.gain));
+    let best = null;
+    for (let i = 0; i < L.length; i++) for (let n = 1; n <= 3 && i + n <= L.length; n++) { let s = 0; for (let k = i; k < i + n; k++) s += g[k]; if (!best || s > best.s + 0.15 * (n - best.n) * Math.abs(gap) / L.length) best = { i, n, s }; }
+    if (best && best.s > 0) {
+      const a = L[best.i], b = L[best.i + best.n - 1], share = best.s / Math.abs(gap);
+      const where = fmt(a.t0, 0) + '–' + fmt(b.t1, 0) + ' s of A' + (isFinite(a.d0) && isFinite(b.d1) ? ', ' + fmt(a.d0, 0) + '–' + fmt(b.d1, 0) + ' m' : '');
+      box.append(el('span', { class: 'sub' }, share >= 0.4 && best.n <= Math.max(1, L.length / 2)
+        ? 'Most of it (' + fmtSec(best.s) + ' s, ' + Math.round(share * 100) + '%) came in ' + secName(a.index, b.index).toLowerCase() + ' (' + where + ').'
+        : 'Spread over the run; the most in ' + secName(a.index, b.index).toLowerCase() + ' (' + fmtSec(best.s) + ' s, ' + where + ').'));
+    }
+    return box;
+  }
+  function secZoom(R, t0, t1, label) {
+    miniShowItem(t0, t1, (t0 + t1) / 2, label);
+    const pc = R.pace, useDist = $('paceX').value === 'dist' && pc.dist, X = t => useDist ? CMP.interp(pc.t, pc.dist, t) : t;
+    const r = [X(t0), X(t1)];
+    for (const id of ['chPace', 'chGap']) { try { Plotly.relayout(id, Object.assign({ 'xaxis.range': r }, fitY($(id), r))); } catch (e) {} }
+  }
+  function renderSpeedInsights(R) {
+    const v = $('paceVerdict'), bars = $('secBars'); if (!v || !bars) return;
+    v.textContent = ''; v.append(verdictBox(R));
+    bars.textContent = '';
+    const L = (R.sectors && R.sectors.list) || []; if (!L.length) return;
+    const mx = Math.max(0.05, ...L.map(S => Math.abs(S.gain)));
+    for (const S of L) {
+      const c = secCert(S), w = S.gain < 0 ? 'B' : 'A', frac = Math.min(1, Math.abs(S.gain) / mx) * 50;
+      const fill = el('span', { class: 'fill', style: 'background:var(' + (w === 'B' ? '--s2' : '--s1') + ');' + (w === 'B' ? 'left:50%' : 'right:50%') + ';width:' + frac.toFixed(1) + '%' });
+      const ln = lineOf(S);
+      const row = el('div', { class: 'secbar' + (c === 'close' ? ' faint' : ''), role: 'button', tabindex: 0, 'aria-label': 'Section ' + S.index + ': ' + w + ' quicker by ' + fmtSec(S.gain) + ' s, ' + CERT_TXT[c] },
+        el('div', { class: 'lbl' }, el('b', null, 'Section ' + S.index), el('span', null, isFinite(S.d0) && isFinite(S.d1) ? fmt(S.d0, 0) + '–' + fmt(S.d1, 0) + ' m' : fmt(S.t0, 0) + '–' + fmt(S.t1, 0) + ' s')),
+        el('div', { class: 'track' }, fill),
+        el('div', { class: 'val' }, (c === 'close' ? 'even' : w + ' +' + fmtSec(S.gain) + ' s'), el('span', null, certChip(c))));
+      row.title = (ln.txt ? ln.txt + ' · ' : '') + (w === 'B' ? 'B' : 'A') + ' ' + Math.abs(S.pct).toFixed(1) + '% quicker';
+      const go = () => { bars.querySelectorAll('.secbar.sel').forEach(x => x.classList.remove('sel')); row.classList.add('sel'); secZoom(R, S.t0, S.t1, 'Section ' + S.index); };
+      row.addEventListener('click', go); row.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+      bars.append(row);
+    }
+    bars.append(el('div', { class: 'secaxis' }, el('span', null, '← A quicker'), el('span', null, 'B quicker →')));
+  }
+  // "Where A lost time": neighbouring sections the slower rider lost, merged, biggest first,
+  // each with what was measured there (speed, the hit that started it) and what it points to
+  // Time lost / gained, from one rider's point of view (you pick A or B):
+  // "Where A lost time" and "Where A gained time". The same stretch is one
+  // rider's loss and the other's gain, so the two lists are the two sides of
+  // the run. Neighbouring sections merge when they went the same way.
+  let lossPov = null;
+  function lossGroups(R, side) {                     // side(S) > 0: time the chosen rider lost (or gained) there
+    const L = (R.sectors && R.sectors.list) || [];
+    const used = new Set(), groups = [], idx = new Map(L.map((S, k) => [S.index, k]));
+    const ok = S => S && !used.has(S.index) && side(S) > 0 && secCert(S) !== 'close';
+    const kind = S => lineOf(S).k === 'same' ? 'same' : 'other';
+    for (const S of L.slice().sort((a, b) => side(b) - side(a))) {
+      if (!ok(S) || side(S) < 0.02 || groups.length >= 3) continue;
+      const G = { list: [S] }; used.add(S.index);
+      let grew = true;
+      while (grew) {
+        grew = false;
+        const mx = Math.max(...G.list.map(side));
+        for (const nb of [L[idx.get(G.list[0].index) - 1], L[idx.get(G.list[G.list.length - 1].index) + 1]]) {
+          if (ok(nb) && side(nb) >= 0.4 * mx && kind(nb) === kind(S)) { used.add(nb.index); G.list.push(nb); G.list.sort((a, b) => a.index - b.index); grew = true; }
+        }
+      }
+      groups.push(G);
+    }
+    groups.forEach(G => { G.amt = G.list.reduce((s, S) => s + side(S), 0); G.cert = G.list.some(S => secCert(S) === 'clear') && G.amt >= 0.2 ? 'clear' : 'likely'; });
+    return groups.sort((a, b) => b.amt - a.amt);
+  }
+  function lossCard(R, G, me, gained) {
+    const other = me === 'A' ? 'B' : 'A', slow = gained ? other : me, fast = gained ? me : other;
+    const a = G.list[0], b = G.list[G.list.length - 1], t0 = a.t0, t1 = b.t1;
+    const where = fmt(t0, 0) + '–' + fmt(t1, 0) + ' s of A' + (isFinite(a.d0) && isFinite(b.d1) ? ' · ' + fmt(a.d0, 0) + '–' + fmt(b.d1, 0) + ' m' : '');
+    const items = [];
+    const seen = txt => items.push(el('li', null, el('span', { class: 'kind' }, 'Seen'), txt));
+    const maybe = txt => items.push(el('li', null, el('span', { class: 'kind' }, 'Possible'), txt));
+    const sp = speedsIn(R, t0, t1);
+    if (sp) {
+      const S1 = sp[slow], S2 = sp[fast];
+      seen(slow + ' went from ' + kmh(S1.in) + ' to ' + kmh(S1.min) + ' km/h at the slowest; ' + fast + ' from ' + kmh(S2.in) + ' to ' + kmh(S2.min) + ' km/h' +
+        (S2.min - S1.min >= 2 ? ', carrying ' + kmh(S2.min - S1.min) + ' km/h more through it.' : '.'));
+    }
+    // what the slower rider's sensors saw where the time went
+    const ms = (R.losses && R.losses.list || []).filter(o => o.who === slow && o.kind === 'mistake' && (o.listed || o.lost >= 0.2) && o.t >= t0 - 1 && o.t <= t1 + 1);
+    for (const m of ms) {
+      seen(slow + ' lost ' + fmtSec(m.lost) + ' s in ' + fmt(m.D, 1) + ' s from ' + fmt(m.t, 1) + ' s.');
+      for (const w of m.why || []) {
+        if (/line differs|line\b.*differ/i.test(w)) continue;
+        if (/packing/i.test(w)) maybe(toSection(w) + ' (if ' + fast + ' packed too, it isn’t the cause).'); else if (/\bsensors? say|probably|may\b/i.test(w)) maybe(toSection(w)); else seen(toSection(w));
+      }
+    }
+    const lines = G.list.map(lineOf), diff = lines.filter(x => x.k === 'diff'), same = lines.filter(x => x.k === 'same');
+    if (diff.length) (diff.some(x => /GPS/.test(x.txt)) ? seen : maybe)('A different line through ' + (diff.length === lines.length ? 'here' : 'part of it') + (diff.some(x => /GPS/.test(x.txt)) ? ' (GPS shows the tracks apart).' : ' (the bumps didn’t match).'));
+    else if (same.length === lines.length) seen('Same line: the same bumps in both rides, so the time is in speed, braking or setup.');
+    else if (lines.some(x => x.k === 'unclear')) maybe('Line unclear: most bumps match, but not their pattern (common when one rider is much faster).');
+    if (!items.length) maybe(slow + ' was simply slower through here; nothing stands out in the sensors.');
+    const label = secName(a.index, b.index);
+    const mapBtn = el('button', { type: 'button', class: 'btn small', onclick: () => { miniShowItem(t0, t1, ms.length ? ms[0].t : (t0 + t1) / 2, label); try { miniFullOn(true); } catch (e) {} } }, 'Map');
+    const chartBtn = el('button', { type: 'button', class: 'btn small', onclick: () => { showCsub('speed'); setTimeout(() => { secZoom(R, t0 - 2, t1 + 2, label); scrollToEl($('chPace')); }, 60); } }, 'Chart');
+    return el('div', { class: 'lcard' + (me === 'B' ? ' b' : '') + (gained ? ' gain' : '') },
+      el('div', { class: 'lhead' }, el('span', { class: 'lcost' }, me + (gained ? ' gained ' : ' lost ') + fmtSec(G.amt) + ' s'), certChip(G.cert)),
+      el('div', { class: 'lwhere' }, label + ' · ' + where),
+      el('div', { class: 'lfoot' }, el('details', { class: 'lwhy' }, el('summary', null, gained ? 'Why it was quicker' : 'Possible reasons'), el('ul', null, ...items)), mapBtn, chartBtn));
+  }
+  function renderLossCards(R) {
+    const V = $('lossVerdict'), box = $('lossCards'), small = $('lossSmall'); if (!V || !box) return;
+    V.textContent = ''; box.textContent = ''; small.textContent = '';
+    V.append(verdictBox(R));
+    const L = (R.sectors && R.sectors.list) || [], O = R.pace.overall; if (!L.length) return;
+    // whose point of view: the slower rider by default (where did I lose it, where did I make it up)
+    const me = lossPov && lossPov.R === R ? lossPov.who : (O.gap < 0 ? 'A' : 'B'), other = me === 'A' ? 'B' : 'A';
+    const pick = el('div', { class: 'seg', role: 'group', 'aria-label': 'Whose time' },
+      ...['A', 'B'].map(w => { const b = el('button', { type: 'button', 'aria-pressed': w === me ? 'true' : 'false' }, 'Ride ' + w); b.addEventListener('click', () => { lossPov = { R, who: w }; renderLossCards(R); }); return b; }));
+    box.append(el('div', { class: 'row', style: 'gap:8px;align-items:center;margin-bottom:2px' }, el('span', { class: 'muted' }, 'Show for'), pick));
+    const lostBy = S => me === 'A' ? -S.gain : S.gain;      // > 0: "me" lost time in this section
+    const head = (txt, n, tot) => el('h3', { class: 'lgroup' }, txt, n ? el('span', { class: 'muted', style: 'font-weight:400' }, ' · ' + fmtSec(tot) + ' s in all') : null);
+    const lostG = lossGroups(R, lostBy), gainG = lossGroups(R, S => -lostBy(S));
+    const sumL = L.reduce((s, S) => s + Math.max(0, lostBy(S)), 0), sumG = L.reduce((s, S) => s + Math.max(0, -lostBy(S)), 0);
+    const order = sumL >= sumG ? [['lost', lostG, sumL], ['gained', gainG, sumG]] : [['gained', gainG, sumG], ['lost', lostG, sumL]];
+    for (const [k, G, tot] of order) {
+      const gained = k === 'gained';
+      box.append(head('Where ' + me + (gained ? ' gained time' : ' lost time'), G.length, tot));
+      if (!G.length) { box.append(el('div', { class: 'lsmall' }, gained ? me + ' wasn’t clearly quicker anywhere.' : me + ' didn’t clearly lose time anywhere.')); continue; }
+      // big ones get a card; small ones (under 0.1 s) a line
+      for (const g of G.filter(x => x.amt >= 0.1)) box.append(lossCard(R, g, me, gained));
+      const tiny = G.filter(x => x.amt < 0.1);
+      if (tiny.length) box.append(el('div', { class: 'lsmall' }, (G.some(x => x.amt >= 0.1) ? 'Also a little in ' : 'Only a little: ') + tiny.map(x => secName(x.list[0].index, x.list[x.list.length - 1].index).toLowerCase() + ' (' + fmtSec(x.amt) + ' s, ' + CERT_TXT[x.cert].toLowerCase() + ')').join(', ') + '.'));
+    }
+  }
   function renderTrailTimes(R) {
     const card = $('trailTimesCard'), box = $('cmpTrailTimes'); if (!card || !box) return;
     const L = (R.trails || []).filter(x => x.how && x.how !== 'none');
@@ -10270,19 +10584,20 @@ window.plotlyReady = new Promise(function (done) {
     const sg = d => (d > 0 ? '+' : d < 0 ? '−' : '') + fmt(Math.abs(d), 2) + ' s';
     const how = o => o.how === 'gates' ? 'gates' : o.how === 'hits' ? (o.ends || []).map((k, i) => (k === 'gate' ? 'gate' : 'hit') + ' at ' + fmt(i ? o.a1 : o.a0, 1) + ' s').join(', ') : 'GPS gates';
     const who = o => Math.abs(o.diff) <= 1.96 * o.sd ? 'too close to call' : o.diff < 0 ? 'B faster' : 'A faster';
-    const zoom = (a0, a1) => { const r = [a0 - 1, a1 + 1]; for (const id of ['chPace', 'chGap']) { try { Plotly.relayout(id, Object.assign({ 'xaxis.range': r }, fitY($(id), r))); } catch (e) {} } miniRange(r); scrollToEl($('chPace')); };
+    const zoom = (a0, a1, name) => { const r = [a0 - 1, a1 + 1]; miniShowItem(a0, a1, a0, name); const useDist = $('paceX').value === 'dist' && R.pace.dist; const rx = useDist ? r.map(x => CMP.interp(R.pace.t, R.pace.dist, x)) : r;
+      for (const id of ['chPace', 'chGap']) { try { Plotly.relayout(id, Object.assign({ 'xaxis.range': rx }, fitY($(id), rx))); } catch (e) {} } scrollToEl($('chPace')); };
     for (const o of L) {
       const item = el('div', { class: 'tt', tabindex: 0, role: 'button' },
         el('div', { class: 'ttname' }, o.name),
         el('div', { class: 'ttbig' }, 'B ' + sg(o.diff), el('span', { class: 'muted', style: 'font-size:14px;font-weight:400' }, ' ' + pm(o.sd) + ' · ' + who(o))),
         el('div', { class: 'ttsub' }, 'A ' + ft(o.tA) + ' · B ' + ft(o.tB)),
         el('div', { class: 'ttsub xp' }, 'Timed from ' + how(o) + (isFinite(o.align) ? ' · line-up alone ' + sg(o.align) : '')));
-      item.addEventListener('click', () => zoom(o.a0, o.a1));
-      item.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); zoom(o.a0, o.a1); } });
+      item.addEventListener('click', () => zoom(o.a0, o.a1, o.name));
+      item.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); zoom(o.a0, o.a1, o.name); } });
       if ((o.sectors || []).length > 1) o.sectors.forEach((x, k) => {
-        const row = el('div', { class: 'ttsec' }, el('span', null, 'Sector ' + (k + 1) + (x ? ' · A ' + ft(x.tA) + ' · B ' + ft(x.tB) : '')),
-          el('span', null, x ? el('b', null, sg(x.diff)) : el('span', { class: 'muted' }, 'split not found'), x ? el('span', { class: 'muted' }, ' ' + pm(x.sd)) : null));
-        if (x) row.addEventListener('click', e => { e.stopPropagation(); zoom(x.a0, x.a1); });
+        const row = el('div', { class: 'ttsec' }, el('span', null, 'Sector ' + (k + 1), x ? el('span', { class: 'muted', style: 'display:block;font-size:12.5px' }, 'A ' + ft(x.tA) + ' \u00b7 B ' + ft(x.tB)) : null),
+          el('span', null, x ? el('b', null, sg(x.diff)) : el('span', { class: 'muted' }, 'split not found'), x ? el('span', { class: 'muted xp', style: 'display:block;font-size:12.5px' }, pm(x.sd)) : null));
+        if (x) row.addEventListener('click', e => { e.stopPropagation(); zoom(x.a0, x.a1, o.name + ' \u00b7 sector ' + (k + 1)); });
         item.append(row);
       });
       box.append(item);
@@ -10291,16 +10606,25 @@ window.plotlyReady = new Promise(function (done) {
     $('trailTimesNote').textContent = 'B − A: + means B took longer. Gates are each matched in their own ride, so a time from gates doesn’t depend on the line-up at all; where a gate didn’t lock in both rides, the trail is timed between the timed hits nearest to it (±' + Math.round(1.96 * Math.SQRT2 * (A.sigma || 0.01) * 1000) + ' ms). ' +
       (A.nGates ? A.nGates + ' locked gate' + (A.nGates > 1 ? 's' : '') + ' also pin the line-up. ' : '') + '“Line-up alone” is what the alignment said before hits and gates corrected it.';
   }
+  // rear sensor unplugged (or reading almost nothing) in either ride
+  function rearDead(R) {
+    const off = X => !X || (X.potOn && X.potOn.rear === false) || (() => { const v = X.rear; if (!v || !v.length) return true; let mx = 0; for (let i = 0; i < v.length; i += 25) if (v[i] > mx) mx = v[i]; return mx < 0.05 * ((X.params && X.params.rearTravel) || params.rearTravel || 150); })();
+    return off(R.A) || off(R.B);
+  }
   function renderSummary(R) {
-    const sig = R.stats.filter(s => s.sig).sort((a, b) => Math.abs(b.dz) - Math.abs(a.dz));
+    try { const o = $('statSide'); if (o) { const dead = rearDead(R); o.closest('div').classList.toggle('hidden', dead); if (dead) o.value = 'front'; } } catch (e) {}
+    const grp = $('statGroup') ? $('statGroup').value : 'all';
+    const sig = R.stats.filter(s => s.sig && (grp === 'all' || s.group === grp)).sort((a, b) => Math.abs(b.dz) - Math.abs(a.dz));
     const p = $('cmpSummary'); p.textContent = '';
     const used = R.pairs.filter(x => x.used).length;
     if (!R.stats.length) { p.append('Not enough paired hits for statistics (need at least 3 per metric).'); return; }
     if (!sig.length) { p.append('No metric changed by more than chance across ' + used + ' paired hits (all q ≥ ' + params.alpha + ').'); return; }
-    p.append('Biggest consistent changes, B vs A: ');
+    p.append(isStd() ? 'Biggest changes, B vs A: ' : 'Biggest consistent changes, B vs A: ');
     sig.slice(0, 3).forEach((s, i) => {
       if (i) p.append(i === Math.min(sig.length, 3) - 1 ? ' and ' : ', ');
-      p.append(el('b', null, sideName(s.side).toLowerCase() + ' ' + s.label.toLowerCase()), ' ' + signed(s.diff, s.d) + ' ' + s.unit + ' (95% CI ' + signed(s.ciLo, s.d) + ' to ' + signed(s.ciHi, s.d) + ', ' + s.n + ' hits)');
+      // the label already names front/rear for IMU metrics ("Front harshness RMS"): don't say it twice
+      const lbl = /^(front|rear)\b/i.test(s.label) ? s.label : sideName(s.side) + ' ' + s.label.charAt(0).toLowerCase() + s.label.slice(1);
+      p.append(el('b', null, lbl), ' ' + signed(s.diff, s.d) + ' ' + s.unit + (isFinite(s.pct) ? ' (' + signed(s.pct, 0) + '%)' : ''), el('span', { class: 'xp' }, ' (95% CI ' + signed(s.ciLo, s.d) + ' to ' + signed(s.ciHi, s.d) + ', ' + s.n + ' hits)'));
     });
     p.append('.' + (sig.length > 3 ? ' ' + (sig.length - 3) + ' more below.' : ''));
   }
@@ -10390,13 +10714,14 @@ window.plotlyReady = new Promise(function (done) {
     const tr = {
       type: 'scatter', mode: 'markers', x: rows.map(s => s.pct), y: labels,
       error_x: { type: 'data', symmetric: false, array: rows.map(s => s.pctHi - s.pct), arrayminus: rows.map(s => s.pct - s.pctLo), color: cssVar('--ink2'), thickness: 1.5, width: 4 },
-      marker: { size: 10, color: rows.map(s => s.sig ? acc : cssVar('--surface')), line: { color: rows.map(s => s.sig ? acc : mut), width: 2 } },
+      marker: { size: 10, color: rows.map(s => s.sig ? cssVar('--ink') : cssVar('--surface')), line: { color: rows.map(s => s.sig ? cssVar('--ink') : mut), width: 2 } },
       customdata: rows.map(s => [signed(s.diff, s.d) + ' ' + s.unit, fmtP(s.q), s.n]),
       hovertemplate: '%{y}<br>%{x:.1f}% (%{customdata[0]})<br>q = %{customdata[1]}, %{customdata[2]} hits<extra></extra>'
     };
     const hEff = Math.max(160, rows.length * (narrow ? 22 : 26) + 70); $('chEffects').style.height = hEff + 'px'; L.height = hEff;
     Plotly.react('chEffects', [tr], L, PLOT_CFG);
 
+    try { const bx = $('hitStatsBox'); if (bx && bx.__mode !== uiMode) { bx.open = !isStd(); bx.__mode = uiMode; } } catch (e) {}
     const t = $('cmpHitStats'); t.textContent = '';
     const heads = ['Metric', 'Hits', 'A mean', 'B mean', 'B − A (95% CI)', 'Change', 'dz', 'p (t-test)', 'p (Wilcoxon)', 'q', 'B higher in', ''];
     t.append(el('thead', null, el('tr', null, ...heads.map((h, i) => el('th', { class: i === 0 ? 'l' : i >= 6 && i <= 10 ? 'xp' : null }, h)))));
@@ -10486,7 +10811,10 @@ window.plotlyReady = new Promise(function (done) {
       if (which === 'A') return { x: P.map(p => p.a.peak), y: P.map(p => A[side][p.a.ip]) };
       return { x: P.map(p => CMP.mapBtoA(R.map, p.b.peak)), y: P.map(p => B[side][p.b.ip]) };
     };
+    const rearOff = rearDead(R);
+    $('chCmpR').classList.toggle('hidden', rearOff); $('chCmpRHead').classList.toggle('hidden', rearOff);
     for (const [div, side, title] of [['chCmpF', 'front', 'Front position (mm)'], ['chCmpR', 'rear', 'Rear position (mm)']]) {
+      if (side === 'rear' && rearOff) { Plotly.react(div, [], baseLayout('', 'Time in A (s)'), PLOT_CFG); continue; }
       const [bx, by] = bOnA(R, B[side]);
       const pa = peaks(side, 'A'), pb = peaks(side, 'B');
       const L = baseLayout(title, 'Time in A (s)');
@@ -10529,28 +10857,31 @@ window.plotlyReady = new Promise(function (done) {
     const h = $('cmpHits'); h.textContent = '';
     h.append(el('thead', null, el('tr', null, ...['#', 'Where', 'Time in A (s)', 'Found in', 'Travel A → B (mm)', 'Peak comp. A → B (mm/s)', 'Shape match r', ''].map((x, i) => el('th', { class: i < 2 ? 'l' : null }, x)))));
     const b = el('tbody');
-    R.pairs.forEach((p, i) => {
-      const tr = el('tr', { tabindex: '0' },
+    const order = R.pairs.map((p, i) => i).sort((x, y) => { const a = R.pairs[x], c = R.pairs[y], ka = a.used && a.src === 'both' ? 0 : 1, kc = c.used && c.src === 'both' ? 0 : 1; return ka - kc || a.a.peak - c.a.peak; });
+    order.forEach((i, row) => {
+      const p = R.pairs[i];
+      const tr = el('tr', { tabindex: '0', class: p.used && p.src === 'both' ? null : 'xp' },
         el('td', { class: 'l' }, i + 1), el('td', { class: 'l' }, sideName(p.side)), el('td', null, fmt(p.a.peak, 2)), el('td', null, p.src),
         el('td', null, fmt(p.mA.travel, 1) + ' → ' + fmt(p.mB.travel, 1)), el('td', null, fmt(p.mA.compVelPeak, 0) + ' → ' + fmt(p.mB.compVelPeak, 0)),
         el('td', null, fmt(p.corr, 2)), el('td', null, el('span', { class: 'pill ' + (p.used ? '' : 'off') }, p.used ? 'used' : 'left out')));
-      const pick = () => { b.querySelectorAll('tr.sel').forEach(r => r.classList.remove('sel')); tr.classList.add('sel'); showHit(R, p, i); };
+      const pick = () => { b.querySelectorAll('tr.sel').forEach(r => r.classList.remove('sel')); tr.classList.add('sel'); showHit(R, p, i, true); };
       tr.addEventListener('click', pick);
       tr.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
-      if (i >= 30) tr.classList.add('more', 'hidden');
+      if (row >= 30) tr.classList.add('more', 'hidden');
       b.append(tr);
     });
     h.append(b);
     const old = $('cmpHitsMore'); if (old) old.remove();
-    if (R.pairs.length > 30) {
-      const btn = el('button', { class: 'btn small', id: 'cmpHitsMore', type: 'button', style: 'margin-top:6px' }, 'Show all ' + R.pairs.length + ' hits');
+    const nShow = isStd() ? R.pairs.filter(p => p.used && p.src === 'both').length : R.pairs.length;
+    if (nShow > 30) {
+      const btn = el('button', { class: 'btn small', id: 'cmpHitsMore', type: 'button', style: 'margin-top:6px' }, 'Show all ' + nShow + ' hits');
       btn.addEventListener('click', () => { b.querySelectorAll('tr.more').forEach(r => r.classList.remove('hidden')); btn.remove(); });
       h.closest('.tbl').after(btn);
     }
-    const first = R.pairs.findIndex(p => p.used);
-    if (first >= 0) { b.children[first].classList.add('sel'); showHit(R, R.pairs[first], first); }
+    const first = order.findIndex(i => R.pairs[i].used && R.pairs[i].src === 'both');
+    if (first >= 0) { b.children[first].classList.add('sel'); showHit(R, R.pairs[order[first]], order[first]); }
   }
-  function showHit(R, p, i) {
+  function showHit(R, p, i, picked) {          // picked: you tapped it (the first hit shown on opening the tab doesn't move the map)
     const { A, B } = R, side = p.side, s1 = cssVar('--s1'), s2 = cssVar('--s2');
     const bs = CMP.mapBtoA(R.map, p.b.start), be = CMP.mapBtoA(R.map, p.b.end);
     const t0 = Math.min(p.a.start, isFinite(bs) ? bs : p.a.start) - 0.3, t1 = Math.max(p.a.end, isFinite(be) ? be : p.a.end) + 0.3;
@@ -10563,7 +10894,9 @@ window.plotlyReady = new Promise(function (done) {
     const Lp = baseLayout('Position (mm)', 'Time in A (s)'), Lv = baseLayout('Velocity (mm/s)', 'Time in A (s)');
     Plotly.react('chHitP', [line('A', ax, Array.from(A[side].subarray(ia0, ia1)), s1), line('B', bx, Array.from(B[side].subarray(ib0, ib1)), s2)], Lp, PLOT_CFG);
     Promise.resolve(Plotly.react('chHitV', [line('A', ax, Array.from(A[side + 'Vel'].subarray(ia0, ia1)), s1), line('B', bx, Array.from(B[side + 'Vel'].subarray(ib0, ib1)), s2)], Lv, PLOT_CFG))
-      .then(() => { if (!$('chHitP').__synced && $('chHitP').on) { syncZoom([$('chHitP'), $('chHitV')]); $('chHitP').__synced = true; } });
+      .then(() => { if (!$('chHitP').__synced && $('chHitP').on) { syncZoom([$('chHitP'), $('chHitV')]); $('chHitP').__synced = true; } try { miniHookAll(); } catch (e) {} });
+    // the map follows the hit you picked: a dot on the peak, the hit's stretch in bold
+    if (picked) miniShowItem(t0, t1, isFinite(p.a.peak) ? p.a.peak : NaN, 'Hit ' + (i + 1));
   }
   function lowerIdx(t, x) { let lo = 0, hi = t.length; while (lo < hi) { const m = (lo + hi) >> 1; if (t[m] < x) lo = m + 1; else hi = m; } return lo; }
 
