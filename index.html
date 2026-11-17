@@ -320,9 +320,7 @@ ul.takeaways li.info{border-left-color:var(--s1)}
 }
 @media(max-width:520px){.tiles{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.tile{padding:8px 6px}.tile .v{font-size:19px}.tile .l,.tile .s{font-size:11.5px}}
 @media(max-width:520px){#anTabs{flex-wrap:wrap;overflow:visible;gap:0}#anTabs button{flex:1 1 auto;padding:9px 8px}}
-#anEvents td,#anGouts td{white-space:nowrap}
-#anEvents tr.whyrow td,#anGouts td.why{white-space:normal;font-size:13px;text-align:left;color:var(--ink2);padding-top:0;padding-bottom:10px}
-#anEvents tr.whyrow div{margin-top:2px}
+#anEvents td{white-space:nowrap}
 @media(pointer:coarse){
   #btnResetZoom,#btnResetZoom2{display:none}
   .subtabs button{min-height:44px}
@@ -337,7 +335,7 @@ ul.takeaways li.info{border-left-color:var(--s1)}
 <body>
 <header>
   <div class="top">
-    <h1>ShokIQ <span class="h1sub">Analyzer</span> <span class="appver" id="appVer" title="Analyzer version">v2026.11.16b</span></h1>
+    <h1>ShokIQ <span class="h1sub">Analyzer</span> <span class="appver" id="appVer" title="Analyzer version">v2026.11.09c</span></h1>
     <span class="chip" id="linkChip"><span class="dot" id="linkDot"></span><span id="linkText">No logger</span></span>
   </div>
   <nav class="tabs" role="tablist">
@@ -505,11 +503,9 @@ ul.takeaways li.info{border-left-color:var(--s1)}
           <div class="legend" id="bandLegend"></div>
           <h3>Velocity</h3>
           <div id="chVel" class="chart"></div>
-          <div id="harshTBox">
-            <h3>Harshness (frame IMU)</h3>
-            <div id="chHarshT" class="chart"></div>
-            <div class="muted" id="harshTNote"></div>
-          </div>
+          <h3>Harshness</h3>
+          <div id="chHarshC" class="chart short"></div>
+          <div class="muted" id="harshCNote"></div>
           <div class="muted">Zoom one chart and the others follow (IMU too). Tap a point to mark that moment on the map. Double-tap or Reset zoom to go back.</div>
         </div>
 
@@ -578,11 +574,12 @@ ul.takeaways li.info{border-left-color:var(--s1)}
         <!-- Events -->
         <div class="subview" id="sub-events" role="tabpanel">
           <h3>Packing events</h3>
-          <div class="muted">Packing: hit after hit, the suspension can&rsquo;t get back up before the next bump, so each hit starts deeper than the load on the bike explains. Tap an event to zoom the charts to it (&plusmn;1.5&nbsp;s).</div>
+          <div class="muted">Tap an event to zoom the position, velocity and IMU charts to it (&plusmn;1.5&nbsp;s) and mark it on the map.</div>
+          <div class="muted" id="packNote"></div>
           <div class="tbl"><table id="anEvents" class="clickable"></table></div>
-          <h3 id="goutHead">G-outs and landings (not packing)</h3>
-          <div class="muted" id="goutNote"></div>
-          <div class="tbl"><table id="anGouts" class="clickable"></table></div>
+          <h3 style="margin-top:16px">G-outs and landings (not packing)</h3>
+          <div class="muted">Deep moments the load explains: sustained vertical g, or a landing after airtime. They are shown grey on the charts and never counted as packing.</div>
+          <div class="tbl"><table id="anLoaded" class="clickable"></table></div>
         </div>
 
         <!-- Balance -->
@@ -1017,16 +1014,16 @@ ul.takeaways li.info{border-left-color:var(--s1)}
       </details>
       <details><summary>Packing detection</summary>
         <div class="grid3">
-          <div><label class="f" for="p_packedThreshold">Packed: starts this far above expected (mm)</label><input id="p_packedThreshold" type="number" min="1" step="1"></div>
-          <div><label class="f" for="p_minPackedHits">Packed hits in a row</label><input id="p_minPackedHits" type="number" min="2" step="1"></div>
-          <div><label class="f" for="p_packMaxGap">Max time between hits (s)</label><input id="p_packMaxGap" type="number" min="0.1" step="0.05"></div>
-          <div><label class="f" for="p_packHitDepth">Hit: at least (mm deep)</label><input id="p_packHitDepth" type="number" min="1" step="1"></div>
-          <div><label class="f" for="p_packHitVelocity">Hit: at least (mm/s)</label><input id="p_packHitVelocity" type="number" min="50" step="10"></div>
-          <div><label class="f" for="p_goutG">G-out: load above (g)</label><input id="p_goutG" type="number" min="1.1" step="0.1"></div>
-          <div><label class="f" for="p_stuckThreshold">Stuck deep: floor moves less than (mm)</label><input id="p_stuckThreshold" type="number" min="0"></div>
-          <div><label class="f" for="p_ratchetDelta">Ratcheting: floor rises more than (mm)</label><input id="p_ratchetDelta" type="number" min="0"></div>
+          <div><label class="f" for="p_packedThreshold">Not recovered by (mm)</label><input id="p_packedThreshold" type="number" min="1" step="1"></div>
+          <div><label class="f" for="p_minPackedHits">Min packed hits in a row</label><input id="p_minPackedHits" type="number" min="2"></div>
+          <div><label class="f" for="p_packMaxGap">Hits closer than (s)</label><input id="p_packMaxGap" type="number" min="0.1" step="0.05"></div>
+          <div><label class="f" for="p_packHitVelocity">A hit peaks above (mm/s)</label><input id="p_packHitVelocity" type="number" min="50" step="10"></div>
+          <div><label class="f" for="p_packHitDepth">A hit is deeper than (mm)</label><input id="p_packHitDepth" type="number" min="1" step="1"></div>
+          <div><label class="f" for="p_packLandGuard">Ignore after airtime (s)</label><input id="p_packLandGuard" type="number" min="0" step="0.1"></div>
+          <div><label class="f" for="p_gOutLoad">G-out at (g)</label><input id="p_gOutLoad" type="number" min="1.1" step="0.1"></div>
+          <div><label class="f" for="p_velocityThreshold">Impact speed (mm/s)</label><input id="p_velocityThreshold" type="number" min="0"></div>
         </div>
-        <div class="muted" style="margin-top:6px">&ldquo;Expected&rdquo; is where each axle sits for the load right now, learned from the ride: the frame IMU&rsquo;s up/down g (g-outs, landings, pumping) and fore-aft g (braking, steepness). A hit is packed when the suspension didn&rsquo;t get back to within this distance of it since the previous hit. Deep because of load = a g-out or landing, listed on its own. Without a frame IMU the typical riding position is used, and g-outs can&rsquo;t be told apart by load.</div>
+        <div class="muted" style="margin-top:6px">A hit is <b>packed</b> when it comes within the gap of the previous hit while the suspension is still “not recovered by” this many mm deeper than it normally sits for the current load (g-outs, landings and braking included; needs the frame IMU, otherwise sag from Setup is used). Packing is that many packed hits in a row. “Impact speed” only affects the impact counts.</div>
       </details>
       <details><summary>Hit detection &amp; statistics (Compare)</summary>
         <div class="grid3">
@@ -1470,6 +1467,190 @@ window.plotlyReady = new Promise(function (done) {
     return events;
   }
 
+  // ---------------------------------------------------------------- packing v2: judged against the load
+  // Packing = hits arrive faster than the suspension can come back. The old test (start deeper than sag) also
+  // fired in g-outs, landings and braking, where the bike is SUPPOSED to sit deep. This one asks instead:
+  //  1. Expected position: how extended each wheel normally gets between hits for the current load, learned
+  //     from this ride (frame IMU: vertical g for g-outs/landings/pumping, fore-aft g for braking).
+  //     Without a frame IMU it is the sag from Setup.
+  //  2. A hit = a compression of at least packHitDepth mm that peaks above packHitVelocity mm/s.
+  //  3. A hit is packed when it comes within packMaxGap s of the previous one AND the suspension had got back
+  //     less than 80% of the way to its expected position AND still sits packedThreshold mm deeper than it.
+  //     Hits in the packLandGuard s after airtime are landings, not packing.
+  //  4. Packing = minPackedHits packed hits in a row. Deep moments the load explains are listed as g-outs.
+  // Rebound speed and harshness are reported for each event but do not decide whether it is one.
+  const PACK_RECOVERED = 0.8;
+  const medOf = a => { const v = Array.from(a).filter(Number.isFinite).sort((x, y) => x - y); return v.length ? (v.length % 2 ? v[v.length >> 1] : (v[v.length / 2 - 1] + v[v.length / 2]) / 2) : NaN; };
+  function rollMin(x, h) {                          // minimum over [i-h, i+h], O(n)
+    const n = x.length, out = new Float64Array(n), dq = new Int32Array(n); let head = 0, tail = 0, nxt = 0;
+    for (let i = 0; i < n; i++) {
+      const hi = Math.min(n - 1, i + h);
+      while (nxt <= hi) { while (tail > head && x[dq[tail - 1]] >= x[nxt]) tail--; dq[tail++] = nxt++; }
+      while (dq[head] < i - h) head++;
+      out[i] = x[dq[head]];
+    }
+    return out;
+  }
+  // quantile regression y ~ columns by iteratively reweighted least squares
+  function qreg(cols, y, tau, iters) {
+    const k = cols.length, m = y.length; let beta = null; const w = new Float64Array(m).fill(1);
+    for (let it = 0; it < iters; it++) {
+      const A = []; for (let a = 0; a < k; a++) A.push(new Float64Array(k + 1));
+      for (let r = 0; r < m; r++) { const wr = w[r]; for (let a = 0; a < k; a++) { const xa = cols[a][r] * wr; for (let c = a; c < k; c++) A[a][c] += xa * cols[c][r]; A[a][k] += xa * y[r]; } }
+      for (let a = 0; a < k; a++) { A[a][a] += 1e-6; for (let c = 0; c < a; c++) A[a][c] = A[c][a]; }
+      for (let c = 0; c < k; c++) {
+        let pv = c; for (let r = c + 1; r < k; r++) if (Math.abs(A[r][c]) > Math.abs(A[pv][c])) pv = r;
+        [A[c], A[pv]] = [A[pv], A[c]];
+        if (Math.abs(A[c][c]) < 1e-12) return null;
+        for (let r = c + 1; r < k; r++) { const f = A[r][c] / A[c][c]; for (let q = c; q <= k; q++) A[r][q] -= f * A[c][q]; }
+      }
+      beta = new Array(k);
+      for (let r = k - 1; r >= 0; r--) { let s = A[r][k]; for (let c = r + 1; c < k; c++) s -= A[r][c] * beta[c]; beta[r] = s / A[r][r]; }
+      for (let r = 0; r < m; r++) { let f = 0; for (let a = 0; a < k; a++) f += beta[a] * cols[a][r]; const res = y[r] - f; w[r] = (res >= 0 ? tau : 1 - tau) / Math.max(Math.abs(res), 0.5); }
+    }
+    return beta;
+  }
+  // What the frame IMU says about load: vertical g and fore-aft g (slow, ~2 Hz), a faster vertical g for
+  // spotting g-outs, and the smoothed total (near 0 g = airborne). null without a usable frame IMU.
+  function loadSignals(parsed, a, b, rate, p) {
+    let I = null, ori = null;
+    try { I = imuFrame(parsed, a, b); ori = I ? imuOrientation(parsed, p) : null; } catch (e) { I = null; }
+    if (!I || !ori) return null;
+    const n = I.n, A = I.A, up = ori.up, fwd = ori.fwd, gn = new Float64Array(n), gl = new Float64Array(n), mag = new Float64Array(n);
+    for (let i = 0; i < n; i++) {
+      gn[i] = A[0][i] * up[0] + A[1][i] * up[1] + A[2][i] * up[2];
+      gl[i] = A[0][i] * fwd[0] + A[1][i] * fwd[1] + A[2][i] * fwd[2];
+      mag[i] = Math.hypot(A[0][i], A[1][i], A[2][i]);
+    }
+    return { gN: lpZ(gn, rate, 2), gN4: lpZ(gn, rate, 4), gL: lpZ(gl, rate, 2), mag: lpZ(mag, rate, 10) };
+  }
+  function airSegments(mag, rate) {                  // [{s, e}] row indexes, near 0 g for at least 80 ms
+    const segs = [], min = Math.round(0.08 * rate); let s = -1;
+    for (let i = 0; i <= mag.length; i++) {
+      const low = i < mag.length && mag[i] < 0.35;
+      if (low && s < 0) s = i; else if (!low && s >= 0) { if (i - s >= min) segs.push({ s, e: i - 1 }); s = -1; }
+    }
+    return segs;
+  }
+  function airFromPots(front, rear, potOn, rate) {   // no IMU: both wheels fully extended for 0.15–3 s
+    if (!potOn.front || !potOn.rear) return [];
+    const segs = [], min = Math.round(0.15 * rate), max = Math.round(3 * rate); let s = -1;
+    for (let i = 0; i <= front.length; i++) {
+      const low = i < front.length && front[i] <= 3 && rear[i] <= 3;
+      if (low && s < 0) s = i; else if (!low && s >= 0) { if (i - s >= min && i - s <= max) segs.push({ s, e: i - 1 }); s = -1; }
+    }
+    return segs;
+  }
+  // Expected position of one wheel for the load: a + b·(g − 1) + c·fore-aft g, fitted to the wheel's own
+  // most-extended point in each half second (the level it recovers to), middle of the ride, so a rough
+  // ride is judged against its own recovery and a g-out against its own load.
+  function expectedPosition(pos, rate, travel, sig, skip, p) {
+    const n = pos.length, E = new Float64Array(n), sag = travel * p.sagPercent / 100;
+    const fallback = why => { E.fill(sag); return { E, info: { mode: 'sag', why, atRest: sag, perG: 0, perGlong: 0, n: 0 } }; };
+    if (!sig) return fallback('no frame IMU');
+    const lo = rollMin(pos, Math.max(1, Math.round(0.25 * rate))), step = Math.max(1, Math.round(rate / 20));
+    const X0 = [], X1 = [], X2 = [], Y = [];
+    for (let i = 0; i < n; i += step) if (!skip[i]) { X0.push(1); X1.push(sig.gN[i] - 1); X2.push(sig.gL[i]); Y.push(lo[i]); }
+    if (Y.length < 100) return fallback('too little data');
+    const tau = 0.5; let beta = qreg([X0, X1, X2], Y, tau, 14);
+    if (!beta || !beta.every(Number.isFinite) || beta[1] < 0 || beta[1] > 3 * travel || Math.abs(beta[2]) > 3 * travel) {
+      const m = medOf(Y); beta = [m, 0, 0];     // load has no clear effect: one level for the whole ride
+    }
+    for (let i = 0; i < n; i++) E[i] = Math.min(travel, Math.max(0, beta[0] + beta[1] * (sig.gN[i] - 1) + beta[2] * sig.gL[i]));
+    return { E, info: { mode: 'imu', atRest: beta[0], perG: beta[1], perGlong: beta[2], n: Y.length } };
+  }
+  function findHits(t, pos, vel, rate, p) {
+    const n = t.length, vmin = p.packHitVelocity, dmin = p.packHitDepth, w = Math.max(1, Math.round(0.03 * rate)), cand = [];
+    for (let i = 1; i < n - 1; i++) {
+      const v = vel[i]; if (v < vmin || v < vel[i - 1] || v <= vel[i + 1]) continue;
+      let top = true; for (let j = Math.max(0, i - w); j <= Math.min(n - 1, i + w); j++) if (vel[j] > v) { top = false; break; }
+      if (top) cand.push(i);
+    }
+    const sep = Math.round(0.08 * rate), peaks = [];
+    for (const i of cand) { const L = peaks.length - 1; if (L >= 0 && i - peaks[L] < sep) { if (vel[i] > vel[peaks[L]]) peaks[L] = i; } else peaks.push(i); }
+    const hits = []; let prevZ = 0;
+    for (let k = 0; k < peaks.length; k++) {
+      const ip = peaks[k], nextP = k + 1 < peaks.length ? peaks[k + 1] : n - 1, lo0 = Math.max(prevZ, ip - Math.round(0.4 * rate));
+      let i0 = ip, m = pos[ip]; for (let j = ip; j >= lo0; j--) if (pos[j] < m) { m = pos[j]; i0 = j; }
+      const hiEnd = Math.min(nextP, ip + Math.round(0.6 * rate)); let iz = ip, mx = pos[ip];
+      for (let j = ip; j <= hiEnd; j++) if (pos[j] > mx) { mx = pos[j]; iz = j; }
+      if (mx - m < dmin) continue;
+      hits.push({ i0, ip, iz, t0: t[i0], tp: t[ip], tz: t[iz], pre: m, top: mx, depth: mx - m, peakVel: vel[ip] });
+      prevZ = iz;
+    }
+    return hits;
+  }
+  function detectPackingV2(c) {
+    const { t, pos, vel, E, p, travel, rate, landM, strokes } = c, n = t.length;
+    const hits = findHits(t, pos, vel, rate, p), events = [];
+    const rb = strokes.rebound.filter(s => s.depth >= 15);
+    const rebRate = medOf(rb.map(s => s.maxVelocity / s.depth)) || 12;          // peak rebound speed per mm returned (1/s)
+    for (let k = 0; k < hits.length; k++) {
+      const h = hits[k]; h.E = E[h.i0]; h.G = h.pre - h.E; h.afterAir = !!landM[h.i0]; h.packed = false;
+      if (k === 0) continue;
+      const q = hits[k - 1], avail = q.top - h.E;
+      h.gap = h.t0 - q.tz; h.interval = h.tp - q.tp;
+      h.recFrac = avail > 1 ? Math.min(1, Math.max(0, (q.top - h.pre) / avail)) : 1;
+      let pk = 0; for (let j = q.iz; j <= h.i0; j++) if (-vel[j] > pk) pk = -vel[j];
+      h.rebPeak = pk; h.rebRatio = avail > 1 ? pk / (rebRate * avail) : NaN;
+      h.packed = h.interval <= p.packMaxGap && h.G >= p.packedThreshold && h.recFrac <= PACK_RECOVERED && !h.afterAir;
+    }
+    const cat = s => s <= 25 ? 'Mild' : s <= 50 ? 'Moderate' : s <= 75 ? 'Severe' : 'Critical';
+    const finish = seq => {
+      if (seq.length < p.minPackedHits) return;
+      const first = seq[0], last = seq[seq.length - 1];
+      let ie = last.iz; const lim = Math.min(n - 1, last.iz + Math.round(1.2 * rate));
+      while (ie < lim && pos[ie] > E[ie] + p.packedThreshold * 0.5) ie++;
+      const Gs = seq.map(h => h.G), maxG = Math.max(...Gs), maxTop = Math.max(...seq.map(h => h.top)), maxPre = Math.max(...seq.map(h => h.pre));
+      const phases = seq.map((h, i) => { if (!i) return 'Initial'; const d = h.pre - seq[i - 1].pre; return d > p.ratchetDelta ? 'Progressive Ratcheting' : Math.abs(d) < p.stuckThreshold ? 'Stuck Deep' : 'Mixed'; });
+      const reb = medOf(seq.slice(1).map(h => h.rebRatio));
+      const prior = hits.filter(h => h.tp < first.t0 && h.tp >= first.t0 - 3).map(h => h.peakVel);
+      const cDur = medOf(seq.map(h => h.peakVel)), cBef = medOf(prior);
+      let sum = 0, cnt = 0; for (let i = first.i0; i <= ie; i++) { sum += E[i]; cnt++; }
+      let score = (seq.length - 2) * 10 + maxG * 0.5 + (phases.includes('Stuck Deep') ? 20 : 0) + (maxTop > travel * 0.7 ? 15 : 0) + (isFinite(reb) && reb < 0.8 ? 10 : 0);
+      score = Math.min(Math.round(score), 100);
+      events.push({
+        hit_count: seq.length, start_time: first.t0, end_time: t[ie], duration: t[ie] - first.t0, baseline_used: cnt ? sum / cnt : NaN,
+        max_depth: maxTop, max_start_depth: maxPre, depth_above_baseline: maxG, above_expected_mean: Gs.reduce((a, b) => a + b, 0) / Gs.length,
+        phases_present: [...new Set(phases)], severity: score, category: cat(score),
+        rebound_speed_ratio: reb, cause: isFinite(reb) && reb < 0.8 ? 'slow rebound' : 'hits too close together',
+        comp_speed_during: cDur, comp_speed_before: cBef, hit_gap_median: medOf(seq.slice(1).map(h => h.interval)), harsh: null
+      });
+    };
+    let seq = [];
+    for (const h of hits) { if (h.packed) seq.push(h); else { finish(seq); seq = []; } }
+    finish(seq);
+    return { hits, events, rebRate };
+  }
+  // Deep moments the load explains: g-outs (sustained vertical load) and landings (after airtime)
+  function loadedEvents(sig, time, rate, front, rear, air, p) {
+    const n = time.length, g = sig.gN4, thr = p.gOutLoad, low = 1.25, minLen = Math.round(0.12 * rate), merge = Math.round(0.25 * rate), out = [];
+    const maxIn = (x, a, b) => { let m = 0; for (let i = a; i <= b; i++) if (x[i] > m) m = x[i]; return m; };
+    const covered = [];
+    let i = 0;
+    while (i < n) {
+      if (g[i] < thr) { i++; continue; }
+      let s = i, e = i, pk = g[i];
+      for (let j = i; j < n; j++) { if (g[j] >= thr) { e = j; if (g[j] > pk) pk = g[j]; } else if (j - e > merge) break; }
+      let s2 = s; while (s2 > 0 && g[s2 - 1] >= low && s - s2 < rate) s2--;
+      let e2 = e; while (e2 < n - 1 && g[e2 + 1] >= low && e2 - e < rate) e2++;
+      if (e - s + 1 >= minLen) {
+        const a = air.find(x => x.e >= s2 - Math.round(0.4 * rate) && x.e <= e);
+        out.push({ type: a ? 'landing' : 'g-out', start_time: time[s2], end_time: time[e2], peak_g: pk, air_s: a ? (a.e - a.s + 1) / rate : 0,
+                   depth_front: maxIn(front, s2, e2), depth_rear: maxIn(rear, s2, e2), harsh: null });
+        covered.push([s2, e2]);
+      }
+      i = e2 + 1;
+    }
+    for (const a of air) {                         // small drops that never reach the g-out load
+      const len = (a.e - a.s + 1) / rate; if (len < 0.25) continue;
+      if (covered.some(c => a.e >= c[0] - Math.round(0.4 * rate) && a.e <= c[1])) continue;
+      const e2 = Math.min(n - 1, a.e + Math.round(0.5 * rate));
+      out.push({ type: 'landing', start_time: time[a.e], end_time: time[e2], peak_g: maxIn(g, a.e, e2), air_s: len, depth_front: maxIn(front, a.e, e2), depth_rear: maxIn(rear, a.e, e2), harsh: null });
+    }
+    return out.sort((x, y) => x.start_time - y.start_time);
+  }
+
   function packingIndex(impacts, events, runTime) {
     if (!impacts.length) return 0;
     const packed = events.reduce((s, e) => s + e.hit_count, 0);
@@ -1593,7 +1774,12 @@ window.plotlyReady = new Promise(function (done) {
     // Balance chart thresholds (front wheel speed, rear shock speed)
     frontSpeedThreshold: 1000, rearShockSpeedThreshold: 350,
     rateOverride: 0,
-    extensionThreshold: 15, packedThreshold: 15, minPackedHits: 3, packMaxGap: 0.6, packHitDepth: 8, packHitVelocity: 300, goutG: 1.4,
+    // Packing (v2, judged against the load): a hit is "packed" when it arrives within packMaxGap seconds of
+    // the previous one while the suspension is still packedThreshold mm deeper than the load says it should be.
+    // packHitVelocity / packHitDepth: what counts as a hit. packLandGuard: seconds after airtime ignored (landings).
+    // gOutLoad: vertical load (g) from which a deep moment is listed as a g-out. extensionThreshold is no longer used.
+    extensionThreshold: 15, packedThreshold: 12, minPackedHits: 3,
+    packHitVelocity: 300, packHitDepth: 8, packMaxGap: 0.6, packLandGuard: 0.4, gOutLoad: 1.6,
     stuckThreshold: 8, ratchetDelta: 5, velocityThreshold: 50,
     // Compare: alignment (GPS → pots + IMU, see align.js)
     gpsTolerance: 25, gpsDrift: 3.5, alignBand: 2.5, alignRate: 50, alignGuide: 0.1, alignUseImu: true,
@@ -1630,242 +1816,6 @@ window.plotlyReady = new Promise(function (done) {
     };
     judge('front', sF, sR); judge('rear', sR, sF);
     return out;
-  }
-
-  // ---------------------------------------------------------------- packing (v2)
-  // Packing: hit after hit, the suspension can't get back up before the next
-  // bump arrives, so each hit starts deeper than the load on the bike
-  // explains. A g-out or a landing also sits deep, but because the load is
-  // high (1.5–4 g on the IMU), and it comes back as soon as the load goes:
-  // those are listed separately, never as packing.
-  //  1. Expected position E(t) of each axle for the load right now, fitted on
-  //     this ride (robust least squares, same 2 Hz low-pass on both sides):
-  //       position ≈ b0 + b1·(heave g − 1) + b2·(fore-aft g)
-  //     heave covers g-outs, landings and pumping; fore-aft covers braking
-  //     dive and steepness. No IMU: E = the typical riding position.
-  //  2. Hits: compression strokes at least packHitDepth deep and packHitVelocity
-  //     fast (the chatter at the bottom of a g-out doesn't count).
-  //  3. A hit is packed when the lowest point since the previous hit's peak is
-  //     still packedThreshold above E there, and it came within packMaxGap.
-  //  4. minPackedHits packed hits in a row make an event. Rebound timing (did
-  //     the next hit come before rebound could get back at this ride's own
-  //     rebound speed?), the velocities and the load are reported with it;
-  //     harshness is added afterwards as a consequence (packingHarshness).
-  function bisect(t, x) { let lo = 0, hi = t.length; while (lo < hi) { const m = (lo + hi) >> 1; if (t[m] < x) lo = m + 1; else hi = m; } return lo; }
-  function median(arr) { if (!arr.length) return NaN; const v = Float64Array.from(arr).sort(); return v[v.length >> 1]; }
-  // robust (Huber) least squares: y ≈ X·b, X rows given as arrays
-  function huberFit(X, y, cols) {
-    const m = cols.length, n = y.length; let w = new Float64Array(n).fill(1), b = new Array(m).fill(0), sd = NaN;
-    for (let it = 0; it < 8; it++) {
-      const A = [], v = new Array(m).fill(0);
-      for (let i = 0; i < m; i++) A.push(new Array(m).fill(0));
-      for (let k = 0; k < n; k++) { const x = X[k]; for (let i = 0; i < m; i++) { const xi = x[cols[i]] * w[k]; v[i] += xi * y[k]; for (let j = 0; j < m; j++) A[i][j] += xi * x[cols[j]]; } }
-      for (let i = 0; i < m; i++) A[i][i] += 1e-9;
-      b = solve(A, v);
-      const res = new Float64Array(n);
-      for (let k = 0; k < n; k++) { let f = 0; for (let i = 0; i < m; i++) f += b[i] * X[k][cols[i]]; res[k] = Math.abs(y[k] - f); }
-      sd = 1.4826 * median(res) || 1; const c = 1.5 * sd;
-      for (let k = 0; k < n; k++) w[k] = res[k] <= c ? 1 : c / res[k];
-    }
-    const full = [0, 0, 0]; cols.forEach((c, i) => { full[c] = b[i]; });
-    return { b: full, sd };
-  }
-  function packingV2(parsed, a, ctx, p) {
-    const { time, rate, segs, travel, side } = ctx, n = time.length;
-    const lp = (x, fc) => perSegment(x, segs, y => lpZ(y, rate, fc));
-    const out = { E: {}, fit: {}, hits: {}, events: {}, imu: false, log: [] };
-    // activity: either wheel moving (so standing still doesn't set the expected position)
-    const va = new Float64Array(n); for (let i = 0; i < n; i++) va[i] = Math.abs(side.front.vel[i]) + Math.abs(side.rear.vel[i]);
-    const act = lp(va, 0.5);
-    // load from the frame IMU
-    let gu = null, gf = null, air = null;
-    const ori = (() => { try { return imuOrientation(parsed, p); } catch (e) { return null; } })();
-    const I = ori ? imuFrame(parsed, a, a + n) : null;
-    if (I) {
-      const au = new Float64Array(n), af = new Float64Array(n), mg = new Float64Array(n);
-      for (let i = 0; i < n; i++) {
-        au[i] = I.A[0][i] * ori.up[0] + I.A[1][i] * ori.up[1] + I.A[2][i] * ori.up[2];
-        af[i] = I.A[0][i] * ori.fwd[0] + I.A[1][i] * ori.fwd[1] + I.A[2][i] * ori.fwd[2];
-        mg[i] = Math.hypot(I.A[0][i], I.A[1][i], I.A[2][i]);
-      }
-      gu = lp(au, 2); gf = lp(af, 2);
-      const m10 = lp(mg, 10); air = new Uint8Array(n); for (let i = 0; i < n; i++) air[i] = m10[i] < 0.35 ? 1 : 0;
-      out.imu = true;
-    }
-    out.gu = gu; out.gf = gf; out.air = air;
-    // near air (0.3 s around it): the suspension tops out and lands, not a steady load
-    let nearAir = null;
-    if (air) { nearAir = new Uint8Array(n); const pad = Math.round(0.3 * rate); for (let i = 0; i < n; i++) if (air[i]) for (let k = Math.max(0, i - pad); k < Math.min(n, i + pad); k++) nearAir[k] = 1; }
-    for (const s of ['front', 'rear']) {
-      const S = side[s], posLP = lp(S.pos, 2), E = new Float32Array(n), T = travel[s];
-      S.posLP = posLP;
-      if (!S.on) { out.E[s] = E; out.hits[s] = []; out.events[s] = []; continue; }
-      // --- 1. expected position
-      const step = Math.max(1, Math.round(rate / 25)), X = [], y = [];
-      for (let i = 0; i < n; i += step) if (act[i] > 40 && !(nearAir && nearAir[i])) { X.push(gu ? [1, gu[i] - 1, gf[i]] : [1, 0, 0]); y.push(posLP[i]); }
-      let fit;
-      if (y.length < 50) fit = { b: [median(Array.from(posLP)), 0, 0], sd: NaN };
-      else if (!gu) fit = { b: [median(y), 0, 0], sd: NaN };
-      else {
-        fit = huberFit(X, y, [0, 1, 2]);
-        if (fit.b[1] < 0) fit = huberFit(X, y, [0, 2]);            // more load can't extend the suspension
-      }
-      const [b0, b1, b2] = fit.b;
-      for (let i = 0; i < n; i++) E[i] = Math.max(0, Math.min(T, gu ? b0 + b1 * (gu[i] - 1) + b2 * gf[i] : b0));
-      out.E[s] = E; out.fit[s] = { b0, b1, b2, sd: fit.sd, n: y.length };
-      // --- 2. hits
-      const minD = Math.max(p.packHitDepth, 0.03 * T), pos = S.pos;
-      // compression strokes with only a small rebound between them are one hit
-      // (a velocity wobble mid-compression splits a stroke in two)
-      const merged = [];
-      for (const c of S.strokes.compression) {
-        const h = { start_time: c.startTime, peak_time: c.zenithTime, end_time: c.zenithTime, start_position: c.startPos, peak_position: c.zenithPos, vel: c.maxVelocity,
-          i0: bisect(time, c.startTime), ip: Math.min(n - 1, bisect(time, c.zenithTime)) };
-        const q = merged[merged.length - 1];
-        if (q) {
-          let lo = Infinity; for (let j = q.ip; j <= h.i0 && j < n; j++) if (pos[j] < lo) lo = pos[j];
-          if (q.peak_position - lo < minD && h.start_time - q.peak_time < 0.15) {
-            if (h.peak_position >= q.peak_position) { q.peak_position = h.peak_position; q.peak_time = q.end_time = h.peak_time; q.ip = h.ip; }
-            q.vel = Math.max(q.vel, h.vel); continue;
-          }
-        }
-        merged.push(h);
-      }
-      const hits = merged.filter(h => h.peak_position - h.start_position >= minD && h.vel >= p.packHitVelocity);
-      // this ride's rebound speed from each depth (75th percentile of rebound strokes, 5 bins)
-      const bins = [[], [], [], [], []];
-      for (const r of S.strokes.rebound) if (r.depth >= minD && r.duration > 0) bins[Math.max(0, Math.min(4, Math.floor(r.startPos / T * 5)))].push(r.depth / r.duration);
-      const q75 = a2 => { const v = a2.slice().sort((u, w) => u - w); return v[Math.floor(0.75 * (v.length - 1))]; };
-      const vb = bins.map(b => b.length >= 3 ? q75(b) : NaN);
-      for (let k = 0; k < 5; k++) if (!isFinite(vb[k])) { let best = NaN, d = 9; for (let j = 0; j < 5; j++) if (isFinite(vb[j]) && Math.abs(j - k) < d) { d = Math.abs(j - k); best = vb[j]; } vb[k] = isFinite(best) ? best : 800; }
-      const vAt = x => vb[Math.max(0, Math.min(4, Math.floor(x / T * 5)))];
-      out.fit[s].rebound = vb;
-      // --- 3. per hit: how far it extended since the previous hit, against E
-      for (let k = 0; k < hits.length; k++) {
-        const h = hits[k], prev = k ? hits[k - 1] : null;
-        let j0 = prev ? prev.ip : Math.max(0, bisect(time, h.start_time - 1.5)); j0 = Math.max(j0, bisect(time, h.start_time - 1.5));
-        let fi = h.i0, fv = Infinity; for (let j = j0; j <= h.i0 && j < n; j++) if (pos[j] < fv) { fv = pos[j]; fi = j; }
-        h.floor = isFinite(fv) ? fv : h.start_position; h.floorIdx = fi; h.E = E[fi]; h.excess = h.floor - h.E;
-        h.gap = prev ? h.start_time - prev.peak_time : Infinity;
-        h.inAir = !!(nearAir && nearAir[fi]);
-        if (prev) {
-          const back = prev.peak_position - h.E;
-          h.need = back > 0 ? back / vAt(prev.peak_position) : 0;
-          const dt = time[fi] - prev.peak_time;
-          h.rebSpeed = dt > 0.01 ? (prev.peak_position - h.floor) / dt : NaN; h.rebUsual = vAt(prev.peak_position);
-        }
-        h.packed = !!prev && !h.inAir && h.gap <= p.packMaxGap && h.excess >= p.packedThreshold;
-      }
-      // --- 4. runs of packed hits
-      const ev = [];
-      for (let k = 0; k < hits.length;) {
-        if (!hits[k].packed) { k++; continue; }
-        let e2 = k; while (e2 + 1 < hits.length && hits[e2 + 1].packed) e2++;
-        const run = hits.slice(k, e2 + 1);
-        if (run.length >= p.minPackedHits) ev.push(packEvent(run, hits[k - 1], hits, k, e2, time, pos, E, gu, T, p, n));
-        k = e2 + 1;
-      }
-      // --- 5. or: the average position stays well above E (1.5 × the threshold) for
-      // 0.4 s or more while hits keep coming (packing that sinks slowly, where single
-      // floors are noisy)
-      const thrB = 1.5 * p.packedThreshold, minT = 0.4;
-      for (let i = 0, st = -1; i <= n; i++) {
-        const on = i < n && posLP[i] - E[i] > thrB && !(nearAir && nearAir[i]);
-        if (on && st < 0) st = i;
-        if (!on && st >= 0) {
-          const t0 = time[st], t1 = time[i - 1]; st = -1;
-          if (t1 - t0 < minT || ev.some(e => e.end_time >= t0 && e.start_time <= t1)) continue;
-          let k = hits.findIndex(h => h.start_time >= t0 - 0.1), e2 = k;
-          if (k < 0) continue;
-          while (e2 + 1 < hits.length && hits[e2 + 1].start_time <= t1 && hits[e2 + 1].gap <= p.packMaxGap) e2++;
-          if (k === 0) k = 1;
-          const run = hits.slice(k, e2 + 1);
-          if (run.length < p.minPackedHits || hits[e2].start_time > t1 + 0.1) continue;
-          let sx = 0; for (let j = bisect(time, t0); j < i; j++) sx += posLP[j] - E[j];
-          const e = packEvent(run, hits[k - 1], hits, k, e2, time, pos, E, gu, T, p, n);
-          // deep on average because the hits are big is not packing: the floors must stay up too,
-          // and rebound must be losing the race (too little time, or held back)
-          if (!(e.excess_mean >= 0.5 * p.packedThreshold && (e.deficit_hits >= run.length / 2 || e.rebound_ratio < 0.6))) continue;
-          e.why.unshift('Its average position stayed ' + Math.round(sx / Math.max(1, i - bisect(time, t0))) + ' mm above expected for ' + (t1 - t0).toFixed(1) + ' s while the hits kept coming.');
-          e.route = 'sustained'; ev.push(e);
-        }
-      }
-      ev.sort((u, w) => u.start_time - w.start_time);
-      out.hits[s] = hits; out.events[s] = ev;
-    }
-    out.gouts = gu ? findGouts(time, side, out, gu, air, travel, p, rate) : [];
-    for (const s of ['front', 'rear']) for (const e of out.events[s]) {
-      const g = out.gouts.find(o => o.end_time >= e.start_time && o.start_time <= e.end_time);
-      if (g) e.why.push('Overlaps a ' + (g.kind === 'landing' ? 'landing' : 'g-out') + ' (' + g.peak_g.toFixed(1) + ' g), but it stayed deeper than that load explains.');
-    }
-    return out;
-  }
-  function packEvent(run, first, hits, k, e2, time, pos, E, gu, T, p, n) {
-    const last = run[run.length - 1], next = hits[e2 + 1];
-    // the end: the most extended point after the last packed hit (before the next hit, at most 1.5 s on)
-    const jEnd = Math.min(n - 1, next ? next.i0 : bisect(time, last.peak_time + 1.5));
-    let fe = last.ip, fv = Infinity; for (let j = last.ip; j <= jEnd; j++) if (pos[j] < fv) { fv = pos[j]; fe = j; }
-    const t0 = first.start_time, t1 = Math.max(time[fe], last.peak_time);
-    const mean = f => run.reduce((s, h) => s + f(h), 0) / run.length;
-    const exMean = mean(h => h.excess), exMax = Math.max(...run.map(h => h.excess));
-    const deficit = run.filter(h => h.need > h.gap).length;
-    const rr = run.filter(h => isFinite(h.rebSpeed) && h.rebUsual > 0).map(h => h.rebSpeed / h.rebUsual);
-    const rebRatio = rr.length ? rr.reduce((a2, b) => a2 + b, 0) / rr.length : NaN;
-    const maxDepth = Math.max(first.peak_position, ...run.map(h => h.peak_position));
-    // velocities: hits in the 3 s before (not part of it) vs during
-    const before = hits.slice(Math.max(0, k - 5), k - 1).filter(h => h.start_time >= t0 - 3);
-    const vBefore = before.length ? before.reduce((s, h) => s + h.vel, 0) / before.length : NaN, vDuring = mean(h => h.vel);
-    let gMean = NaN, gPeak = NaN;
-    if (gu) { let s = 0, c = 0, pk = -Infinity; for (let j = first.i0; j <= fe; j++) { s += gu[j]; c++; if (gu[j] > pk) pk = gu[j]; } gMean = c ? s / c : NaN; gPeak = pk; }
-    const eMean = mean(h => h.E);
-    // phases from how the floor moves hit to hit
-    const ph = new Set(['Initial']);
-    for (let i = 1; i < run.length; i++) { const d = run[i].floor - run[i - 1].floor; ph.add(d > p.ratchetDelta ? 'Progressive Ratcheting' : Math.abs(d) < p.stuckThreshold ? 'Stuck Deep' : 'Mixed'); }
-    const cl = x => Math.max(0, Math.min(1, x));
-    const dur = t1 - t0;
-    const sev = Math.round(35 * cl(exMean / (0.25 * T)) + 20 * (deficit / run.length) + 15 * cl((run.length - 2) / 6) + 15 * cl((maxDepth / T - 0.6) / 0.35) + 15 * cl(dur / 2));
-    const f0 = x => Math.round(x);
-    const why = [f0(run.length) + ' hits in a row each started ' + f0(exMean) + ' mm (up to ' + f0(exMax) + ') deeper than ' + (gu ? 'the load explains (expected ' + f0(eMean) + ' mm at ' + (isFinite(gMean) ? gMean.toFixed(1) : '1') + ' g)' : 'the typical riding position (' + f0(eMean) + ' mm)') + '.'];
-    why.push(deficit + ' of ' + run.length + ' came before rebound could get back at this ride’s usual rebound speed' + (isFinite(rebRatio) ? '; rebound ran at ' + f0(rebRatio * 100) + '% of that speed between hits' : '') + '.');
-    why.push('Compression speed of the hits: ' + f0(vDuring) + ' mm/s while packed' + (isFinite(vBefore) ? ', ' + f0(vBefore) + ' mm/s in the 3 s before' + (vDuring < 0.75 * vBefore ? ' (lower: less travel left to absorb them)' : '') : '') + '.');
-    return {
-      hit_count: run.length, start_time: t0, end_time: t1, duration: dur, baseline_used: eMean,
-      max_depth: maxDepth, max_start_depth: Math.max(...run.map(h => h.floor)), depth_above_baseline: exMean,
-      excess_mean: exMean, excess_max: exMax, deficit_hits: deficit, rebound_ratio: rebRatio,
-      comp_vel_before: vBefore, comp_vel_during: vDuring, load_g: gMean, load_g_peak: gPeak,
-      phases_present: [...ph], severity: Math.min(100, sev), category: category(Math.min(100, sev)), why
-    };
-  }
-  // G-outs and landings: an axle well below its 1 g position while the load
-  // (heave) is high, and the load explains the depth
-  function findGouts(time, side, M, gu, air, travel, p, rate) {
-    const n = time.length, out = [];
-    const deepAt = (s, i) => { const f = M.fit[s]; if (!side[s].on || !f) return false; const base = f.b0 + f.b2 * M.gf[i]; return side[s].posLP[i] - base > Math.max(p.packedThreshold, 0.1 * travel[s]); };
-    let i = 0;
-    while (i < n) {
-      if (!(gu[i] >= p.goutG && (deepAt('front', i) || deepAt('rear', i)))) { i++; continue; }
-      let a = i; while (a > 0 && gu[a - 1] > 1.1) a--;
-      let b = i; while (b + 1 < n && gu[b + 1] > 1.1) b++;
-      if (time[b] - time[a] >= 0.15) {
-        let pk = 0, ip = a; for (let j = a; j <= b; j++) if (gu[j] > pk) { pk = gu[j]; ip = j; }
-        let landing = false; const j0 = bisect(time, time[a] - 0.8); for (let j = j0; j < a; j++) if (air[j]) { landing = true; break; }
-        const depth = {}; for (const s of ['front', 'rear']) if (side[s].on) { let m = 0; for (let j = a; j <= b; j++) if (side[s].pos[j] > m) m = side[s].pos[j]; depth[s] = m; }
-        out.push({ kind: landing ? 'landing' : 'g-out', start_time: time[a], end_time: time[b], duration: time[b] - time[a], peak_g: pk, peak_time: time[ip], depth });
-      }
-      i = b + 1;
-    }
-    return out;
-  }
-  // Harshness (SA.harshness result) during each packing event and g-out vs the 2 s before
-  function packingHarshness(r, h) {
-    if (!h || !h.fine) return;
-    const F = h.fine, rms = (side, t0, t1) => { const a = bisect(F.t, t0), b = bisect(F.t, t1); let s = 0, c = 0; for (let i = a; i < b; i++) { const v = F[side][i]; if (v != null) { s += v * v; c++; } } return c >= 3 ? Math.sqrt(s / c) : NaN; };
-    for (const side of ['front', 'rear']) for (const e of r.events[side]) {
-      e.harsh_during = rms(side, e.start_time, e.end_time); e.harsh_before = rms(side, e.start_time - 2, e.start_time - 0.1);
-      e.harsh_ratio = e.harsh_during / e.harsh_before;
-      if (isFinite(e.harsh_ratio) && !e.why.some(w => /^Harshness/.test(w))) e.why.push('Harshness over the ' + side + ' axle: ' + Math.round(e.harsh_during) + ' g/s, ' + (e.harsh_ratio >= 1.15 ? e.harsh_ratio.toFixed(1) + '× the 2 s before' : e.harsh_ratio <= 0.87 ? 'lower than the 2 s before (' + Math.round(e.harsh_before) + ')' : 'about the same as the 2 s before') + '.');
-    }
-    for (const g of r.gouts || []) { g.harsh = { front: rms('front', g.start_time, g.end_time), rear: rms('rear', g.start_time, g.end_time) }; }
   }
 
   function analyze(parsed, params) {
@@ -1944,26 +1894,37 @@ window.plotlyReady = new Promise(function (done) {
       'Strokes: front ' + strokes.front.compression.length + ' compression / ' + strokes.front.rebound.length + ' rebound, rear ' + strokes.rear.compression.length + ' / ' + strokes.rear.rebound.length
     ];
 
-    let PK = null;
-    try {
-      PK = packingV2(parsed, a, { time, rate, segs, travel: { front: p.frontTravel, rear: p.rearTravel },
-        side: { front: { pos: front, vel: frontVel, strokes: strokes.front, on: potOn.front }, rear: { pos: rear, vel: rearVel, strokes: strokes.rear, on: potOn.rear } } }, p);
-    } catch (e) { PK = null; log.push('Packing: new detection failed (' + e.message + '), used the old one'); }
-    const impacts = PK ? PK.hits : { front: detectImpacts(time, front, frontVel, p.velocityThreshold), rear: detectImpacts(time, rear, rearVel, p.velocityThreshold) };
-    const events = PK ? PK.events : { front: detectPacking(impacts.front, p, p.frontTravel), rear: detectPacking(impacts.rear, p, p.rearTravel) };
-    if (PK) {
-      for (const s of ['front', 'rear']) if (potOn[s] && PK.fit[s]) { const F = PK.fit[s];
-        log.push('Packing, ' + s + ': expected position ' + f1(F.b0) + ' mm' + (PK.imu ? ' at 1 g, ' + (F.b1 >= 0 ? '+' : '') + f1(F.b1) + ' mm per extra g, ' + (F.b2 >= 0 ? '+' : '') + f1(F.b2) + ' mm per g fore-aft (fit spread ±' + f1(F.sd) + ' mm)' : ' (typical riding position; no IMU, so load is not accounted for)') +
-          '; rebound speed by depth ' + F.rebound.map(f0).join('/') + ' mm/s; ' + PK.hits[s].length + ' hits, ' + PK.hits[s].filter(h => h.packed).length + ' packed, ' + PK.events[s].length + ' events'); }
-      log.push(PK.imu ? 'G-outs: ' + PK.gouts.filter(g => g.kind === 'g-out').length + ', landings: ' + PK.gouts.filter(g => g.kind === 'landing').length + ' (deep because of load, not packing)' : 'No frame IMU: g-outs and landings can\u2019t be told apart by load; packing needs ' + p.minPackedHits + ' hits in a row that don\u2019t get back up');
+    const impacts = { front: detectImpacts(time, front, frontVel, p.velocityThreshold), rear: detectImpacts(time, rear, rearVel, p.velocityThreshold) };
+    // packing v2: expected position from the load, hits, packed runs, g-outs (see the comment above detectPackingV2)
+    const sig = loadSignals(parsed, a, b, rate, p);
+    const air = sig ? airSegments(sig.mag, rate) : airFromPots(front, rear, potOn, rate);
+    const landM = new Uint8Array(n), guardN = Math.round(p.packLandGuard * rate);
+    for (const s of air) for (let i = s.s; i <= Math.min(n - 1, s.e + guardN); i++) landM[i] = 1;
+    const events = { front: [], rear: [] }, hits = { front: [], rear: [] };
+    const packing = { mode: sig ? 'imu' : 'sag', air, model: {}, expected: { front: null, rear: null }, loaded: [], rebRate: {} };
+    // g-outs and landings (they still feed the load model, but a hit that starts inside one is never "packed":
+    // the load changes faster than the expected position can follow)
+    if (sig) packing.loaded = loadedEvents(sig, time, rate, front, rear, air, p);
+    const noPackM = Uint8Array.from(landM), padN = Math.round(0.15 * rate);
+    for (const g of packing.loaded) {
+      const i0 = Math.max(0, Math.round(g.start_time * rate) - padN), i1 = Math.min(n - 1, Math.round(g.end_time * rate) + padN);
+      for (let i = i0; i <= i1; i++) noPackM[i] = 1;
+    }
+    for (const sd of ['front', 'rear']) {
+      if (!potOn[sd]) continue;
+      const pos = sd === 'front' ? front : rear, vv = sd === 'front' ? frontVel : rearVel, travel = sd === 'front' ? p.frontTravel : p.rearTravel;
+      const ex = expectedPosition(pos, rate, travel, sig, landM, p);
+      const res = detectPackingV2({ t: time, pos, vel: vv, E: ex.E, p, travel, rate, landM: noPackM, strokes: strokes[sd] });
+      packing.model[sd] = ex.info; packing.expected[sd] = ex.E; packing.rebRate[sd] = res.rebRate;
+      hits[sd] = res.hits; events[sd] = res.events;
     }
     const runTime = n > 1 ? time[n - 1] - time[0] : 0;
-    const fi = packingIndex(impacts.front, events.front, runTime), ri = packingIndex(impacts.rear, events.rear, runTime);
+    const fi = packingIndex(hits.front, events.front, runTime), ri = packingIndex(hits.rear, events.rear, runTime);
     const combined = potOn.front && potOn.rear ? Math.round((fi + ri) / 2) : potOn.rear ? ri : fi;
     return {
       params: p0, effective: scaled, rate, detectedRate: detected, rows: n, runTime,
       potOn: { front: potOn.front, rear: potOn.rear }, potWhy: potOn.why,
-      time, front, rear, frontVel, rearVel, frontRaw: fr, rearRaw: rr, zero, rowOffset: a, gouts: PK ? PK.gouts : [], expected: PK ? PK.E : null, packingV: PK ? 2 : 1, packImu: !!(PK && PK.imu), gaps: segs.length - 1, strokes, log, impacts, events,
+      time, front, rear, frontVel, rearVel, frontRaw: fr, rearRaw: rr, zero, rowOffset: a, gaps: segs.length - 1, strokes, log, impacts, hits, packing, events,
       packingIndex: combined, frontPackingIndex: fi, rearPackingIndex: ri, rating: rating(combined),
       packedSeconds: packedSeconds(events),
       stats: {
@@ -2242,27 +2203,33 @@ window.plotlyReady = new Promise(function (done) {
       sT.push(r.time ? r.time[s + (win >> 1)] : (s + win / 2) / fs);
       if (c > win * 0.3) { sF.push(Math.sqrt(f2 / c)); sR.push(Math.sqrt(r2 / c)); } else { sF.push(null); sR.push(null); }
     }
-    // finer rolling RMS (0.1 s window every 0.02 s) for the time charts, so single hits and packing show
-    const cF = new Float64Array(n + 1), cR = new Float64Array(n + 1), cC = new Float64Array(n + 1);
-    for (let i = 0; i < n; i++) { cF[i + 1] = cF[i] + (ok[i] ? jF[i] * jF[i] : 0); cR[i + 1] = cR[i] + (ok[i] ? jR[i] * jR[i] : 0); cC[i + 1] = cC[i] + ok[i]; }
-    const fw = Math.max(2, Math.round(0.1 * fs)), fh = Math.max(1, Math.round(0.02 * fs)), fT = [], fF = [], fR = [];
-    for (let s = 0; s + fw <= n; s += fh) {
-      const c = cC[s + fw] - cC[s];
-      fT.push(r.time ? r.time[s + (fw >> 1)] : (s + fw / 2) / fs);
-      if (c > fw * 0.3) { fF.push(Math.sqrt(Math.max(0, cF[s + fw] - cF[s]) / c)); fR.push(Math.sqrt(Math.max(0, cR[s + fw] - cR[s]) / c)); } else { fF.push(null); fR.push(null); }
-    }
     let valid = 0; for (let i = 0; i < n; i++) valid += ok[i];
-    return { fine: { t: fT, front: fF, rear: fR, window: 0.1 },
+    return {
       front: F, rear: R, share: F.rms + R.rms > 0 ? 100 * R.rms / (F.rms + R.rms) : NaN,
       ratio: F.rms > 0 ? R.rms / F.rms : NaN, cutoff: fc, threshold: thr, wheelbase: L * 1000, imuFromFront: x * 1000,
       seconds: valid / fs, airPct: 100 * air / n, clipPct: 100 * clip / n, ori, series: { t: sT, front: sF, rear: sR }
     };
   }
 
-  const SA = { parseCSV, detectRate, medianFilter, limitChange, sgCoeffs, sgDerivative, sgSmooth, movingAverage, diffVelocity, robustBaseline,
+  // Harshness next to each packing event and g-out: the 2 s before (leaving 0.2 s) against during.
+  function annotateHarshness(r, h) {
+    if (!r || !h || !h.series || !h.series.t) return;
+    const T = h.series.t;
+    const win = (arr, a, b) => { let s = 0, c = 0, pk = 0; for (let i = 0; i < T.length; i++) { if (T[i] < a) continue; if (T[i] > b) break; const v = arr[i]; if (v != null && isFinite(v)) { s += v; c++; if (v > pk) pk = v; } } return c ? { mean: s / c, peak: pk } : null; };
+    for (const sd of ['front', 'rear']) for (const e of r.events[sd]) {
+      const d = win(h.series[sd], e.start_time, e.end_time), b = win(h.series[sd], e.start_time - 2, e.start_time - 0.2);
+      e.harsh = d ? { before: b ? b.mean : NaN, during: d.mean, peak: d.peak, ratio: b && b.mean > 0 ? d.mean / b.mean : NaN } : null;
+    }
+    for (const g of (r.packing && r.packing.loaded) || []) {
+      const f = win(h.series.front, g.start_time, g.end_time), q = win(h.series.rear, g.start_time, g.end_time);
+      g.harsh = f || q ? { front: f ? f.peak : NaN, rear: q ? q.peak : NaN } : null;
+    }
+  }
+
+  const SA = { annotateHarshness, detectPackingV2, expectedPosition, parseCSV, detectRate, medianFilter, limitChange, sgCoeffs, sgDerivative, sgSmooth, movingAverage, diffVelocity, robustBaseline,
                detectStrokes, strokeStats, wheelToShock, linkageRatio, toMM, detectImpacts,
                detectPacking, packingIndex, rating, posStats, velStats, travelHistogram, analyze, DEFAULTS,
-               autoOffset, parseWarpPath, warpTimes, packedSeconds, potsConnected, imuOrientation, harshness, packingHarshness };
+               autoOffset, parseWarpPath, warpTimes, packedSeconds, potsConnected, imuOrientation, harshness };
   if (typeof module !== 'undefined' && module.exports) module.exports = SA;
   else root.SA = SA;
 })(typeof window !== 'undefined' ? window : this);
@@ -6031,7 +5998,7 @@ window.plotlyReady = new Promise(function (done) {
   const rideByKey = k => rides.find(r => r.key === k);
   function pkey() { const p = A.params(); return JSON.stringify(['frontTravel', 'rearTravel', 'frontPotStroke', 'rearPotStroke', 'invertFront', 'invertRear', 'swapPots', 'frontPot', 'rearPot', 'rearA', 'rearB', 'rearC', 'rearD', 'velocityFilterWindow', 'filterType'].map(k => p[k])); }
   // run numbers also depend on these (front/rear harshness); 'h1' = run-stats version
-  function skey() { const p = A.params(); return pkey() + JSON.stringify(['h1', p.wheelbase, p.imuFromFront, p.imuForward, p.jerkCutoff, p.harshHit, 'pk2', p.packedThreshold, p.minPackedHits, p.packMaxGap, p.packHitDepth, p.packHitVelocity, p.goutG, p.sagPercent]); }
+  function skey() { const p = A.params(); return pkey() + JSON.stringify(['h1', p.wheelbase, p.imuFromFront, p.imuForward, p.jerkCutoff, p.harshHit]); }
   function fmtT(s) { if (!isFinite(s)) return '–'; const neg = s < 0; s = Math.abs(s); const m = Math.floor(s / 60), r = s - m * 60; return (neg ? '−' : '') + m + ':' + (r < 10 ? '0' : '') + r.toFixed(2); }
   const fmtGap = g => !isFinite(g) ? '–' : Math.abs(g) < 0.005 ? '±0.00' : (g > 0 ? '+' : '−') + Math.abs(g).toFixed(2);
   const fmtDate = ms => { try { return new Date(ms).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }); } catch (e) { return ''; } };
@@ -7224,10 +7191,9 @@ window.plotlyReady = new Promise(function (done) {
     } catch (e) {}
   }
   let params = Object.assign({}, SA.DEFAULTS, LS.get('params', {}));
-  // packing detection v2 (2026.11.16b): the packed threshold now counts from the load-expected
-  // position, not from sag, so a value saved for the old detector is reset once
-  if (!('packMaxGap' in LS.get('params', {}))) { params.packedThreshold = SA.DEFAULTS.packedThreshold; LS.set('params', params); }
   delete params.trimStart; delete params.trimEnd;
+  // Packing v2 measures from the load-expected position, not from sag: the old saved 20 mm means something else now
+  if (!LS.get('packV2', 0)) { params.packedThreshold = SA.DEFAULTS.packedThreshold; LS.set('params', params); LS.set('packV2', 1); }
 
   // ======================================================= tabs
   // Plotly needs a resize when a hidden chart becomes visible (only visible ones can be resized)
@@ -7988,32 +7954,63 @@ window.plotlyReady = new Promise(function (done) {
   // tab). New rides come in as soon as this page opens: each ride's summary
   // first (quick look), then the full recording.
   let direct = null;                    // logger /api/status when this page is served by the logger
-  // Logger 5.3.2+: big rides in 0.5 MB pieces (?raw=1 + Range), each retried, then
-  // unpacked here; older loggers (no Range) and old browsers get the whole file.
-  function getRide(name, prog) {
-    const u = '/download?file=' + encodeURIComponent(name);
-    const whole = () => dfetch(u, 300000).then(r => r.ok ? r.text() : r.text().then(x => { throw new Error(x || ('HTTP ' + r.status)); }));
-    if (typeof DecompressionStream === 'undefined' || !Blob.prototype.stream) return whole();
-    const P = 524288, parts = []; let total = -1, gz = false, got = 0, ranged = true, wholeText = '';
-    const piece = (a, tries) => fetch(u + '&raw=1', { headers: { 'X-Logger': '1', Range: 'bytes=' + a + '-' + (a + P - 1) }, cache: 'no-store' })
-      .then(r => {
-        if (!r.ok) return r.text().then(x => { const e = new Error(x || ('HTTP ' + r.status)); e.fatal = r.status < 500; throw e; });
-        if (r.status !== 206 && !r.headers.get('X-Stored')) { ranged = false; return r.text().then(t => { wholeText = t; return null; }); }   // logger before 5.3.2: this is the whole ride
-        gz = r.headers.get('X-Stored') === 'gz';
-        const m = /\/(\d+)$/.exec(r.headers.get('Content-Range') || ''); total = m ? +m[1] : +(r.headers.get('X-Total') || -1);
-        return r.arrayBuffer().then(b => { const want = Math.min(P, total - a); if (total >= 0 && b.byteLength !== want) throw new Error('cut off'); return b; });
-      })
-      .catch(e => { if (!e.fatal && tries < 4) return new Promise(res => setTimeout(res, 800 * (tries + 1))).then(() => piece(a, tries + 1)); throw e; });
-    const loop = () => piece(got, 0).then(b => { if (!b) return; parts.push(b); got += b.byteLength; if (prog) prog(got, total); if (got < total && b.byteLength) return loop(); });
-    return loop().then(() => {
-      if (!ranged) return wholeText;
-      const bl = new Blob(parts);
-      return gz ? new Response(bl.stream().pipeThrough(new DecompressionStream('gzip'))).text() : bl.text();
-    });
-  }
   function dfetch(path, ms) {
     const c = window.AbortController ? new AbortController() : null, t = setTimeout(() => { if (c) c.abort(); }, ms || 8000);
     return fetch(path, { headers: { 'X-Logger': '1' }, cache: 'no-store', signal: c ? c.signal : undefined }).finally(() => clearTimeout(t));
+  }
+  // Like dfetch, but the timer keeps running until the body has arrived (dfetch stops it at the headers, so a body that
+  // stalls halfway was never given up on). read(response) returns the body; stall = ms without a full answer.
+  function bodyFetch(path, ms, read) {
+    const c = window.AbortController ? new AbortController() : null; let t = 0;
+    const arm = () => { clearTimeout(t); t = setTimeout(() => { if (c) c.abort(); }, ms); };
+    arm();
+    return fetch(path, { headers: { 'X-Logger': '1' }, cache: 'no-store', signal: c ? c.signal : undefined })
+      .then(r => read(r, arm)).finally(() => clearTimeout(t));
+  }
+  const sleep = ms => new Promise(res => setTimeout(res, ms));
+  // One recording from the logger. Logger firmware 5.3.1+ sends it in 256 KB pieces of the stored bytes (?raw=1&off&len),
+  // so a dropped connection costs one piece: that piece is asked for again (up to 6 tries) and the rest is kept. The pieces are
+  // joined and, if the logger stored the file gzipped, unpacked here. Older firmware ignores the piece arguments and sends
+  // the whole file, which is then read as before (with up to 3 tries).
+  async function downloadRide(f, onProgress) {
+    const enc = encodeURIComponent(f.name), PIECE = 262144;
+    const whole = async () => {
+      let last;
+      for (let k = 1; k <= 3; k++) {
+        try { return await bodyFetch('/download?file=' + enc, 120000, async r => { if (!r.ok) throw new Error((await r.text()) || ('HTTP ' + r.status)); return r.text(); }); }
+        catch (e) { last = e; if (k < 3) { onProgress && onProgress('retry ' + k); await sleep(800 * k); } }
+      }
+      throw new Error('The download kept failing (' + (last && last.name === 'AbortError' ? 'the logger stopped answering' : (last && last.message) || 'connection lost') + '). Try again closer to the logger.');
+    };
+    const parts = []; let off = 0, total = null, stored = 'plain', wire = 0;
+    while (total == null || off < total) {
+      let got = null, last = null;
+      for (let k = 1; k <= 6 && !got; k++) {
+        try {
+          got = await bodyFetch('/download?file=' + enc + '&raw=1&off=' + off + '&len=' + PIECE, 30000, async (r, arm) => {
+            if (!r.ok) throw new Error((await r.text()) || ('HTTP ' + r.status));
+            const tt = r.headers.get('X-Total');
+            if (tt == null) return { old: true };                            // firmware without pieces: sent the whole file
+            const buf = new Uint8Array(await r.arrayBuffer()), want = Math.min(PIECE, +tt - off);
+            if (buf.length !== want) throw new Error('short piece (' + buf.length + ' of ' + want + ' bytes)');
+            return { buf, total: +tt, stored: r.headers.get('X-Stored') || 'plain' };
+          });
+        } catch (e) { last = e; got = null; if (k < 6) { onProgress && onProgress('retry'); await sleep(400 * k); } }
+      }
+      if (!got) throw new Error('The download stopped at ' + Math.round(100 * off / (total || 1)) + '% and could not be resumed (' + (last && last.name === 'AbortError' ? 'the logger stopped answering' : (last && last.message) || 'connection lost') + '). Try again closer to the logger.');
+      if (got.old) return { text: await whole(), wire: f.gz || f.size || 0 };
+      total = got.total; stored = got.stored; parts.push(got.buf); off += got.buf.length; wire = total;
+      onProgress && onProgress(total ? Math.round(100 * off / total) : 0);
+      if (!got.buf.length) break;                                           // file shrank under us: stop rather than loop
+    }
+    const all = new Uint8Array(off); let p = 0; for (const b of parts) { all.set(b, p); p += b.length; }
+    if (total != null && off !== total) throw new Error('The recording came in incomplete (' + off + ' of ' + total + ' bytes).');
+    if (stored === 'gzip') {
+      if (typeof DecompressionStream === 'undefined') throw new Error('This browser can’t unpack the recording (no DecompressionStream). Use a current Chrome, Edge or Safari.');
+      const ds = new DecompressionStream('gzip'), text = await new Response(new Blob([all]).stream().pipeThrough(ds)).text();
+      return { text, wire };
+    }
+    return { text: new TextDecoder().decode(all), wire };
   }
   function detectDirect() {
     if (location.protocol !== 'http:') return Promise.resolve(null);
@@ -8064,10 +8061,11 @@ window.plotlyReady = new Promise(function (done) {
         return sumP.then(sum => {
           if (sum && !qlShown && !names) showQuickLook(sum, f.name, null);
           const t0 = performance.now();
-          return getRide(f.name, (g, tot) => { if (tot > 0) msg('linkMsg', 'Getting ' + f.name + ' (' + i + ' of ' + todo.length + ', ' + Math.round(100 * g / tot) + ' %)…'); })
-            .then(text => {
-              // logger 4.3.2+ sends recordings gzip-compressed (f.gz bytes); the browser unpacks them
-              const s = (performance.now() - t0) / 1000, wire = f.gz || text.length;
+          const head = 'Getting ' + f.name + ' (' + i + ' of ' + todo.length + ', ' + fmtBytes(f.size) + ')';
+          return downloadRide(f, st => msg('linkMsg', head + (typeof st === 'number' ? ' · ' + st + '%' : ' · connection hiccup, asking again') + '…'))
+            .then(res => {
+              // logger 4.3.2+ stores recordings gzipped (f.gz bytes); they are unpacked here or by the browser
+              const text = res.text, s = (performance.now() - t0) / 1000, wire = res.wire || f.gz || text.length;
               speed = fmtBytes(text.length) + (f.gz ? ' (' + fmtBytes(f.gz) + ' sent)' : '') + ' in ' + s.toFixed(1) + ' s, ' + (wire / 1e6 / s).toFixed(2) + ' MB/s';
               return text;
             })
@@ -8273,10 +8271,8 @@ window.plotlyReady = new Promise(function (done) {
     }));
   }
   const BAND = { Mild: 'warn', Moderate: 'warn', Severe: 'serious', Critical: 'crit' };
-  function bandShapes(events, gouts) {
+  function bandShapes(events) {
     const shapes = [];
-    for (const g of gouts || []) shapes.push({ type: 'rect', xref: 'x', yref: 'paper', x0: g.start_time, x1: g.end_time, y0: 0, y1: 1,
-      fillcolor: cssVar('--muted'), opacity: 0.16, line: { width: 1, dash: 'dot', color: cssVar('--muted') }, layer: 'below' });
     for (const side of ['front', 'rear']) for (const e of events[side]) {
       shapes.push({ type: 'rect', xref: 'x', yref: 'paper', x0: e.start_time, x1: e.end_time, y0: 0, y1: 1,
                     fillcolor: cssVar('--' + BAND[e.category]), opacity: 0.22, line: { width: 0 }, layer: 'below' });
@@ -8367,7 +8363,7 @@ window.plotlyReady = new Promise(function (done) {
     try { r.track = TRACK.build(parsed, r); } catch (e) { console.warn(e); r.track = { ok: false, reason: 'The GPS track could not be read (' + e.message + ').' }; }
     try { r.imu = { frame: CMP.imuChannel(parsed, ['fax', 'fay', 'faz'], r.rate, 20), bar: CMP.imuChannel(parsed, ['bax', 'bay', 'baz'], r.rate, 20) }; } catch (e) { r.imu = null; }
     try { r.harsh = SA.harshness(parsed, r, p); } catch (e) { console.warn(e); r.harsh = null; }
-    try { SA.packingHarshness(r, r.harsh); } catch (e) { console.warn(e); }
+    try { SA.annotateHarshness(r, r.harsh); } catch (e) { console.warn(e); }
     lastAnalysis = r;
     $('anRate').textContent = Math.round(r.rate) + ' Hz' + (params.rateOverride > 0 ? ' (override)' : '');
     $('trimEnd').placeholder = fmt(parsed.time[parsed.rows - 1] - parsed.time[0], 1);
@@ -8408,12 +8404,14 @@ window.plotlyReady = new Promise(function (done) {
       el('div', null, el('div', { class: 'badge' }, el('span', { class: 'sw', style: 'background:' + cssVar(RATING_CLR[r.rating] || '--muted') }), r.rating),
         el('div', { class: 'muted', style: 'margin-top:4px' }, 'Packing index (0 = none, 100 = worst) · front ' + r.frontPackingIndex + ' / rear ' + r.rearPackingIndex)));
     const T = $('anTiles'); T.textContent = '';
-    T.append(tile(impacts ? Math.round(packedHits / impacts * 100) + '%' : '0%', 'Packing ratio', packedHits + ' of ' + impacts + ' impacts packed'),
+    const hitsAll = r.hits ? r.hits.front.length + r.hits.rear.length : impacts;
+    T.append(tile(hitsAll ? Math.round(packedHits / hitsAll * 100) + '%' : '0%', 'Packing ratio', packedHits + ' of ' + hitsAll + ' hits packed'),
       tile(ev.length ? String(Math.round(ev.reduce((s, e) => s + e.severity, 0) / ev.length)) : '0', 'Avg severity', 'of packing events, 0–100'),
       tile(ev.length ? String(Math.max(...ev.map(e => e.severity))) : '0', 'Worst event', ev.length ? ev.reduce((a, e) => e.severity > a.severity ? e : a).category : 'none'),
       tile(r.runTime > 0 ? (r.packedSeconds / r.runTime * 100).toFixed(1) + '%' : '–', 'Time packed', 'front or rear · ' + fmtDur(r.runTime) + ' analyzed'),
       tile(String(ev.length), 'Packing events', 'front ' + r.events.front.length + ' · rear ' + r.events.rear.length),
-      tile(String(impacts), 'Total impacts', 'front ' + r.impacts.front.length + ' · rear ' + r.impacts.rear.length),
+      tile(String(hitsAll), 'Hits', 'front ' + (r.hits ? r.hits.front.length : r.impacts.front.length) + ' · rear ' + (r.hits ? r.hits.rear.length : r.impacts.rear.length) + ' · ' + impacts + ' small impacts'),
+      ...(r.packing && r.packing.mode === 'imu' ? [tile(String(r.packing.loaded.length), 'G-outs / landings', 'not counted as packing')] : []),
       (r.potOn && !r.potOn.rear ? tile(fmt(r.stats.front.velocity.compression.max, 0), 'Front max comp. (mm/s)', 'rear pot not connected') : tile(fmt(r.stats.rear.velocity.compression.max, 0), 'Rear max comp. (mm/s)', 'front ' + fmt(r.stats.front.velocity.compression.max, 0))));
     if (r.harsh) {
       const ht = el('div', { class: 'tile', style: 'cursor:pointer', role: 'button', tabindex: '0', title: 'Open the IMU tab', onclick: () => showSub('imu') },
@@ -8430,7 +8428,7 @@ window.plotlyReady = new Promise(function (done) {
   }
 
   // ---- position / velocity charts (+ IMU, zoomed together)
-  const ZOOM_GROUP = ['chPos', 'chVel', 'chHarshT', 'chImu', 'chHarsh'];
+  const ZOOM_GROUP = ['chPos', 'chVel', 'chHarshC', 'chImu', 'chHarsh'];
   let zoomBusy = false;
   function zoomAll(update, except) {
     const targets = ZOOM_GROUP.map(id => $(id)).filter(d => d !== except && d.data && d.layout);
@@ -8452,9 +8450,35 @@ window.plotlyReady = new Promise(function (done) {
   function rideKey(r) { return r.name + ':' + r.rows + ':' + r.time[0]; }
   function currentRange() { const L = $('chPos').layout; return L && L.xaxis && L.xaxis.autorange === false && L.xaxis.range ? L.xaxis.range.slice() : null; }
 
+  // grey bands: g-outs and landings (deep because of the load, not packing)
+  function loadedShapes(r) {
+    return ((r.packing && r.packing.loaded) || []).map(g => ({ type: 'rect', xref: 'x', yref: 'paper', x0: g.start_time, x1: g.end_time, y0: 0, y1: 1,
+      fillcolor: cssVar('--muted'), opacity: 0.18, line: { width: 0 }, layer: 'below' }));
+  }
+  // Harshness under the position and velocity charts, with the same packing zones, so you can see
+  // whether the harshness rises where the suspension packs.
+  function drawHarshC(r) {
+    const ch = $('chHarshC'), note = $('harshCNote'), h = r.harsh;
+    if (!h || !h.series) {
+      Plotly.purge(ch); ch.__zoom = false; ch.__cursor = false; ch.classList.add('hidden');
+      note.textContent = 'Harshness needs the frame IMU (acc_frame and gyro_frame columns with data). This ride has none.';
+      return;
+    }
+    ch.classList.remove('hidden');
+    const s1 = cssVar('--s1'), s2 = cssVar('--s2'), on = r.potOn || { front: true, rear: true };
+    const L = baseLayout('Harshness (g/s)'); L.uirevision = rideKey(r) + 'hc';
+    L.shapes = bandShapes(r.events).concat(loadedShapes(r)); L.shapes.push(cursorShape());
+    const rng = currentRange(); if (rng) L.xaxis.range = rng;
+    Plotly.react(ch, [on.rear ? line('Rear', h.series.t, h.series.rear, s2) : null, on.front ? line('Front', h.series.t, h.series.front, s1) : null].filter(Boolean), L, PLOT_CFG);
+    linkZoom('chHarshC'); linkCharts();
+    const ev = r.events.front.concat(r.events.rear).filter(e => e.harsh && isFinite(e.harsh.ratio));
+    let txt = 'Shaking of the frame over each axle (g/s, 0.5 s RMS), with the packing zones from the charts above. ';
+    if (ev.length) { const up = ev.filter(e => e.harsh.ratio >= 1.3).length; txt += 'Harshness was at least 30% higher during packing than in the 2 s before in ' + up + ' of ' + ev.length + ' events (details on the Events tab). '; }
+    note.textContent = txt + 'Grey bands are g-outs and landings; time in the air is left out.';
+  }
   function drawTimeCharts(r) {
     const s1 = cssVar('--s1'), s2 = cssVar('--s2');
-    const Lp = baseLayout('Position (mm)'); Lp.shapes = bandShapes(r.events, r.gouts); Lp.uirevision = rideKey(r);
+    const Lp = baseLayout('Position (mm)'); Lp.shapes = bandShapes(r.events).concat(loadedShapes(r)); Lp.uirevision = rideKey(r);
     const rb = r.params.rearTravel * r.params.sagPercent / 100;
     Lp.shapes.push({ type: 'line', xref: 'paper', x0: 0, x1: 1, y0: rb, y1: rb, line: { color: cssVar('--muted'), width: 1, dash: 'dash' } });
     Lp.annotations = [{ xref: 'paper', x: 1, y: rb, xanchor: 'right', yanchor: 'bottom', text: 'rear sag', showarrow: false, font: { size: 11, color: cssVar('--muted') } }];
@@ -8462,74 +8486,31 @@ window.plotlyReady = new Promise(function (done) {
     const on = r.potOn || { front: true, rear: true };
     // rear first, front on top (front is usually the busier trace); an unplugged pot isn't drawn
     const tp = [on.rear ? line('Rear', r.time, r.rear, s2) : null, on.front ? line('Front', r.time, r.front, s1) : null].filter(Boolean);
-    if (r.expected) {
-      // where each axle should sit for the load at that moment (packing = the floor stays above it)
-      const st = Math.max(1, Math.floor(r.rows / 6000)), xs = [];
-      for (let i = 0; i < r.rows; i += st) xs.push(r.time[i]);
-      const ex = (nm, arr, c) => ({ type: 'scattergl', mode: 'lines', name: nm, x: xs, y: xs.map((_, k) => arr[k * st]), line: { color: c, width: 1, dash: 'dot' }, opacity: 0.8, hovertemplate: '%{y:.0f} mm<extra>' + nm + '</extra>' });
-      if (on.rear) tp.push(ex('Rear expected', r.expected.rear, s2)); if (on.front) tp.push(ex('Front expected', r.expected.front, s1));
-      Lp.shapes = Lp.shapes.filter(sh => !(sh.xref === 'paper' && sh.y0 === rb && sh.y1 === rb)); Lp.annotations = [];
-      Lp.shapes.push(Lp.shapes.splice(Lp.shapes.findIndex(sh => sh.visible === false), 1)[0]);   // cursor stays last
-    }
     if (params.showRawData) {
       const raw = (name, y, c) => Object.assign(line(name, r.time, y, c), { line: { color: c, width: 0.6 }, opacity: 0.35 });
       if (on.front) tp.push(raw('Front raw', r.frontRaw, s1)); if (on.rear) tp.push(raw('Rear raw', r.rearRaw, s2));
     }
     if (!on.rear) { Lp.shapes = Lp.shapes.filter(sh => !(sh.xref === 'paper' && sh.y0 === rb && sh.y1 === rb)); Lp.annotations = []; }
+    // dotted: where each wheel should sit for the load. Packing = the low points between hits stay above it. (click the legend to show)
+    const ex = r.packing && r.packing.expected;
+    if (ex) for (const [k, nm, c] of [['rear', 'Rear expected', s2], ['front', 'Front expected', s1]]) if (ex[k] && on[k]) {
+      const st = Math.max(1, Math.round(r.rate / 25)), xs = [], ys = [];
+      for (let i = 0; i < r.time.length; i += st) { xs.push(r.time[i]); ys.push(ex[k][i]); }
+      tp.push(Object.assign(line(nm, xs, ys, c), { line: { color: c, width: 1.2, dash: 'dot' }, visible: 'legendonly' }));
+    }
     Plotly.react('chPos', tp, Lp, PLOT_CFG);
     const Lv = baseLayout('Velocity (mm/s)'); Lv.uirevision = rideKey(r);
     Lv.shapes = [{ type: 'line', xref: 'paper', x0: 0, x1: 1, y0: 0, y1: 0, line: { color: cssVar('--muted'), width: 1, dash: 'dot' } }, cursorShape()];
     Plotly.react('chVel', [on.rear ? line('Rear', r.time, r.rearVel, s2) : null, on.front ? line('Front', r.time, r.frontVel, s1) : null].filter(Boolean), Lv, PLOT_CFG);
-    drawHarshTime(r, on);
     linkZoom('chPos'); linkZoom('chVel'); linkCharts();
+    try { drawHarshC(r); } catch (e) { console.warn(e); }
     const bl = $('bandLegend'); bl.textContent = '';
     bl.append(el('span', null, 'Packing zones:'));
     [['warn', 'Mild / moderate'], ['serious', 'Severe'], ['crit', 'Critical']].forEach(([k, t]) => bl.append(el('span', null, el('span', { class: 'sw', style: 'background:' + cssVar('--' + k) + ';opacity:.6' }), t)));
-    if ((r.gouts || []).length) bl.append(el('span', null, el('span', { class: 'sw', style: 'background:' + cssVar('--muted') + ';opacity:.35;outline:1px dotted ' + cssVar('--muted') }), 'G-out / landing (load, not packing)'));
-    if (r.expected) bl.append(el('span', null, 'Dotted: expected position for the load'));
+    if (r.packing && r.packing.loaded && r.packing.loaded.length) bl.append(el('span', null, el('span', { class: 'sw', style: 'background:' + cssVar('--muted') + ';opacity:.5' }), 'G-out / landing (not packing)'));
+    if (r.packing && r.packing.mode === 'sag') bl.append(el('span', null, 'No frame IMU: packing judged against sag, so g-outs can’t be told apart by load'));
     if (params.showRawData) bl.append(el('span', null, 'Faint lines: raw (unfiltered) position'));
     if (cursorT != null) chartCursor(cursorT);
-  }
-
-  // ---- harshness under position and velocity (same zoom, same packing bands):
-  // is the frame getting hit harder while the suspension is packed?
-  function harshInOut(h, events) {
-    const F = h.fine, out = {};
-    for (const side of ['front', 'rear']) {
-      const ev = events[side]; if (!ev.length) continue;
-      let si = 0, so = 0, ni = 0, no = 0, k = 0;
-      const sorted = ev.slice().sort((a, b) => a.start_time - b.start_time);
-      for (let i = 0; i < F.t.length; i++) {
-        const v = F[side][i]; if (v == null) continue;
-        const t = F.t[i];
-        while (k < sorted.length && sorted[k].end_time < t) k++;
-        if (k < sorted.length && t >= sorted[k].start_time) { si += v * v; ni++; } else { so += v * v; no++; }
-      }
-      if (ni >= 5 && no >= 5) out[side] = { inside: Math.sqrt(si / ni), outside: Math.sqrt(so / no), sec: ni * 0.02 };
-    }
-    return out;
-  }
-  function drawHarshTime(r, on) {
-    const box = $('harshTBox'), d = $('chHarshT'), h = r.harsh;
-    if (!h || !h.fine || !h.fine.t.length) { box.classList.add('hidden'); try { Plotly.purge(d); } catch (e) {} d.__zoom = false; d.__cursor = false; return; }
-    box.classList.remove('hidden');
-    const s1 = cssVar('--s1'), s2 = cssVar('--s2'), F = h.fine;
-    const L = baseLayout('Harshness (g/s)'); L.uirevision = rideKey(r) + 'harshT';
-    L.shapes = bandShapes(r.events, r.gouts); L.shapes.push(cursorShape());
-    const rng = currentRange(); if (rng) { L.xaxis.range = rng; L.xaxis.autorange = false; }
-    const tr = (nm, y, c) => Object.assign(line(nm, F.t, y, c), { connectgaps: false, hovertemplate: '%{y:.0f} g/s<extra>' + nm + '</extra>' });
-    Plotly.react(d, [tr('Rear', F.rear, s2), tr('Front', F.front, s1)], L, PLOT_CFG);
-    linkZoom('chHarshT');
-    const io = harshInOut(h, r.events), bits = [];
-    for (const side of ['front', 'rear']) {
-      const x = io[side]; if (!x) continue;
-      const k = x.inside / x.outside, S = side === 'front' ? 'Front' : 'Rear';
-      bits.push('During ' + side + ' packing (' + fmt(x.sec, 1) + ' s): ' + side + ' harshness ' + fmt(x.inside, 0) + ' g/s vs ' + fmt(x.outside, 0) + ' elsewhere, '
-        + (k >= 1.15 ? fmt(k, 1) + '\u00d7 harsher' : k <= 0.87 ? fmt(1 / k, 1) + '\u00d7 smoother' : 'about the same') + '.');
-    }
-    $('harshTNote').textContent = (bits.length ? bits.join(' ') + ' ' : (r.events.front.length + r.events.rear.length ? '' : 'No packing events in this part to compare against. '))
-      + 'Jerk of the frame over each axle, RMS over ' + fmt(F.window * 1000, 0) + ' ms. Same packing bands and zoom as the charts above; the IMU tab has the ride totals.'
-      + (h.airPct > 0.5 ? ' Gaps are time in the air.' : '');
   }
 
   // ---- IMU
@@ -8673,53 +8654,51 @@ window.plotlyReady = new Promise(function (done) {
   }
   function renderEvents(r) {
     const et = $('anEvents'); et.textContent = '';
+    const pk = r.packing, mdl = pk && pk.model && (pk.model.rear || pk.model.front);
+    $('packNote').textContent = !pk ? '' : pk.mode === 'imu'
+      ? 'Judged against where each wheel should sit for the load (frame IMU: vertical and fore-aft g). Rear sits at about ' + (pk.model.rear ? fmt(pk.model.rear.atRest, 0) + ' mm at 1 g, +' + fmt(pk.model.rear.perG, 0) + ' mm per extra g' : '–') + '; front ' + (pk.model.front ? fmt(pk.model.front.atRest, 0) + ' mm, +' + fmt(pk.model.front.perG, 0) + ' mm per g' : '–') + '. Show the dotted “expected” lines in the position chart legend.'
+      : 'No frame IMU on this ride, so packing is judged against the sag from Setup (' + params.sagPercent + '%). Landings are skipped, but a g-out or braking can still look like packing here.';
+    const fx = (v, d) => isFinite(v) ? fmt(v, d) : '–';
     const all = r.events.front.map(e => Object.assign({ loc: 'Front' }, e)).concat(r.events.rear.map(e => Object.assign({ loc: 'Rear' }, e))).sort((a, b) => a.start_time - b.start_time);
-    const zoomRow = (tr, e) => { tr.addEventListener('click', () => zoomToEvent(e)); tr.addEventListener('keydown', k => { if (k.key === 'Enter' || k.key === ' ') { k.preventDefault(); zoomToEvent(e); } }); };
-    if (!all.length) et.append(el('tbody', null, el('tr', null, el('td', { class: 'l' }, 'No packing events detected.' + ((r.gouts || []).length ? ' The deep moments in this ride are g-outs or landings (below): the load explains them.' : '')))));
+    if (!all.length) et.append(el('tbody', null, el('tr', null, el('td', null, 'No packing events detected'))));
     else {
-      et.append(el('thead', null, el('tr', null, ...['#', 'Time', 'Where', 'Severity', 'Hits', 'Duration', 'Max depth', 'Above expected'].map((h, i) => el('th', { class: i === 0 || i === 4 || i === 5 ? 'wide' : null }, h)))));
+      et.append(el('thead', null, el('tr', null, ...['#', 'Time', 'Location', 'Severity', 'Hits', 'Duration', 'Not recovered', 'Rebound speed', 'Comp. speed (before → during)', 'Harshness (before → during)', 'Cause'].map((h, i) => el('th', { class: i === 0 || i === 5 || i >= 8 ? 'wide' : null }, h)))));
       const b = el('tbody');
       all.forEach((e, i) => {
+        const h = e.harsh, side = e.loc === 'Front' ? 'F' : 'R';
         const tr = el('tr', { tabindex: 0, role: 'button', title: 'Zoom the charts to this event', 'aria-label': 'Event ' + (i + 1) + ', ' + e.loc + ' at ' + fmt(e.start_time, 2) + ' s: zoom the charts to it' },
-          el('td', { class: 'wide' }, i + 1), el('td', null, fmt(e.start_time, 1) + ' s'), el('td', null, e.loc === 'Front' ? 'F' : e.loc === 'Rear' ? 'R' : e.loc),
+          el('td', { class: 'wide' }, i + 1), el('td', null, fmt(e.start_time, 2) + ' s'), el('td', null, side),
           el('td', null, el('span', { class: 'sw', style: 'background:' + cssVar('--' + BAND[e.category]) }), el('span', { class: 'status-lbl' }, e.severity + ' (' + e.category + ')')),
-          el('td', { class: 'wide' }, e.hit_count), el('td', { class: 'wide' }, fmt(e.duration, 2) + ' s'), el('td', null, fmt(e.max_depth, 0) + ' mm'),
-          el('td', null, e.excess_mean != null ? '+' + fmt(e.excess_mean, 0) + ' mm' : fmt(e.depth_above_baseline, 0) + ' mm'));
-        const why = el('td', { colspan: 8 });
-        (e.why || [e.phases_present.join(', ')]).forEach(w => why.append(el('div', null, '• ' + w)));
-        if (e.phases_present && e.why) why.append(el('div', null, '• Pattern: ' + e.phases_present.filter(x => x !== 'Initial').join(', ').toLowerCase()));
-        const tr2 = el('tr', { class: 'whyrow' }, why);
-        zoomRow(tr, e); zoomRow(tr2, e);
-        b.append(tr, tr2);
+          el('td', null, e.hit_count), el('td', { class: 'wide' }, fmt(e.duration, 2) + ' s'),
+          el('td', null, '+' + fmt(e.depth_above_baseline, 0) + ' mm'),
+          el('td', null, isFinite(e.rebound_speed_ratio) ? Math.round(e.rebound_speed_ratio * 100) + '% of usual' : '–'),
+          el('td', { class: 'wide' }, (isFinite(e.comp_speed_before) ? fmt(e.comp_speed_before, 0) : '–') + ' → ' + fx(e.comp_speed_during, 0) + ' mm/s'),
+          el('td', { class: 'wide' }, h ? (isFinite(h.before) ? fmt(h.before, 0) : '–') + ' → ' + fmt(h.during, 0) + (isFinite(h.ratio) ? ' (×' + fmt(h.ratio, 1) + ')' : '') : '–'),
+          el('td', { class: 'l wide' }, e.cause));
+        tr.addEventListener('click', () => zoomToEvent(e));
+        tr.addEventListener('keydown', k => { if (k.key === 'Enter' || k.key === ' ') { k.preventDefault(); zoomToEvent(e); } });
+        b.append(tr);
       });
       et.append(b);
     }
-    // g-outs and landings: deep because of load
-    const gt = $('anGouts'), G = r.gouts || [], head = $('goutHead'), note = $('goutNote'); gt.textContent = ''; if (gt.__more) { gt.__more.remove(); gt.__more = null; }
-    const hasImu = !!r.packImu;
-    head.classList.toggle('hidden', !hasImu); note.classList.toggle('hidden', !hasImu);
-    if (!hasImu) return;
-    note.textContent = G.length ? 'The suspension went deep here because the load was high (the frame IMU read ' + params.goutG + ' g or more), not because it couldn’t rebound. Big ones are normal on a good trail; lots of bottoming in them says spring or progression, not rebound.'
-      : 'None found: no moments where the load (over ' + params.goutG + ' g) pushed the suspension well past its 1 g position.';
-    if (!G.length) return;
-    const on = r.potOn || { front: true, rear: true }, sides = ['front', 'rear'].filter(k => on[k]);
-    const cols = ['Time', 'What', 'Load'].concat(sides.map(k => (k === 'front' ? 'Front' : 'Rear') + ' max')).concat(r.harsh ? ['Harsh ' + sides.map(k => k[0].toUpperCase()).join('/')] : []);
-    gt.append(el('thead', null, el('tr', null, ...cols.map(h => el('th', null, h)))));
-    const gb = el('tbody'), top = new Set(G.slice().sort((x, y) => y.peak_g - x.peak_g).slice(0, 10));
-    G.forEach(g => {
-      const tr = el('tr', { tabindex: 0, role: 'button', title: 'Zoom the charts to this', class: top.has(g) ? null : 'more hidden' },
-        el('td', null, fmt(g.start_time, 1) + ' s'), el('td', null, g.kind === 'landing' ? 'Landing' : 'G-out'), el('td', null, fmt(g.peak_g, 1) + ' g'),
-        ...sides.map(k => el('td', null, g.depth[k] != null ? fmt(g.depth[k], 0) + (r.params[k + 'Travel'] ? ' (' + Math.round(g.depth[k] / r.params[k + 'Travel'] * 100) + '%)' : '') : '–')),
-        r.harsh ? el('td', null, g.harsh ? sides.map(k => fmt(g.harsh[k], 0)).join(' / ') : '–') : null);
-      zoomRow(tr, g); gb.append(tr);
-    });
-    gt.append(gb);
-    if (G.length > 10) {
-      const btn = el('button', { class: 'btn small', type: 'button', style: 'margin-top:6px' }, 'Show all ' + G.length + ' (the 10 biggest loads are shown)');
-      btn.addEventListener('click', () => { gb.querySelectorAll('tr.more').forEach(x => x.classList.remove('hidden')); btn.remove(); });
-      gt.closest('.tbl').after(btn); gt.__more = btn;
+    // g-outs and landings (the load explains the depth)
+    const lt = $('anLoaded'); lt.textContent = '';
+    const ld = (pk && pk.loaded) || [];
+    if (!ld.length) lt.append(el('tbody', null, el('tr', null, el('td', null, pk && pk.mode === 'imu' ? 'None on this ride' : 'Needs the frame IMU'))));
+    else {
+      lt.append(el('thead', null, el('tr', null, ...['Time', 'Type', 'Peak load', 'Air', 'Deepest F / R', 'Harshness F / R (peak)'].map((h, i) => el('th', { class: i === 3 || i === 5 ? 'wide' : null }, h)))));
+      const b = el('tbody');
+      ld.forEach(g => {
+        const tr = el('tr', { tabindex: 0, role: 'button', title: 'Zoom the charts to this moment' },
+          el('td', null, fmt(g.start_time, 2) + ' s'), el('td', null, g.type), el('td', null, fmt(g.peak_g, 1) + ' g'), el('td', { class: 'wide' }, g.air_s ? fmt(g.air_s, 2) + ' s' : '–'),
+          el('td', null, fmt(g.depth_front, 0) + ' / ' + fmt(g.depth_rear, 0) + ' mm'),
+          el('td', { class: 'wide' }, g.harsh ? fx(g.harsh.front, 0) + ' / ' + fx(g.harsh.rear, 0) : '–'));
+        tr.addEventListener('click', () => zoomToEvent(g));
+        tr.addEventListener('keydown', k => { if (k.key === 'Enter' || k.key === ' ') { k.preventDefault(); zoomToEvent(g); } });
+        b.append(tr);
+      });
+      lt.append(b);
     }
-    gt.append(gb);
   }
 
   // ---- balance: stroke depth vs max velocity, with linear trend lines
@@ -9124,7 +9103,7 @@ window.plotlyReady = new Promise(function (done) {
   }
   // Vertical line on the position and velocity charts (the last shape of each)
   function chartCursor(t) {
-    for (const id of ['chPos', 'chVel', 'chHarshT']) {
+    for (const id of ['chPos', 'chVel', 'chHarshC']) {
       const d = $(id), L = d.layout; if (!L || !L.shapes || !L.shapes.length) continue;
       const i = L.shapes.length - 1, u = {};
       u['shapes[' + i + '].x0'] = t; u['shapes[' + i + '].x1'] = t; u['shapes[' + i + '].visible'] = true;
@@ -9136,7 +9115,7 @@ window.plotlyReady = new Promise(function (done) {
   }
   let cursorTap = 0;
   function linkCharts() {
-    for (const id of ['chPos', 'chVel', 'chHarshT']) {
+    for (const id of ['chPos', 'chVel', 'chHarshC']) {
       const d = $(id); if (!d.on || d.__cursor) continue;
       d.__cursor = true;
       // the cursor redraw waits out a possible second tap (redrawing at once
