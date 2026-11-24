@@ -3053,13 +3053,15 @@ nav.tabs .ico {
 .lc-del { border: 0; background: none; color: var(--muted); font-size: 22px; line-height: 1; padding: 4px 6px; cursor: pointer; }
 .lc-del-sp { width: 30px; }
 .lc-add { margin-top: 8px; }
+
+.lc-auto { margin-top: 6px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
 @media (max-width: 480px) { .lc-choice { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
 <header>
   <div class="top">
-    <h1>ShokIQ <span class="h1sub">Analyzer</span> <span class="appver" id="appVer" title="Analyzer version">v2026.11.24b</span></h1>
+    <h1>ShokIQ <span class="h1sub">Analyzer</span> <span class="appver" id="appVer" title="Analyzer version">v2026.11.24c</span></h1>
     <span class="toprt"><span class="chip" id="linkChip"><span class="dot" id="linkDot"></span><span id="linkText">No logger</span></span>
     <button type="button" class="gear" id="gearBtn" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></span>
   </div>
@@ -3696,11 +3698,13 @@ nav.tabs .ico {
       <div class="muted" style="margin-bottom:8px">Each bike keeps its own travel, sensors and linkage, so one box can move between bikes. Every ride uses its own bike.</div>
       <div id="bikePick" style="margin-bottom:10px"></div>
       <h3>Travel</h3>
-      <div class="grid3">
+      <div class="grid2">
         <div><label class="f" for="p_frontTravel">Front travel (mm)</label><input id="p_frontTravel" type="number" min="30" max="300"></div>
-        <div><label class="f" for="p_rearTravel">Rear travel (mm)</label><input id="p_rearTravel" type="number" min="30" max="300"></div>
         <div><label class="f" for="p_sagPercent">Sag (%)</label><input id="p_sagPercent" type="number" min="5" max="50"></div>
+        <div><label class="f" for="p_rearTravel">Rear wheel travel (mm)</label><input id="p_rearTravel" type="number" min="30" max="300"></div>
+        <div><label class="f" for="p_shockStroke">Shock stroke (mm)</label><input id="p_shockStroke" type="number" min="20" max="120" step="0.5"></div>
       </div>
+      <div class="muted lc-auto" id="lcAuto"></div>
       <h3>Sensors</h3>
       <div class="grid2">
         <div><label class="f" for="p_frontPotStroke">Front sensor length (mm)</label><input id="p_frontPotStroke" type="number" min="1"></div>
@@ -3879,7 +3883,7 @@ const o=e.rearA+e.rearB*n+e.rearC*n*n+e.rearD*n*n*n-t,s=N(n,e);if(Math.abs(s)<1e
 const s=n[g],l=n[g-1],M=l<=0&&s>0,w=l>=0&&s<0;if(d>=0&&(M||w)){const s=g-1;if(s-d>=u&&d<s&&m>=d&&m<=s){const l=e[d],u=e[s],y="compression"===p?u-l:l-u;if(y>=c){const c=Math.abs(n[m]),g=e[m],M={type:p,startTime:t[d],zenithTime:t[s],duration:t[s]-t[d],startPos:l,zenithPos:u,depth:y,maxVelocity:c,maxVelTime:t[m],maxVelPos:g,maxVelPosPercent:y>0?Math.abs(g-l)/y*100:0,accelDuration:t[m]-t[d],
 decelDuration:t[s]-t[m],bottomedOut:"compression"===p&&u>=f,toppedOut:"rebound"===p&&u<=h,shockVelocity:null};if(a){const t=N(P(g+r,o),o);M.shockVelocity=t?c/Math.abs(t):c}i[p].push(M)}}d=-1}(M||w)&&(d=g,p=M?"compression":"rebound",m=g,y=Math.abs(s)),d>=0&&Math.abs(s)>y&&(y=Math.abs(s),m=g)}return i}function B(t){const e=(t,e)=>Object.assign((t=>{if(!t.length)return{mean:0,max:0,p95:0,count:0}
 ;const e=t.slice().sort((t,e)=>t-e);let n=0;for(const o of e)n+=o;return{mean:n/e.length,max:e[e.length-1],p95:e[Math.floor(.95*e.length)]||e[e.length-1],count:e.length}})(t.map(t=>t.maxVelocity)),{depthMean:t.length?t.reduce((t,e)=>t+e.depth,0)/t.length:0,depthMax:t.length?Math.max(...t.map(t=>t.depth)):0},e);return{compression:e(t.compression,{
-bottomOutCount:t.compression.filter(t=>t.bottomedOut).length}),rebound:e(t.rebound,{topOutCount:t.rebound.filter(t=>t.toppedOut).length})}}const R={frontTravel:203,rearTravel:210,sagPercent:27,frontPotStroke:225,rearPotStroke:85,rearA:0,rearB:2.8574,rearC:0,rearD:0,trimStart:0,trimEnd:Infinity,invertFront:!1,invertRear:!1,swapPots:!1,frontPot:"auto",rearPot:"auto",medianFilterSize:5,
+bottomOutCount:t.compression.filter(t=>t.bottomedOut).length}),rebound:e(t.rebound,{topOutCount:t.rebound.filter(t=>t.toppedOut).length})}}const R={frontTravel:203,rearTravel:210,shockStroke:75,sagPercent:27,frontPotStroke:225,rearPotStroke:85,rearA:0,rearB:2.8,rearC:0,rearD:0,trimStart:0,trimEnd:Infinity,invertFront:!1,invertRear:!1,swapPots:!1,frontPot:"auto",rearPot:"auto",medianFilterSize:5,
 maxPosChange:15,velocityWindow:21,velocityOrder:3,filterType:"savgol",positionFilterWindow:5,velocityFilterWindow:11,autoZero:!0,showRawData:!1,autoReprocess:!0,minStrokeDepth:5,minStrokeSamples:5,bottomOutThreshold:95,topOutThreshold:5,frontSpeedThreshold:1e3,rearShockSpeedThreshold:350,rateOverride:0,extensionThreshold:15,packedThreshold:15,minPackedHits:3,packMaxGap:.6,packHitDepth:8,
 packHitVelocity:300,goutG:1.4,stuckThreshold:8,ratchetDelta:5,velocityThreshold:50,gpsTolerance:25,gpsDrift:3.5,alignBand:2.5,alignRate:50,alignGuide:.1,alignUseImu:!0,paceWindow:5,paceSectors:8,hitVelocity:400,hitMinTravel:8,hitMinDuration:.03,hitMaxDuration:2,hitSettle:.08,hitCooldown:.05,hitReturn:.4,hitBacktrack:.3,pairTolerance:.25,pairMinCorr:.5,alpha:.05,jerkCutoff:20,phaseThreshold:50,
 wheelbase:1250,imuFromFront:500,imuForward:"auto",harshHit:400};function C(t,e,n,o){const s={front:"off"!==o.frontPot,rear:"off"!==o.rearPot,why:{}};s.front||(s.why.front="set to not connected"),s.rear||(s.why.rear="set to not connected");const r=n-e;if(r<50)return s;const a=Math.max(1,Math.floor(r/2e4)),i=[],l=[],c=o.swapPots?t.rear:t.front,u=o.swapPots?t.front:t.rear;for(let A=e;A<n;A+=a){
@@ -4671,7 +4675,7 @@ const o=t.split(a).map(t=>t.trim()),s=parseFloat(o[l]),r=parseFloat(o[c]);isFini
 const d=u.map((t,e)=>t.concat([h[e]]));for(let o=0;o<4;o++){let t=o;for(let e=o+1;e<4;e++)Math.abs(d[e][o])>Math.abs(d[t][o])&&(t=e);[d[o],d[t]]=[d[t],d[o]];for(let e=o+1;e<4;e++){const t=d[e][o]/d[o][o];for(let n=o;n<=4;n++)d[e][n]-=t*d[o][n]}}const p=new Array(4);for(let o=3;o>=0;o--){let t=d[o][4];for(let e=o+1;e<4;e++)t-=d[o][e]*p[e];p[o]=t/d[o][o]}let m=0,y=0;e.forEach((t,e)=>{
 const o=Math.abs(n[e]-(p[0]+p[1]*t+p[2]*t*t+p[3]*t*t*t));m=Math.max(m,o),y+=o*o}),x.rearA=+p[0].toFixed(6),x.rearB=+p[1].toFixed(6),x.rearC=+p[2].toFixed(8),x.rearD=+p[3].toFixed(10),x.rearTravel=Math.round(Math.max(...n)),o.set("params",x),X(),C(),
 f("linkageMsg","Fitted "+e.length+" points. Max error "+m.toFixed(2)+" mm, RMS "+Math.sqrt(y/e.length).toFixed(2)+" mm. Rear travel set to "+x.rearTravel+" mm.","ok")}),t.target.value="")})
-;const L=["frontTravel","rearTravel","sagPercent","frontPotStroke","rearPotStroke","invertFront","invertRear","swapPots","frontPot","rearPot","rearA","rearB","rearC","rearD","wheelbase","imuFromFront","imuForward"],z=t=>{const e={};for(const n of L)void 0!==t[n]&&(e[n]=t[n]);return e},_=()=>"b"+Date.now().toString(36)+Math.floor(1296*Math.random()).toString(36);function j(){
+;const L=["frontTravel","rearTravel","shockStroke","sagPercent","frontPotStroke","rearPotStroke","invertFront","invertRear","swapPots","frontPot","rearPot","rearA","rearB","rearC","rearD","wheelbase","imuFromFront","imuForward"],z=t=>{const e={};for(const n of L)void 0!==t[n]&&(e[n]=t[n]);return e},_=()=>"b"+Date.now().toString(36)+Math.floor(1296*Math.random()).toString(36);function j(){
 let t=o.get("bikes",null);return Array.isArray(t)&&t.length||(t=[{id:_(),name:"My bike",p:z(x)}],o.set("bikes",t)),t}const G=t=>j().find(e=>e.id===t)||null,D=t=>JSON.stringify(Object.assign({},t,{updated:0})),H=t=>{const e=new Map((o.get("bikes",[])||[]).map(t=>[t.id,D(t)])),n=Date.now(),s=new Set(t.map(t=>t.id)),r=o.get("bikesGone",{});for(const o of t)e.get(o.id)!==D(o)&&(o.updated=n)
 ;for(const o of e.keys())s.has(o)||(r[o]=n);o.set("bikesGone",r),o.set("bikes",t)},U=t=>{const e=o.get("rideBikeAt",{}),n=Date.now();for(const o of t)e[o]=n;o.set("rideBikeAt",e)},W=()=>o.get("rideBike",{})||{},V=t=>{const e=/data_(\d+)/i.exec(t&&t.name||"");return e?+e[1]:-1},q=t=>t&&(t.recordedAt||(t.fileTime?t.fileTime-1e3*(t.duration||0):0)||t.importedAt)||0,$=(t,e)=>q(e)-q(t)||V(e)-V(t)
 ;function J(t){const e=W(),n=j();if(!t)return{bike:n[0],how:"default"};const o=e[t.key]&&G(e[t.key]);if(o)return{bike:o,how:"set"};const s=nt(t);if(s){let n=null;for(const o of m)o.key!==t.key&&nt(o)===s&&e[o.key]&&G(e[o.key])&&q(o)<=q(t)&&(!n||q(o)>q(n))&&(n=o);if(n)return{bike:G(e[n.key]),how:"carried",from:n}}return{bike:n[0],how:"default"}}function K(t){const e=J(m.find(e=>e.id===+t)).bike
@@ -5444,7 +5448,7 @@ throw e})}
     return rows;
   }
   function newSession() {
-    return { v: 2, step: 1, bikeId: bikeId(), travel: num("p_rearTravel") || 210, stroke: 75, e2e: NaN, heights: "box", read: "sensor", bottom: false, rows: null, started: Date.now(), rideId: "" };
+    return { v: 2, step: 1, bikeId: bikeId(), travel: num("p_rearTravel") || 210, stroke: num("p_shockStroke") || 75, e2e: NaN, heights: "box", read: "sensor", bottom: false, rows: null, started: Date.now(), rideId: "" };
   }
   const usesSensor = (r) => r.kind === "zero" || S.read === "sensor";
   const sensorRows = () => S.rows.filter(usesSensor);
@@ -6016,10 +6020,11 @@ throw e})}
     if (S.bikeId && $("bikeEditSel") && $("bikeEditSel").value !== S.bikeId && [...$("bikeEditSel").options].some((o) => o.value === S.bikeId)) {
       $("bikeEditSel").value = S.bikeId; $("bikeEditSel").dispatchEvent(new Event("change"));
     }
-    undo = { bike: bikeId(), a: $("p_rearA").value, b: $("p_rearB").value, c: $("p_rearC").value, d: $("p_rearD").value, t: $("p_rearTravel").value, inv: $("p_invertRear").checked };
+    undo = { bike: bikeId(), s: $("p_shockStroke") ? $("p_shockStroke").value : "", a: $("p_rearA").value, b: $("p_rearB").value, c: $("p_rearC").value, d: $("p_rearD").value, t: $("p_rearTravel").value, inv: $("p_invertRear").checked };
     const f = (v) => String(Number(v.toPrecision(10)));
     setVal("p_rearA", f(R.coef[0])); setVal("p_rearB", f(R.coef[1])); setVal("p_rearC", f(R.coef[2])); setVal("p_rearD", f(R.coef[3]));
     setVal("p_rearTravel", String(Math.round(R.T)));
+    if (fin(R.S)) setVal("p_shockStroke", String(R.S));
     if (R.flip) $("p_invertRear").checked = !$("p_invertRear").checked;
     $("p_rearA").dispatchEvent(new Event("change", { bubbles: true }));
     try { localStorage.setItem(KEY + "Done:" + undo.bike, JSON.stringify({ at: Date.now(), travel: R.T, stroke: R.S, method: S.heights + "/" + S.read, points: R.all.map((p) => [Math.round(p.h * 10) / 10, Math.round((p.x - R.x0) * 100) / 100]), lr: [R.lrStart, R.lrEnd] })); } catch (e) {}
@@ -6033,7 +6038,7 @@ throw e})}
       el("button", { type: "button", class: "btn small", onclick: () => {
         if (!undo) return;
         if ($("bikeEditSel") && $("bikeEditSel").value !== undo.bike) { $("bikeEditSel").value = undo.bike; $("bikeEditSel").dispatchEvent(new Event("change")); }
-        setVal("p_rearA", undo.a); setVal("p_rearB", undo.b); setVal("p_rearC", undo.c); setVal("p_rearD", undo.d); setVal("p_rearTravel", undo.t);
+        setVal("p_rearA", undo.a); setVal("p_rearB", undo.b); setVal("p_rearC", undo.c); setVal("p_rearD", undo.d); setVal("p_rearTravel", undo.t); if (undo.s) setVal("p_shockStroke", undo.s);
         $("p_invertRear").checked = undo.inv;
         $("p_rearA").dispatchEvent(new Event("change", { bubbles: true }));
         undo = null; box.textContent = "Old linkage put back."; lastNote();
@@ -6048,7 +6053,41 @@ throw e})}
     } catch (e) { n.textContent = ""; }
   }
 
+  /* Default linkage = straight line, leverage ratio = rear travel ÷ shock stroke.
+     It follows travel and stroke until a curve is measured or fitted (a, c or d not 0). */
+  const isAuto = () => !num("p_rearA") && !num("p_rearC") && !num("p_rearD");
+  function autoLine() {
+    const n = $("lcAuto"); if (!n) return;
+    const T = num("p_rearTravel"), St = num("p_shockStroke"), b = num("p_rearB"), want = T / St;
+    n.textContent = "";
+    if (!(T > 0 && St > 0)) return;
+    if (isAuto() && Math.abs(b - want) < 0.005) { n.append("Leverage ratio " + r2(want) + " (travel ÷ stroke, straight line). Measure the linkage below for the real curve."); return; }
+    n.append(isAuto() ? "Leverage ratio " + r2(b) + " (straight line, set by hand). " : "Rear linkage: measured curve. ",
+      el("button", { type: "button", class: "btn small", onclick: () => {
+        if (!isAuto() && !confirm("Replace the measured linkage curve with a straight line (" + r2(want) + " = travel ÷ stroke)?")) return;
+        setVal("p_rearA", "0"); setVal("p_rearC", "0"); setVal("p_rearD", "0"); setVal("p_rearB", String(Math.round(want * 10000) / 10000));
+        $("p_rearB").dispatchEvent(new Event("change", { bubbles: true })); autoLine();
+      } }, "Use travel ÷ stroke (" + r2(want) + ")"));
+  }
+  function wireAuto() {
+    // Capture phase: runs before the page's own save handler, so the new b is saved with the change.
+    document.addEventListener("change", (e) => {
+      const id = e.target && e.target.id;
+      if ((id === "p_rearTravel" || id === "p_shockStroke") && isAuto()) {
+        const T = num("p_rearTravel"), St = num("p_shockStroke");
+        if (T > 0 && St > 0) setVal("p_rearB", String(Math.round(T / St * 10000) / 10000));
+      }
+    }, true);
+    document.addEventListener("change", (e) => {
+      const id = e.target && e.target.id;
+      if (id === "bikeEditSel" || /^p_(rear[ABCD]|rearTravel|shockStroke)$/.test(id || "")) setTimeout(autoLine, 0);
+    });
+    document.addEventListener("click", (e) => { if (e.target && e.target.id === "btnResetParams") setTimeout(autoLine, 50); });
+    autoLine();
+  }
+
   function init() {
+    wireAuto();
     body = $("lcBody"); if (!body) return;
     $("lcOpen").addEventListener("click", () => { S = newSession(); save(); $("lcDone").textContent = ""; render(); body.scrollIntoView({ block: "nearest", behavior: "smooth" }); });
     document.addEventListener("change", (e) => { if (e.target && e.target.id === "bikeEditSel") lastNote(); });
