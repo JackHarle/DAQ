@@ -2992,12 +2992,74 @@ nav.tabs .ico {
 .notice .btn {
   flex: 0 0 auto;
 }
+
+/* Rear linkage calibration */
+.lc-box { border: 1px solid var(--ring); border-radius: 10px; padding: 12px; margin-top: 8px; background: var(--surface); }
+.lc-step { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.lc-step b { font-size: 15px; flex: 1; }
+.lc-of { font-size: 12px; color: var(--muted); }
+.lc-n { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: var(--accentInk); font-size: 13px; font-weight: 700; flex: 0 0 auto; }
+.lc-n.sm { background: var(--chip); color: var(--ink2); }
+.lc-list { margin: 0 0 10px; padding-left: 20px; }
+.lc-list li { margin: 3px 0; }
+.lc-rows { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.lc-row { display: flex; align-items: center; gap: 10px; padding: 8px; border: 1px solid var(--ring); border-radius: 9px; background: var(--card); }
+.lc-h { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; flex-wrap: wrap; }
+.lc-h input { width: 84px; }
+.lc-h .muted { flex: 1 1 120px; }
+.lc-act { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.lc-rec { min-width: 128px; }
+.lc-rec.lc-hold { background: var(--warn); color: #0b0b0b; border-color: transparent; }
+.lc-state { font-size: 12px; color: var(--goodText); min-height: 1em; }
+.lc-foot { justify-content: space-between; margin-top: 12px; }
+.lc-sum { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 6px; }
+.lc-sum > div { display: flex; flex-direction: column; }
+.lc-sum b { font-size: 16px; }
+.lc-chart { width: 100%; max-width: 460px; height: auto; display: block; }
+.lc-grid { stroke: var(--grid); stroke-width: 1; }
+.lc-tx { fill: var(--muted); font-size: 11px; }
+.lc-line { fill: none; stroke: var(--s2); stroke-width: 2.5; }
+.lc-dot { fill: var(--card); stroke: var(--s2); stroke-width: 2; }
+.lc-dot.end { stroke: var(--muted); stroke-dasharray: 2 2; }
+.lc-key { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-bottom: 4px; }
+.lc-key > span { display: inline-flex; align-items: center; gap: 5px; }
+.lc-sw { display: inline-block; width: 10px; height: 10px; box-sizing: border-box; }
+.lc-sw.dot { border-radius: 50%; border: 2px solid var(--s2); }
+.lc-sw.end { border-radius: 50%; border: 2px dashed var(--muted); }
+.lc-sw.line { width: 14px; height: 3px; background: var(--s2); }
+.lc-tbl { border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+.lc-tbl th, .lc-tbl td { padding: 3px 10px 3px 0; text-align: left; }
+.lc-tbl th { color: var(--ink2); font-weight: 600; }
+.lc-q { font-size: 14px; margin: 14px 0 6px; color: var(--ink2); }
+.lc-choice { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.lc-opt { display: flex; gap: 8px; align-items: flex-start; padding: 10px; border: 1px solid var(--ring); border-radius: 9px; background: var(--card); cursor: pointer; }
+.lc-opt:has(input:checked) { border-color: var(--accent); background: var(--chip); }
+.lc-opt input { margin-top: 2px; }
+.lc-opt > span { display: flex; flex-direction: column; gap: 2px; }
+.lc-live { margin-top: 10px; }
+.lc-live.on { color: var(--goodText); }
+.lc-check { margin-top: 12px; gap: 8px; flex-wrap: nowrap; align-items: flex-start; }
+.lc-note { margin: 4px 0 0 28px; }
+.lc-now { margin: 8px 0 0; padding: 8px 10px; border-radius: 8px; background: var(--chip); font-weight: 600; font-variant-numeric: tabular-nums; }
+.lc-now.lost { color: var(--crit); }
+.lc-row { flex-wrap: wrap; }
+.lc-row > .lc-h { flex: 1 1 170px; }
+.lc-row > .lc-act { margin-left: auto; }
+.lc-act { flex-direction: row; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 6px 10px; }
+.lc-act .lc-state { flex-basis: 100%; text-align: right; }
+.lc-bl { display: flex; flex-direction: column; gap: 2px; }
+.lc-bl .muted { font-size: 12px; }
+.lc-bolt { width: 104px; }
+.lc-del { border: 0; background: none; color: var(--muted); font-size: 22px; line-height: 1; padding: 4px 6px; cursor: pointer; }
+.lc-del-sp { width: 30px; }
+.lc-add { margin-top: 8px; }
+@media (max-width: 480px) { .lc-choice { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
 <header>
   <div class="top">
-    <h1>ShokIQ <span class="h1sub">Analyzer</span> <span class="appver" id="appVer" title="Analyzer version">v2026.11.14a</span></h1>
+    <h1>ShokIQ <span class="h1sub">Analyzer</span> <span class="appver" id="appVer" title="Analyzer version">v2026.11.24b</span></h1>
     <span class="toprt"><span class="chip" id="linkChip"><span class="dot" id="linkDot"></span><span id="linkText">No logger</span></span>
     <button type="button" class="gear" id="gearBtn" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></span>
   </div>
@@ -3653,6 +3715,13 @@ nav.tabs .ico {
         <div><label class="f" for="p_frontPot">Front sensor</label><select id="p_frontPot"><option value="auto">Auto-detect</option><option value="on">Connected</option><option value="off">Not connected</option></select></div>
         <div><label class="f" for="p_rearPot">Rear sensor</label><select id="p_rearPot"><option value="auto">Auto-detect</option><option value="on">Connected</option><option value="off">Not connected</option></select></div>
       </div>
+      <h3>Rear linkage</h3>
+      <div id="linkCal">
+        <div class="muted">No leverage curve for this bike? Measure it in about 10 minutes: hold the rear wheel at a few heights while the logger records, and the app works out the curve.</div>
+        <div class="row" style="margin-top:8px"><button type="button" class="btn" id="lcOpen">Measure rear linkage</button><span class="muted" id="lcLast"></span></div>
+        <div id="lcBody" class="lc-box hidden"></div>
+        <div id="lcDone" class="msg" role="status"></div>
+      </div>
       <h3>Frame IMU (front vs rear harshness)</h3>
       <div class="grid3">
         <div><label class="f" for="p_wheelbase">Wheelbase (mm)</label><input id="p_wheelbase" type="number" min="800" max="1600" step="5"></div>
@@ -3679,7 +3748,7 @@ nav.tabs .ico {
       </div>
       </details>
       <details><summary>Rear linkage (shock to wheel)</summary>
-      <div class="muted">wheel = a + b&middot;s + c&middot;s&sup2; + d&middot;s&sup3;, where s is shock travel. Easiest: fit it from a linkage file below.</div>
+      <div class="muted">wheel = a + b&middot;s + c&middot;s&sup2; + d&middot;s&sup3;, where s is shock travel. Easiest: <b>Measure rear linkage</b> above, or fit it from a linkage file below.</div>
       <div class="grid2">
         <div><label class="f" for="p_rearA">a</label><input id="p_rearA" type="number" step="any"></div>
         <div><label class="f" for="p_rearB">b</label><input id="p_rearB" type="number" step="any"></div>
@@ -3810,7 +3879,7 @@ const o=e.rearA+e.rearB*n+e.rearC*n*n+e.rearD*n*n*n-t,s=N(n,e);if(Math.abs(s)<1e
 const s=n[g],l=n[g-1],M=l<=0&&s>0,w=l>=0&&s<0;if(d>=0&&(M||w)){const s=g-1;if(s-d>=u&&d<s&&m>=d&&m<=s){const l=e[d],u=e[s],y="compression"===p?u-l:l-u;if(y>=c){const c=Math.abs(n[m]),g=e[m],M={type:p,startTime:t[d],zenithTime:t[s],duration:t[s]-t[d],startPos:l,zenithPos:u,depth:y,maxVelocity:c,maxVelTime:t[m],maxVelPos:g,maxVelPosPercent:y>0?Math.abs(g-l)/y*100:0,accelDuration:t[m]-t[d],
 decelDuration:t[s]-t[m],bottomedOut:"compression"===p&&u>=f,toppedOut:"rebound"===p&&u<=h,shockVelocity:null};if(a){const t=N(P(g+r,o),o);M.shockVelocity=t?c/Math.abs(t):c}i[p].push(M)}}d=-1}(M||w)&&(d=g,p=M?"compression":"rebound",m=g,y=Math.abs(s)),d>=0&&Math.abs(s)>y&&(y=Math.abs(s),m=g)}return i}function B(t){const e=(t,e)=>Object.assign((t=>{if(!t.length)return{mean:0,max:0,p95:0,count:0}
 ;const e=t.slice().sort((t,e)=>t-e);let n=0;for(const o of e)n+=o;return{mean:n/e.length,max:e[e.length-1],p95:e[Math.floor(.95*e.length)]||e[e.length-1],count:e.length}})(t.map(t=>t.maxVelocity)),{depthMean:t.length?t.reduce((t,e)=>t+e.depth,0)/t.length:0,depthMax:t.length?Math.max(...t.map(t=>t.depth)):0},e);return{compression:e(t.compression,{
-bottomOutCount:t.compression.filter(t=>t.bottomedOut).length}),rebound:e(t.rebound,{topOutCount:t.rebound.filter(t=>t.toppedOut).length})}}const R={frontTravel:150,rearTravel:150,sagPercent:30,frontPotStroke:225,rearPotStroke:85,rearA:0,rearB:2.8574,rearC:0,rearD:0,trimStart:0,trimEnd:Infinity,invertFront:!1,invertRear:!1,swapPots:!1,frontPot:"auto",rearPot:"auto",medianFilterSize:5,
+bottomOutCount:t.compression.filter(t=>t.bottomedOut).length}),rebound:e(t.rebound,{topOutCount:t.rebound.filter(t=>t.toppedOut).length})}}const R={frontTravel:203,rearTravel:210,sagPercent:27,frontPotStroke:225,rearPotStroke:85,rearA:0,rearB:2.8574,rearC:0,rearD:0,trimStart:0,trimEnd:Infinity,invertFront:!1,invertRear:!1,swapPots:!1,frontPot:"auto",rearPot:"auto",medianFilterSize:5,
 maxPosChange:15,velocityWindow:21,velocityOrder:3,filterType:"savgol",positionFilterWindow:5,velocityFilterWindow:11,autoZero:!0,showRawData:!1,autoReprocess:!0,minStrokeDepth:5,minStrokeSamples:5,bottomOutThreshold:95,topOutThreshold:5,frontSpeedThreshold:1e3,rearShockSpeedThreshold:350,rateOverride:0,extensionThreshold:15,packedThreshold:15,minPackedHits:3,packMaxGap:.6,packHitDepth:8,
 packHitVelocity:300,goutG:1.4,stuckThreshold:8,ratchetDelta:5,velocityThreshold:50,gpsTolerance:25,gpsDrift:3.5,alignBand:2.5,alignRate:50,alignGuide:.1,alignUseImu:!0,paceWindow:5,paceSectors:8,hitVelocity:400,hitMinTravel:8,hitMinDuration:.03,hitMaxDuration:2,hitSettle:.08,hitCooldown:.05,hitReturn:.4,hitBacktrack:.3,pairTolerance:.25,pairMinCorr:.5,alpha:.05,jerkCutoff:20,phaseThreshold:50,
 wheelbase:1250,imuFromFront:500,imuForward:"auto",harshHit:400};function C(t,e,n,o){const s={front:"off"!==o.frontPot,rear:"off"!==o.rearPot,why:{}};s.front||(s.why.front="set to not connected"),s.rear||(s.why.rear="set to not connected");const r=n-e;if(r<50)return s;const a=Math.max(1,Math.floor(r/2e4)),i=[],l=[],c=o.swapPots?t.rear:t.front,u=o.swapPots?t.front:t.rear;for(let A=e;A<n;A+=a){
@@ -5317,6 +5386,680 @@ o.set("selA",y),o.set("selB",g),ut(),ht(),dt={A:e,B:s,label:r},mt(),Jr="",ca="",
 "https:"===location.protocol&&window.isSecureContext&&navigator.serviceWorker&&navigator.serviceWorker.register("push-sw.js",{scope:"./"}).then(()=>navigator.serviceWorker.ready).then(()=>{const e=t("offlineState");e&&(e.textContent="Analyzer "+(t("appVer")?t("appVer").textContent:"")+" is saved on this device: it opens, with your rides, even with no signal.")}).catch(()=>{})}catch(e){}try{
 const t=new URL("./",location.href).href;navigator.serviceWorker&&navigator.serviceWorker.getRegistrations&&navigator.serviceWorker.getRegistrations().then(e=>e.forEach(e=>{const n=e.active||e.waiting||e.installing;0!==e.scope.indexOf(t)||n&&/push-sw\.js$/.test(n.scriptURL)||e.unregister()})).catch(()=>{})}catch(e){}}()}catch(e){"function"==typeof reportError?reportError(e):setTimeout(function(){
 throw e})}
+</script>
+<script>
+/* ShokIQ — rear linkage calibration (measure the leverage curve on the bike).
+   Zero is always the rear sensor reading with the shock in the bike, fully extended.
+   Other points: the wheel is set at known heights (ShokIQ box sides or a tape measure) and the
+   shock position is read either by the rear sensor (live from the logger, or from a recording
+   matched to the Record taps) or by measuring between the shock bolts with the shock tilted
+   out of the way / removed. The end of the curve comes from full travel + shock stroke, unless
+   bottom-out is measured too. A smooth curve (up to cubic) gives the bike's linkage a, b, c, d:
+   wheel = a + b·s + c·s² + d·s³, s = rear sensor mm. */
+(function () {
+  "use strict";
+  const KEY = "shokiqLinkCal";
+  const BOX = [75, 125, 200];  // ShokIQ box sides (mm)
+  const HOLD_S = 3;            // countdown the rider holds still for
+  const WIN = [0.6, 2.6];      // part of the hold that is read (s after tapping Record)
+  const STILL_MM = 0.6;        // max sensor wobble (mm) for a steady hold
+  const $ = (id) => document.getElementById(id);
+
+  function el(tag, attrs, ...kids) {
+    const e = document.createElement(tag);
+    if (attrs) for (const k in attrs) {
+      const v = attrs[k];
+      if (v == null || v === false) continue;
+      if (k === "class") e.className = v;
+      else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
+      else if (k === "checked" || k === "value") e[k] = v;
+      else e.setAttribute(k, v === true ? "" : v);
+    }
+    for (const c of kids.flat(3)) if (c != null && c !== false) e.append(c.nodeType ? c : document.createTextNode(String(c)));
+    return e;
+  }
+  const r0 = (v) => Math.round(v);
+  const r1 = (v) => (Math.round(v * 10) / 10).toFixed(1);
+  const r2 = (v) => (Math.round(v * 100) / 100).toFixed(2);
+  const fin = (v) => typeof v === "number" && isFinite(v);
+  const num = (id) => { const n = $(id); const v = n ? parseFloat(n.value) : NaN; return isFinite(v) ? v : NaN; };
+  const bikeId = () => ($("bikeEditSel") ? $("bikeEditSel").value : "");
+  const bikeName = () => { const s = $("bikeEditSel"); return s && s.selectedIndex >= 0 ? s.options[s.selectedIndex].text : "this bike"; };
+
+  /* ---------------- session (kept in localStorage so a reload loses nothing) ---------------- */
+  let S = null, result = null, undo = null;
+  function load() { try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); return s && s.v === 2 ? s : null; } catch (e) { return null; } }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+  function clear() { try { localStorage.removeItem(KEY); } catch (e) {} }
+  let rowSeq = 1;
+  const row = (kind, h) => ({ id: "r" + Date.now().toString(36) + (rowSeq++), kind, h, t: null, live: null, bolt: NaN });
+  function defaultHeights(st) {
+    if (st.heights === "box") { const h = BOX.filter((b) => b <= st.travel - 10); return h.length ? h : [Math.round(st.travel / 2 / 5) * 5]; }
+    const n = 3, out = []; for (let i = 1; i <= n; i++) out.push(Math.round(st.travel * i / (n + 1) / 5) * 5); return out;
+  }
+  function buildRows(st) {
+    const rows = [row("zero", 0)].concat(defaultHeights(st).map((h) => row("mid", h)));
+    if (st.bottom) rows.push(row("bottom", st.travel));
+    if (st.read === "bolt") { rows[0].bolt = st.e2e; const b = rows.find((r) => r.kind === "bottom"); if (b && fin(st.e2e)) b.bolt = Math.round((st.e2e - st.stroke) * 10) / 10; }
+    return rows;
+  }
+  function newSession() {
+    return { v: 2, step: 1, bikeId: bikeId(), travel: num("p_rearTravel") || 210, stroke: 75, e2e: NaN, heights: "box", read: "sensor", bottom: false, rows: null, started: Date.now(), rideId: "" };
+  }
+  const usesSensor = (r) => r.kind === "zero" || S.read === "sensor";
+  const sensorRows = () => S.rows.filter(usesSensor);
+  const needRecording = () => sensorRows().some((r) => !r.live);
+
+  /* ------------------------------- live readings ------------------------------- */
+  // Logger firmware 5.x: GET /api/pot_cal?live=1 -> {"cal_mode":…, "live_front": 0-4095, "live_rear": 0-4095}
+  // (raw ADC, same scale as the CSV columns; latest sample while recording, a short average when idle).
+  // Same origin only: the analyzer must be opened from the logger (…/analyzer).
+  let live = { ok: null, base: "", why: "" }, liveTimer = null;
+  function liveBases() {
+    if (location.protocol !== "http:") return [];
+    return [""]; // page served by the logger: same origin
+  }
+  function fetchLive(base, ms) {
+    const ac = window.AbortController ? new AbortController() : null;
+    const to = setTimeout(() => ac && ac.abort(), ms || 1500);
+    return fetch(base + "/api/pot_cal?live=1", { cache: "no-store", signal: ac ? ac.signal : undefined })
+      .then((r) => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+      .then((j) => {
+        const o = { front: +j.live_front, rear: +j.live_rear };
+        if (!fin(o.rear) || !fin(o.front)) throw new Error("no sensor values");
+        return o;
+      }).finally(() => clearTimeout(to));
+  }
+  function probeLive() {
+    const bases = liveBases();
+    if (!bases.length) { live = { ok: false, base: "", why: location.protocol === "https:" ? "https" : "file" }; return Promise.resolve(live); }
+    let p = Promise.reject();
+    for (const b of bases) p = p.catch(() => fetchLive(b, 2000).then(() => b));
+    return p.then((b) => (live = { ok: true, base: b, why: "" }), () => (live = { ok: false, base: "", why: "noanswer" }));
+  }
+  const rawRear = (o, P) => { let v = P.swapPots ? o.front : o.rear; if (P.invertRear) v = 4095 - v; return v; };
+  const rawToMM = (raw, P) => raw * P.rearPotStroke / 4095;
+  const liveMM = (raw, P, f) => rawToMM(P.invertRear !== !!f ? 4095 - raw : raw, P); // raw: rear column before any flip
+  function liveText() {
+    if (live.ok) return "● Live: readings come straight from the logger.";
+    if (live.ok === null) return "Checking for a live logger…";
+    return live.why === "https" || live.why === "file"
+      ? "Not live: to read the sensor live, open the analyzer from the logger (logger page → Analyzer, e.g. http://shokiq-1.local/analyzer). Otherwise points come from a recording."
+      : "Not live: the logger didn’t answer. Check it’s on and close by, or carry on: points will come from a recording instead.";
+  }
+
+  /* ---------------------------------- maths ---------------------------------- */
+  function lowerIdx(a, t) { let lo = 0, hi = a.length; while (lo < hi) { const m = (lo + hi) >> 1; if (a[m] < t) lo = m + 1; else hi = m; } return lo; }
+  function polyFit(u, y, w, deg) {
+    const n = deg + 1, A = [];
+    for (let i = 0; i < n; i++) A.push(new Array(n + 1).fill(0));
+    for (let k = 0; k < u.length; k++) {
+      const p = []; for (let i = 0; i < 2 * n; i++) p.push(Math.pow(u[k], i));
+      for (let i = 0; i < n; i++) { for (let j = 0; j < n; j++) A[i][j] += w[k] * p[i + j]; A[i][n] += w[k] * p[i] * y[k]; }
+    }
+    for (let c = 0; c < n; c++) {
+      let piv = c; for (let r = c + 1; r < n; r++) if (Math.abs(A[r][c]) > Math.abs(A[piv][c])) piv = r;
+      [A[c], A[piv]] = [A[piv], A[c]];
+      if (Math.abs(A[c][c]) < 1e-12) return null;
+      for (let r = c + 1; r < n; r++) { const f = A[r][c] / A[c][c]; for (let j = c; j <= n; j++) A[r][j] -= f * A[c][j]; }
+    }
+    const x = new Array(n).fill(0);
+    for (let r = n - 1; r >= 0; r--) { let s = A[r][n]; for (let j = r + 1; j < n; j++) s -= A[r][j] * x[j]; x[r] = s / A[r][r]; }
+    while (x.length < 4) x.push(0);
+    return x;
+  }
+  const evalU = (c, u) => c[0] + u * (c[1] + u * (c[2] + u * c[3]));
+  const dU = (c, u) => c[1] + u * (2 * c[2] + u * 3 * c[3]);
+  function expand(c, x0, Sk) { // Σ c_k ((x-x0)/Sk)^k -> a + b x + c x² + d x³
+    const k = [c[0], c[1] / Sk, c[2] / (Sk * Sk), c[3] / (Sk * Sk * Sk)], m = -x0;
+    return [k[0] + k[1] * m + k[2] * m * m + k[3] * m * m * m, k[1] + 2 * k[2] * m + 3 * k[3] * m * m, k[2] + 3 * k[3] * m, k[3]];
+  }
+  function stats(arr) {
+    const s = arr.slice().sort((a, b) => a - b), n = s.length, m = s.reduce((a, b) => a + b, 0) / n;
+    return { med: s[n >> 1], sd: Math.sqrt(s.reduce((a, b) => a + (b - m) * (b - m), 0) / n) };
+  }
+
+  // Recording: find the one time offset that puts every tap on a steady, correctly ordered reading.
+  function locate(time, x, taps, order, gapNeed) {
+    const n = time.length, ps = new Float64Array(n + 1), ps2 = new Float64Array(n + 1);
+    for (let i = 0; i < n; i++) { ps[i + 1] = ps[i] + x[i]; ps2[i + 1] = ps2[i] + x[i] * x[i]; }
+    const rate = (n - 1) / Math.max(1e-6, time[n - 1] - time[0]);
+    const need = 0.5 * rate * (WIN[1] - WIN[0]);
+    const win = (t0, t1) => {
+      const a = lowerIdx(time, t0), b = lowerIdx(time, t1), c = b - a;
+      if (c < Math.max(5, need)) return null;
+      const m = (ps[b] - ps[a]) / c, v = Math.max(0, (ps2[b] - ps2[a]) / c - m * m), h = (a + b) >> 1;
+      const drift = Math.abs((ps[b] - ps[h]) / (b - h) - (ps[h] - ps[a]) / (h - a));
+      return { a, b, mean: m, sd: Math.sqrt(v), still: Math.sqrt(v) < STILL_MM && drift < STILL_MM };
+    };
+    const pmax = Math.max(...taps);
+    const lo = time[0] - WIN[0], hi = time[n - 1] - pmax - WIN[1];
+    if (!(hi > lo)) return { why: "short" };
+    let anySteady = false, best = null;
+    for (let d = lo; d <= hi; d += 0.05) {
+      const w = taps.map((p) => win(d + p + WIN[0], d + p + WIN[1]));
+      if (!w.every((q) => q && q.still)) continue;
+      anySteady = true;
+      let ordered = true;
+      for (let i = 1; i < order.length; i++) if (w[order[i]].mean - w[order[i - 1]].mean < gapNeed[i]) { ordered = false; break; }
+      if (!ordered) continue;
+      const score = w.reduce((s, q) => Math.max(s, q.sd), 0);
+      if (!best || score < best.score - 1e-9) best = { d, score, w };
+    }
+    if (!best) return { why: anySteady ? "order" : "moving" };
+    const vals = best.w.map((q) => { const s = Array.prototype.slice.call(x, q.a, q.b).sort((a, b) => a - b); return { mm: s[s.length >> 1], sd: q.sd }; });
+    return { d: best.d, vals };
+  }
+  // Only the zero is read by the sensor: top-out is the lowest steady stretch.
+  function topOut(time, x) {
+    const n = time.length; let best = null;
+    const step = Math.max(1, Math.floor(n / 4000)), span = 1.5;
+    for (let i = 0; i < n; i += step) {
+      const j = lowerIdx(time, time[i] + span); if (j >= n) break;
+      let s = 0, s2 = 0, c = 0; for (let k = i; k < j; k += step) { s += x[k]; s2 += x[k] * x[k]; c++; }
+      const m = s / c, sd = Math.sqrt(Math.max(0, s2 / c - m * m));
+      if (sd < STILL_MM && (!best || m < best.mm)) best = { mm: m, sd };
+    }
+    return best;
+  }
+
+  /* Work out the points and the curve. st = session (+sag), P = sensor settings, parsed = recording or null. */
+  function analyse(st, P, parsed) {
+    const T0 = st.travel, Sk = st.stroke, potLen = P.rearPotStroke;
+    const rows = st.rows, sens = rows.filter((r) => r.kind === "zero" || st.read === "sensor");
+    const lrAvg = T0 / Sk;
+    let flip = false;
+    const X = new Map(); // row id -> {mm, sd}
+
+    const allLive = sens.every((r) => r.live && fin(r.live.raw));
+    if (allLive) {
+      const mm = (r, f) => liveMM(r.live.raw, P, f);
+      if (sens.length >= 2) {
+        const srt = sens.slice().sort((a, b) => a.h - b.h);
+        const up = (list, f) => list.every((r, i) => !i || mm(r, f) - mm(list[i - 1], f) > 0.5);
+        flip = mm(srt[srt.length - 1], false) < mm(srt[0], false); // the highest point is the most compressed
+        if (!up(srt, flip)) {
+          const bad = srt.filter((r, i) => i && up(srt.filter((q) => q !== r), flip));
+          if (bad.length === 1) throw new Error("The reading at " + r0(bad[0].h) + " mm doesn’t fit with the others. Redo that point, and check its height.");
+          if (bad.length === 2) throw new Error("The readings at " + r0(bad[0].h) + " and " + r0(bad[1].h) + " mm are the wrong way round. Redo both, and check their heights.");
+          throw new Error("The sensor readings don’t go up in step with the wheel heights. Check each height matches where the wheel was, then redo the points that look off.");
+        }
+      }
+      sens.forEach((r) => X.set(r.id, { mm: mm(r, flip), sd: rawToMM(r.live.sd, P) }));
+    } else {
+      if (!parsed) throw new Error("Bring in the recording first.");
+      const raw = P.swapPots ? parsed.front : parsed.rear, time = parsed.time;
+      if (!raw || !time || raw.length < 50) throw new Error("This recording has no rear sensor data.");
+      const n = raw.length;
+      const mmOf = (f) => { const a = new Float64Array(n); for (let i = 0; i < n; i++) { let v = raw[i]; if (P.invertRear !== f) v = 4095 - v; a[i] = v * potLen / 4095; } return a; };
+      const x = mmOf(false);
+      let mn = Infinity, mx = -Infinity; for (let i = 0; i < n; i++) { if (x[i] < mn) mn = x[i]; if (x[i] > mx) mx = x[i]; }
+      if (sens.length >= 2 && mx - mn < 3) throw new Error("The rear sensor hardly moved in this recording (" + r1(mx - mn) + " mm). Check it is plugged in and that this is the right recording.");
+      if (sens.some((r) => r.t == null)) throw new Error("Tap Record for every sensor point first.");
+      if (sens.length === 1) {
+        const z = topOut(time, x);
+        if (!z) throw new Error("Couldn’t find a steady zero reading in this recording. Record the zero again with the wheel fully down and still.");
+        X.set(sens[0].id, z);
+      } else {
+        const H = sens.map((r) => r.h), t0 = Math.min(...sens.map((r) => r.t)), taps = sens.map((r) => (r.t - t0) / 1000);
+        const mk = (Hh) => { const o = Hh.map((h, i) => i).sort((a, b) => Hh[a] - Hh[b]); return { o, g: o.map((k, i) => (i ? Math.max(0.8, 0.3 * (Hh[k] - Hh[o[i - 1]]) / lrAvg) : 0)) }; };
+        const { o, g } = mk(H);
+        let loc = locate(time, x, taps, o, g);
+        if (!loc.vals) { const lf = locate(time, mmOf(true), taps, o, g); if (lf.vals) { flip = true; loc = lf; } }
+        if (!loc.vals) {
+          if (loc.why === "short") throw new Error("This recording is too short to hold all your points. Pick the recording that was running the whole time you tapped Record.");
+          if (sens.length >= 3) {
+            const bad = [];
+            for (const f of [false, true]) {
+              const xx = f ? mmOf(true) : x;
+              for (let k = 1; k < sens.length; k++) {
+                const keep = sens.map((r, i) => i).filter((i) => i !== k), Hk = keep.map((i) => H[i]), m2 = mk(Hk);
+                if (locate(time, xx, keep.map((i) => taps[i]), m2.o, m2.g).vals && bad.indexOf(k) < 0) bad.push(k);
+              }
+            }
+            if (bad.length === 1) throw new Error("The point at " + r0(H[bad[0]]) + " mm doesn’t fit with the others: the wheel probably moved during its countdown, or its height doesn’t match where the wheel was. Go back, tap Redo on that point, and try again.");
+          }
+          throw new Error("Couldn’t match your taps to steady sensor readings. Usually the wheel moved during a countdown, a height doesn’t match where the wheel was, or this isn’t the recording that was running while you tapped Record.");
+        }
+        sens.forEach((r, i) => X.set(r.id, loc.vals[i]));
+      }
+    }
+
+    const zero = rows.find((r) => r.kind === "zero"), x0 = X.get(zero.id).mm;
+    const warn = [];
+    // Bolt distance points: shock travel = bolt distance at zero − now
+    if (st.read === "bolt") {
+      const L0 = zero.bolt;
+      if (!fin(L0)) throw new Error("Type the distance between the shock bolts at 0 mm (the shock’s eye-to-eye length).");
+      for (const r of rows) if (r.kind !== "zero") {
+        if (!fin(r.bolt)) throw new Error("Type the bolt distance for the point at " + r0(r.h) + " mm.");
+        if (!(r.bolt < L0)) throw new Error("At " + r0(r.h) + " mm the bolt distance (" + r.bolt + ") should be shorter than at 0 mm (" + L0 + "). Check it.");
+        X.set(r.id, { mm: x0 + (L0 - r.bolt), sd: 0 });
+      }
+    }
+    const pts = rows.map((r) => ({ id: r.id, kind: r.kind, h: r.h, x: X.get(r.id).mm, sd: X.get(r.id).sd || 0 }));
+    const bottom = pts.find((p) => p.kind === "bottom");
+    const T = bottom ? bottom.h : T0;
+    const mids = pts.filter((p) => p.kind === "mid").sort((a, b) => a.h - b.h);
+    for (let i = 1; i < mids.length; i++) if (Math.abs(mids[i].h - mids[i - 1].h) < 3) throw new Error("Two points are at almost the same height (" + r0(mids[i].h) + " mm). Remove one or change its height.");
+    for (const p of mids) {
+      if (!(p.h > 0 && p.h < T)) throw new Error("The point at " + r0(p.h) + " mm is outside 0–" + r0(T) + " mm. Check its height.");
+      if (!bottom && p.x - x0 >= Sk) throw new Error("At " + r0(p.h) + " mm the shock had already moved " + r1(p.x - x0) + " mm, more than the " + Sk + " mm stroke you typed. Check the shock stroke (the second number of the shock size, e.g. 210×55 → 55).");
+    }
+    if (bottom) {
+      const moved = bottom.x - x0;
+      if (Math.abs(moved - Sk) > 3) warn.push("At bottom-out the shock moved " + r1(moved) + " mm, but the stroke you typed is " + Sk + " mm. Fine if the bumper stops it early; otherwise check the stroke.");
+      if (Math.abs(T - T0) > 5) warn.push("Measured full travel is " + r0(T) + " mm (spec " + r0(T0) + " mm). Rear travel will be set to " + r0(T) + " mm.");
+    }
+    if (x0 + (bottom ? bottom.x - x0 : Sk) > potLen + 1) warn.push("The rear sensor (" + potLen + " mm) runs out before the shock bottoms out: check Rear sensor length, or the sensor mounting.");
+
+    const all = [{ h: 0, x: x0, w: 100, kind: "zero" }].concat(mids.map((p) => ({ h: p.h, x: p.x, w: 1, kind: "mid" })),
+      [bottom ? { h: bottom.h, x: bottom.x, w: 30, kind: "bottom" } : { h: T, x: x0 + Sk, w: 100, kind: "end" }]);
+    for (let i = 1; i < all.length; i++) if (!(all[i].x - all[i - 1].x > 0.3)) throw new Error("The points at " + r0(all[i - 1].h) + " and " + r0(all[i].h) + " mm have the same shock position. Re-check them.");
+    const seg = [];
+    for (let i = 1; i < all.length; i++) seg.push({ h: (all[i].h + all[i - 1].h) / 2, lr: (all[i].h - all[i - 1].h) / (all[i].x - all[i - 1].x), end: all[i].kind === "end" });
+    if (seg.length >= 2 && !bottom) {
+      const a = seg[seg.length - 2].lr, b = seg[seg.length - 1].lr, dev = Math.abs(b - a) / a;
+      if (dev > 0.6 || !(b > 1 && b < 5)) throw new Error("Your measured points don’t line up with " + r0(T) + " mm travel from a " + Sk + " mm stroke (the last stretch would need a leverage ratio of " + r2(b) + " against " + r2(a) + " before it). Check both numbers in the bike’s specs.");
+      if (dev > 0.4) warn.push("The last stretch (to full travel) doesn’t match your measured points well. Double-check the wheel travel and shock stroke numbers.");
+    }
+    if (seg.some((s) => !(s.lr > 1 && s.lr < 5))) warn.push("Part of the curve has a leverage ratio outside 1–5, which is unusual. Re-check the heights.");
+
+    const span = all[all.length - 1].x - x0;
+    const u = all.map((p) => (p.x - x0) / span), y = all.map((p) => p.h), w = all.map((p) => p.w);
+    const cands = [];
+    for (let deg = 1; deg <= Math.min(3, all.length - 1); deg++) {
+      const c = polyFit(u, y, w, deg); if (!c) continue;
+      let ok = true;
+      for (let i = 0; i <= 100; i++) { const lr = dU(c, i / 100) / span; if (!(lr > 0.8 && lr < 6)) ok = false; }
+      let err = 0; all.forEach((p, i) => { err = Math.max(err, Math.abs(evalU(c, u[i]) - p.h)); });
+      cands.push({ deg, c, ok, err });
+    }
+    const pick = cands.find((k) => k.ok && k.err <= 1.0) || cands.filter((k) => k.ok).sort((a, b) => a.err - b.err)[0];
+    if (!pick) throw new Error("Couldn’t fit a sensible curve through these points. Re-check the heights, the travel and the stroke, then try again.");
+    if (pick.err > 3) warn.push("The curve misses a point by " + r1(pick.err) + " mm. If that seems off, redo that point.");
+    pts.forEach((p) => { if (p.kind !== "zero" && p.sd > 0.35) warn.push("The reading at " + r0(p.h) + " mm was a bit wobbly. Fine if the curve looks right; otherwise redo it holding the wheel steadier."); });
+
+    const coef = expand(pick.c, x0, span);
+    const lrAt = (h) => { let lo = 0, hi = 1; for (let i = 0; i < 40; i++) { const m = (lo + hi) / 2; if (evalU(pick.c, m) < h) lo = m; else hi = m; } return dU(pick.c, (lo + hi) / 2) / span; };
+    const curve = []; for (let i = 0; i <= 60; i++) { const uu = i / 60; curve.push({ h: evalU(pick.c, uu), lr: dU(pick.c, uu) / span }); }
+    const sagPct = st.sag || 30;
+    return { flip, pts, all, seg, coef, deg: pick.deg, err: pick.err, curve, lrStart: curve[0].lr, lrEnd: curve[curve.length - 1].lr, lrSag: lrAt(T * sagPct / 100), sagPct, warn, x0, S: Sk, T };
+  }
+
+  /* ------------------------------------ UI ------------------------------------ */
+  let body, ticker = null;
+  const put = (...k) => body.append(...k.flat(3).filter((c) => c != null && c !== false));
+  const steps = () => (S && S.rows && (live.ok || !needRecording()) && !(S.rows && needRecording() && !live.ok) ? 3 : 4);
+  function stepHead(n, title) {
+    const tot = steps(), shown = n === 4 && tot === 3 ? 3 : n;
+    return el("div", { class: "lc-step" }, el("span", { class: "lc-n" }, String(shown)), el("b", null, title), el("span", { class: "lc-of" }, shown + " of " + tot));
+  }
+  function stopLive() { clearInterval(liveTimer); liveTimer = null; }
+  function render() {
+    stopLive();
+    if (!S) { body.textContent = ""; body.classList.add("hidden"); $("lcOpen").classList.remove("hidden"); return; }
+    body.classList.remove("hidden"); $("lcOpen").classList.add("hidden");
+    body.textContent = "";
+    ({ 1: step1, 2: step2, 3: step3, 4: step4 })[S.step]();
+  }
+  function close() { S = null; result = null; clear(); render(); }
+  const go = (n) => { S.step = n; save(); render(); };
+
+  function choice(name, value, opts, onChange) {
+    return el("div", { class: "lc-choice", role: "radiogroup" }, opts.map((o) => el("label", { class: "lc-opt" },
+      el("input", { type: "radio", name, value: o.v, checked: o.v === value, onchange: () => onChange(o.v) }),
+      el("span", null, el("b", null, o.t), el("span", { class: "muted" }, o.d)))));
+  }
+
+  function step1() {
+    const msg = el("div", { class: "msg", id: "lcMsg1", role: "status" });
+    const f = (id, label, val, attrs) => el("div", null, el("label", { class: "f", for: id }, label),
+      el("input", Object.assign({ type: "number", id, inputmode: "decimal", value: fin(val) ? String(val) : "" }, attrs)));
+    const liveLine = el("div", { class: "muted lc-live" + (live.ok ? " on" : ""), id: "lcLiveLine" }, liveText());
+    const sync = () => { const ln = $("lcLiveLine"); if (ln) { ln.textContent = liveText(); ln.classList.toggle("on", !!live.ok); } };
+    if (live.ok === null || !live.ok) probeLive().then(sync);
+    const bottomNote = el("div", { class: "muted lc-note" },
+      "Optional: measure it for a little more accuracy, or if the manufacturer’s travel and stroke numbers aren’t exact. Otherwise the curve ends at the full travel and stroke you typed.");
+    put(stepHead(1, "Bike and method"),
+      el("div", { class: "grid3" },
+        f("lcTravel", "Rear wheel travel (mm)", S.travel, { min: "50", max: "300", step: "1" }),
+        f("lcStroke", "Shock stroke (mm)", S.stroke, { min: "20", max: "120", step: "0.5", placeholder: "e.g. 75" })),
+      el("div", { class: "muted", style: "margin-top:4px" }, "From the bike’s specs. Stroke is the second number of the shock size: 250×75 → 75 mm."),
+      el("h4", { class: "lc-q" }, "How will you set the wheel heights?"),
+      choice("lcHeights", S.heights, [
+        { v: "box", t: "ShokIQ box", d: "Slide the box under the rear tyre: its sides give 75, 125 and 200 mm." },
+        { v: "tape", t: "Custom heights", d: "Set the wheel at any heights you choose and type each one in." }], (v) => { S.heights = v; }),
+      liveLine,
+      el("label", { class: "row lc-check" }, el("input", { type: "checkbox", id: "lcBottom", checked: !!S.bottom }), el("span", null, el("b", null, "Also measure at bottom-out"))),
+      bottomNote,
+      msg,
+      el("div", { class: "row lc-foot" },
+        el("button", { type: "button", class: "btn small", onclick: close }, "Cancel"),
+        el("button", { type: "button", class: "btn primary", onclick: () => {
+          const T = num("lcTravel"), St = num("lcStroke"), E = NaN; S.read = "sensor";
+          if (!(T >= 50 && T <= 300)) return SA_APP.msg("lcMsg1", "Type the rear wheel travel in mm (50–300).", "err");
+          if (!(St >= 20 && St <= 120)) return SA_APP.msg("lcMsg1", "Type the shock stroke in mm (20–120), e.g. 75 for a 250×75 shock.", "err");
+          const lr = T / St;
+          if ((lr < 1.5 || lr > 4.5) && !confirm("Travel " + T + " mm ÷ stroke " + St + " mm gives an average leverage ratio of " + r2(lr) + ", which is unusual (most bikes are 2–3.5). Carry on anyway?")) return;
+          const bottom = $("lcBottom").checked;
+          const key = [T, St, E, S.heights, S.read, bottom].join("|");
+          S.travel = T; S.stroke = St; S.e2e = E; S.bottom = bottom;
+          if (!S.rows || S.key !== key) { S.rows = buildRows(S); S.key = key; }
+          go(2);
+        } }, "Next")));
+  }
+
+  function instructions() {
+    const box = S.heights === "box", rec = !live.ok;
+    const li = [];
+    li.push(el("li", null, box
+      ? ["Clamp the bike in a stand so the frame can’t move, with the rear tyre ", el("b", null, "just touching the floor"), " when the wheel hangs all the way down."]
+      : "Put the bike in a stand, upright, rear wheel off the ground, frame held still."));
+    if (rec) li.push(el("li", null, el("b", null, "Start a recording on the logger"), " and leave it running until all the points are done."));
+    li.push(el("li", null, el("b", null, "Zero first, with the shock in the bike:"), " wheel all the way down (shock fully extended). Hold still and tap Record."));
+    li.push(el("li", null, "Free up the wheel so it moves by hand: let all the air out (coil: take the spring off), or unbolt one end of the shock and tilt it out of the way, or take the shock out. ",
+      el("b", null, "Leave the rear sensor fitted"), ": it keeps reading the linkage."));
+    li.push(el("li", null, "For each height: put the wheel there and hold it still, ", el("b", null, "then"), " tap Record and keep holding until the tick (3 s)."));
+    if (box) li.push(el("li", null, "Box: stand it under the tyre on the side shown (75, 125 or 200 mm tall). Lift the wheel, slide the box in, let the tyre rest on it."));
+    li.push(el("li", null, "Off by a little? Type the height you actually got. Add or remove points as you like; any order is fine."));
+    return el("ol", { class: "lc-list" }, li);
+  }
+
+  function step2() {
+    const sensor = S.read === "sensor";
+    const list = el("div", { class: "lc-rows" });
+    const next = el("button", { type: "button", class: "btn primary" }, "Next");
+    const msg = el("div", { class: "msg", id: "lcMsg2", role: "status" });
+    const liveNow = el("div", { class: "lc-now hidden", id: "lcNow" });
+    const P = () => currentParams();
+    const ready = (r) => !(usesSensor(r) && r.t == null) && !(S.read === "bolt" && !fin(r.bolt)) && (r.kind === "zero" || r.h > 0);
+    const refresh = () => { next.disabled = !!ticker || !S.rows.every(ready) || S.rows.filter((r) => r.kind !== "zero").length < 1; };
+
+    const drawRows = () => {
+      list.textContent = "";
+      const order = S.rows.slice().sort((a, b) => (a.kind === "zero" ? -1 : b.kind === "zero" ? 1 : a.kind === "bottom" ? 1 : b.kind === "bottom" ? -1 : a.h - b.h));
+      order.forEach((r, idx) => list.append(rowEl(r, idx)));
+      refresh();
+    };
+    const rowEl = (r, idx) => {
+      const state = el("span", { class: "lc-state" });
+      const parts = [];
+      // label / height
+      let hIn = null;
+      if (r.kind === "zero") parts.push(el("div", { class: "lc-h" }, el("b", null, "0 mm · zero"), el("span", { class: "muted" }, "Shock in the bike, wheel all the way down")));
+      else {
+        hIn = el("input", { type: "number", min: "1", step: "1", inputmode: "decimal", value: fin(r.h) ? String(r.h) : "", "aria-label": "Wheel height in mm", placeholder: "mm",
+          onchange: () => { const v = parseFloat(hIn.value); r.h = v > 0 ? v : NaN; save(); refresh(); } });
+        const sub = r.kind === "bottom"
+          ? "Bottom-out: shock in with no air, push the wheel up until it stops. Shock out: move the wheel until the shock bolts are eye-to-eye − " + S.stroke + " mm apart. Type the wheel height there."
+          : S.heights === "box" && BOX.indexOf(r.h) >= 0 ? "Box on its " + r.h + " mm side" : "mm up from 0";
+        parts.push(el("div", { class: "lc-h" }, hIn, el("span", { class: "muted" }, sub)));
+      }
+      const act = el("div", { class: "lc-act" });
+      if (usesSensor(r)) {
+        const btn = el("button", { type: "button", class: "btn lc-rec" }, "Record");
+        const show = () => {
+          if (r.t == null) { state.textContent = ""; btn.textContent = "Record"; btn.classList.add("primary"); }
+          else {
+            btn.textContent = "Redo"; btn.classList.remove("primary");
+            state.textContent = r.live ? "✓ " + r1(liveMM(r.live.raw, P())) + " mm" : "✓ " + new Date(r.t).toLocaleTimeString([], { hour: "numeric", minute: "2-digit", second: "2-digit" });
+          }
+        };
+        btn.addEventListener("click", () => record(r, btn, hIn, show));
+        show(); act.append(btn, state);
+      }
+      if (S.read === "bolt") {
+        const bIn = el("input", { type: "number", min: "50", max: "400", step: "0.5", inputmode: "decimal", class: "lc-bolt", placeholder: "bolts mm", value: fin(r.bolt) ? String(r.bolt) : "", "aria-label": "Bolt to bolt distance in mm",
+          onchange: () => { const v = parseFloat(bIn.value); r.bolt = v > 0 ? v : NaN; if (r.kind === "zero" && fin(v)) { S.e2e = v; const b = S.rows.find((q) => q.kind === "bottom"); if (b) b.bolt = Math.round((v - S.stroke) * 10) / 10; } save(); if (r.kind === "zero") drawRows(); else refresh(); } });
+        act.append(el("label", { class: "lc-bl" }, el("span", { class: "muted" }, r.kind === "zero" ? "Bolts (eye-to-eye)" : "Bolt to bolt"), bIn));
+      }
+      const del = r.kind === "mid" ? el("button", { type: "button", class: "lc-del", "aria-label": "Remove this point", title: "Remove", onclick: () => {
+        if (S.rows.filter((q) => q.kind !== "zero").length <= 1) return SA_APP.msg("lcMsg2", "Keep at least one point besides zero.", "err");
+        S.rows = S.rows.filter((q) => q !== r); save(); drawRows();
+      } }, "×") : el("span", { class: "lc-del-sp" });
+      return el("div", { class: "lc-row" }, el("span", { class: "lc-n sm" }, String(idx + 1)), parts, act, del);
+    };
+    function record(r, btn, hIn, show) {
+      if (ticker) return;
+      if (hIn) { const v = parseFloat(hIn.value); if (!(v > 0 && v <= S.travel + 30)) { SA_APP.msg("lcMsg2", "Type the wheel height for this point first.", "err"); hIn.focus(); return; } r.h = v; }
+      SA_APP.msg("lcMsg2", "");
+      const t = Date.now(), samples = [], Pp = P();
+      let left = HOLD_S, failed = false;
+      list.querySelectorAll(".lc-rec").forEach((b) => (b.disabled = b !== btn));
+      btn.classList.remove("primary"); btn.classList.add("lc-hold");
+      stopLive();
+      let sampling = !!live.ok;
+      if (sampling) { // one request at a time, so the logger's web server never queues up
+        const loop = () => { if (!sampling) return;
+          fetchLive(live.base, 900).then((o) => { if (sampling) samples.push(rawRear(o, Object.assign({}, Pp, { invertRear: false }))); }, () => { failed = true; })
+            .then(() => setTimeout(loop, 100)); };
+        setTimeout(loop, 500);
+      }
+      const finish = () => {
+        clearInterval(ticker); ticker = null; sampling = false;
+        btn.classList.remove("lc-hold"); list.querySelectorAll(".lc-rec").forEach((b) => (b.disabled = false));
+        if (live.ok) {
+          if (samples.length < 5) {
+            SA_APP.msg("lcMsg2", "Lost the live connection to the logger. Check it’s on and close by, then tap Redo. (Or start a recording: points then come from it.)", "err");
+            if (failed) probeLive().then(() => { if (!live.ok) drawRows(); });
+            show(); refresh(); startLive(); return;
+          }
+          const st = stats(samples);
+          if (rawToMM(st.sd, Pp) > STILL_MM) { SA_APP.msg("lcMsg2", "The wheel moved during the countdown. Hold it still and tap Record again.", "err"); show(); refresh(); startLive(); return; }
+          r.live = { raw: st.med, sd: st.sd };
+        } else r.live = null;
+        r.t = t; save(); show(); refresh(); startLive();
+        try { navigator.vibrate && navigator.vibrate(80); } catch (e) {}
+      };
+      const tick = () => { if (left > 0) { btn.textContent = "Hold still… " + left; left--; return; } finish(); };
+      tick(); ticker = setInterval(tick, 1000); refresh();
+    }
+    function startLive() {
+      if (!live.ok) { liveNow.classList.add("hidden"); return; }
+      liveNow.classList.remove("hidden");
+      const upd = () => {
+        if (!document.body.contains(liveNow)) return stopLive();
+        if (document.visibilityState !== "visible" || ticker) return;
+        fetchLive(live.base, 900).then((o) => { liveNow.textContent = "Rear sensor now: " + r1(rawToMM(rawRear(o, P()), P())) + " mm"; liveNow.classList.remove("lost"); })
+          .catch(() => { liveNow.textContent = "Rear sensor: no answer from the logger"; liveNow.classList.add("lost"); });
+      };
+      stopLive(); upd(); liveTimer = setInterval(upd, 500);
+    }
+    next.addEventListener("click", () => {
+      const bad = S.rows.find((r) => r.kind !== "zero" && !(r.h > 0));
+      if (bad) return SA_APP.msg("lcMsg2", "Every point needs a wheel height.", "err");
+      if (needRecording()) return go(3);
+      compute(null, "lcMsg2");
+    });
+
+    put(stepHead(2, "Measure the points"),
+      el("div", { class: "muted lc-live" + (live.ok ? " on" : "") }, liveText()),
+      instructions(),
+      el("details", { class: "help" }, el("summary", null, "Measuring tips"),
+        el("div", { class: "muted" },
+          S.heights === "box" ? "The box only works if the frame stays put: clamp the stand tight. If the tyre can’t rest on the floor at zero, use the tape method instead. " : "",
+          "Custom heights: with the wheel all the way down, measure straight up from the centre of the rear axle to a fixed spot on the main frame (the saddle rails work well). Height = that first number − the new one. Measure straight up, not along the swingarm.")),
+      liveNow,
+      list,
+      el("button", { type: "button", class: "btn small lc-add", onclick: () => { const r = row("mid", NaN); S.rows.push(r); save(); drawRows(); const ins = list.querySelectorAll(".lc-h input"); const last = [...ins].find((i) => !i.value); last && last.focus(); } }, "+ Add a point"),
+      msg,
+      el("div", { class: "row lc-foot" },
+        el("button", { type: "button", class: "btn small", onclick: () => go(1) }, "Back"),
+        next));
+    drawRows();
+    if (live.ok === null) probeLive().then(() => { if (S && S.step === 2) render(); }); else startLive();
+  }
+
+  function compute(parsed, msgId) {
+    try {
+      result = analyse(Object.assign({ sag: num("p_sagPercent") }, S), currentParams(), parsed);
+      go(4);
+    } catch (e) { SA_APP.msg(msgId, e.message || String(e), "err"); }
+  }
+
+  function rideOptions(sel) {
+    const rides = (SA_APP.rides() || []).slice();
+    const when = (r) => (SA_APP.rideWhen ? SA_APP.rideWhen(r) : r.recordedAt || r.importedAt || 0) || 0;
+    rides.sort((a, b) => when(b) - when(a));
+    sel.textContent = "";
+    if (!rides.length) { sel.append(el("option", { value: "" }, "No rides yet")); return; }
+    const taps = sensorRows().map((r) => r.t).filter((t) => t != null);
+    const cut = (taps.length ? Math.min(...taps) : S.started) - 30 * 60 * 1000;
+    for (const r of rides.slice(0, 30)) {
+      const fresh = (r.importedAt || 0) >= S.started || when(r) >= cut;
+      sel.append(el("option", { value: String(r.id) }, (fresh ? "★ " : "") + r.name + " · " + (SA_APP.fmtWhen ? SA_APP.fmtWhen(when(r)) : "") + (r.duration ? " · " + Math.round(r.duration) + " s" : "")));
+    }
+    const pick = S.rideId && rides.some((r) => String(r.id) === S.rideId) ? S.rideId
+      : (rides.find((r) => (r.importedAt || 0) >= S.started) || rides.find((r) => when(r) >= cut) || {}).id;
+    if (pick != null) sel.value = String(pick);
+  }
+
+  function step3() {
+    const sel = el("select", { id: "lcRide", "aria-label": "Calibration recording" });
+    rideOptions(sel);
+    const msg = el("div", { class: "msg", id: "lcMsg3", role: "status" });
+    const getBtn = $("btnGetNew") ? el("button", { type: "button", class: "btn", onclick: () => {
+      SA_APP.msg("lcMsg3", "Getting new rides from the logger… (if a logger tab opens, keep it in front until it closes)", "busy");
+      $("btnGetNew").click();
+    } }, "Get new rides from the logger") : null;
+    const goBtn = el("button", { type: "button", class: "btn primary", onclick: () => {
+      const ride = (SA_APP.rides() || []).find((r) => String(r.id) === sel.value);
+      if (!ride) return SA_APP.msg("lcMsg3", "Bring the recording into the app first.", "err");
+      S.rideId = sel.value; save();
+      SA_APP.msg("lcMsg3", "Finding your points…", "busy"); goBtn.disabled = true;
+      setTimeout(() => SA_APP.getParsed(ride.id).then((p) => { compute(p, "lcMsg3"); goBtn.disabled = false; },
+        (e) => { SA_APP.msg("lcMsg3", e.message || String(e), "err"); goBtn.disabled = false; }), 30);
+    } }, "Work out the curve");
+    let lastLen = (SA_APP.rides() || []).length;
+    const poll = setInterval(() => {
+      if (!document.body.contains(sel)) return clearInterval(poll);
+      const n = (SA_APP.rides() || []).length;
+      if (n !== lastLen) { lastLen = n; S.rideId = ""; rideOptions(sel); SA_APP.msg("lcMsg3", "Recording found ★. Tap Work out the curve.", "ok"); }
+    }, 1500);
+    put(stepHead(3, "Bring in the recording"),
+      el("ol", { class: "lc-list" },
+        el("li", null, el("b", null, "Stop the recording"), " on the logger."),
+        el("li", null, "Get it into the app the usual way", getBtn ? ":" : " (Logger card above, or add the file in Rides).")),
+      getBtn ? el("div", { class: "row" }, getBtn) : null,
+      el("div", { style: "margin-top:10px" }, el("label", { class: "f", for: "lcRide" }, "Calibration recording (★ = new since you started)"), sel),
+      msg,
+      el("div", { class: "row lc-foot" }, el("button", { type: "button", class: "btn small", onclick: () => go(2) }, "Back"), goBtn));
+  }
+
+  function currentParams() {
+    const P = Object.assign({}, window.SA && SA.DEFAULTS || {});
+    P.rearPotStroke = num("p_rearPotStroke") || P.rearPotStroke || 85;
+    P.invertRear = !!($("p_invertRear") && $("p_invertRear").checked);
+    P.swapPots = !!($("p_swapPots") && $("p_swapPots").checked);
+    return P;
+  }
+
+  function chart(R) {
+    const W = 340, Hh = 170, L = 38, Rr = 10, Tp = 10, B = 30;
+    const xs = (h) => L + (h / R.T) * (W - L - Rr);
+    const lrs = R.curve.map((c) => c.lr).concat(R.seg.map((s) => s.lr));
+    let lo = Math.floor((Math.min(...lrs) - 0.1) * 5) / 5, hi = Math.ceil((Math.max(...lrs) + 0.1) * 5) / 5;
+    if (hi - lo < 0.6) { const m = (hi + lo) / 2; lo = m - 0.3; hi = m + 0.3; }
+    const ys = (v) => Tp + (1 - (v - lo) / (hi - lo)) * (Hh - Tp - B);
+    const ns = "http://www.w3.org/2000/svg";
+    const s = (tag, a) => { const e = document.createElementNS(ns, tag); for (const k in a) e.setAttribute(k, a[k]); return e; };
+    const svg = s("svg", { viewBox: "0 0 " + W + " " + Hh, class: "lc-chart", role: "img", "aria-label": "Leverage ratio along the wheel travel" });
+    const tk = (hi - lo) > 1.6 ? 0.5 : 0.2;
+    for (let v = Math.ceil(lo / tk) * tk; v <= hi + 1e-9; v += tk) {
+      svg.append(s("line", { x1: L, x2: W - Rr, y1: ys(v), y2: ys(v), class: "lc-grid" }));
+      const t = s("text", { x: L - 6, y: ys(v) + 4, "text-anchor": "end", class: "lc-tx" }); t.textContent = v.toFixed(1); svg.append(t);
+    }
+    const st = R.T > 160 ? 50 : 25;
+    for (let h = 0; h <= R.T + 1e-9; h += st) { const t = s("text", { x: xs(h), y: Hh - B + 16, "text-anchor": "middle", class: "lc-tx" }); t.textContent = String(h); svg.append(t); }
+    const xl = s("text", { x: (L + W - Rr) / 2, y: Hh - 2, "text-anchor": "middle", class: "lc-tx" }); xl.textContent = "Wheel travel (mm)"; svg.append(xl);
+    svg.append(s("path", { d: R.curve.map((c, i) => (i ? "L" : "M") + xs(c.h).toFixed(1) + " " + ys(c.lr).toFixed(1)).join(" "), class: "lc-line" }));
+    for (const g of R.seg) svg.append(s("circle", { cx: xs(g.h), cy: ys(g.lr), r: 4, class: g.end ? "lc-dot end" : "lc-dot" }));
+    return svg;
+  }
+
+  function step4() {
+    const R = result;
+    if (!R) return go(needRecording() ? 3 : 2);
+    const prog = (R.lrStart - R.lrEnd) / R.lrStart * 100;
+    const kind = Math.abs(prog) < 5 ? "close to linear" : prog > 0 ? r0(prog) + "% progressive" : r0(-prog) + "% regressive";
+    const lbl = { zero: "", mid: "", bottom: " (bottom-out)", end: " (full)" };
+    const tbl = el("table", { class: "lc-tbl" },
+      el("thead", null, el("tr", null, el("th", null, "Wheel"), el("th", null, "Shock moved"), el("th", null, "Leverage"))),
+      el("tbody", null, R.all.map((p, i) => el("tr", null,
+        el("td", null, r0(p.h) + " mm" + lbl[p.kind]),
+        el("td", null, r1(p.x - R.x0) + " mm" + (p.kind === "end" ? " (stroke)" : "")),
+        el("td", null, i ? r2(R.seg[i - 1].lr) : "–")))));
+    const hasEnd = R.all.some((p) => p.kind === "end");
+    put(stepHead(4, "Check and save"),
+      el("div", { class: "lc-sum" },
+        el("div", null, el("span", { class: "muted" }, "Leverage ratio"), el("b", null, r2(R.lrStart) + " → " + r2(R.lrEnd))),
+        el("div", null, el("span", { class: "muted" }, "Curve"), el("b", null, kind)),
+        el("div", null, el("span", { class: "muted" }, "At sag (" + r0(R.sagPct) + "%)"), el("b", null, r2(R.lrSag)))),
+      chart(R),
+      el("div", { class: "muted lc-key" },
+        el("span", null, el("span", { class: "lc-sw line" }), "Fitted curve"),
+        el("span", null, el("span", { class: "lc-sw dot" }), "Your points"),
+        hasEnd ? el("span", null, el("span", { class: "lc-sw end" }), "From stroke + travel") : null),
+      R.flip ? el("div", { class: "msg warn" }, "⚠ The rear sensor reads backwards on this bike. Saving will also tick “Flip rear sensor direction”.") : null,
+      R.warn.map((w) => el("div", { class: "msg warn" }, "⚠ " + w)),
+      el("details", { class: "help" }, el("summary", null, "Points and numbers"), tbl,
+        el("div", { class: "muted", style: "margin-top:6px" }, "Fit: " + ["", "straight line", "quadratic", "cubic"][R.deg] + ", within " + r1(R.err) + " mm of every point.")),
+      el("div", { class: "msg", id: "lcMsg4", role: "status" }),
+      el("div", { class: "row lc-foot" },
+        el("button", { type: "button", class: "btn small", onclick: () => { result = null; go(2); } }, "Back to points"),
+        el("button", { type: "button", class: "btn primary", onclick: () => apply(R) }, "Use this curve")));
+  }
+
+  function setVal(id, v) { const n = $(id); if (n) n.value = String(v); }
+  function apply(R) {
+    if (S.bikeId && $("bikeEditSel") && $("bikeEditSel").value !== S.bikeId && [...$("bikeEditSel").options].some((o) => o.value === S.bikeId)) {
+      $("bikeEditSel").value = S.bikeId; $("bikeEditSel").dispatchEvent(new Event("change"));
+    }
+    undo = { bike: bikeId(), a: $("p_rearA").value, b: $("p_rearB").value, c: $("p_rearC").value, d: $("p_rearD").value, t: $("p_rearTravel").value, inv: $("p_invertRear").checked };
+    const f = (v) => String(Number(v.toPrecision(10)));
+    setVal("p_rearA", f(R.coef[0])); setVal("p_rearB", f(R.coef[1])); setVal("p_rearC", f(R.coef[2])); setVal("p_rearD", f(R.coef[3]));
+    setVal("p_rearTravel", String(Math.round(R.T)));
+    if (R.flip) $("p_invertRear").checked = !$("p_invertRear").checked;
+    $("p_rearA").dispatchEvent(new Event("change", { bubbles: true }));
+    try { localStorage.setItem(KEY + "Done:" + undo.bike, JSON.stringify({ at: Date.now(), travel: R.T, stroke: R.S, method: S.heights + "/" + S.read, points: R.all.map((p) => [Math.round(p.h * 10) / 10, Math.round((p.x - R.x0) * 100) / 100]), lr: [R.lrStart, R.lrEnd] })); } catch (e) {}
+    const name = bikeName();
+    S = null; result = null; clear(); render();
+    showDone(name); lastNote();
+  }
+  function showDone(name) {
+    const box = $("lcDone"); box.textContent = "";
+    box.append(el("span", null, "✓ Linkage saved to " + name + ". Re-run Analyze / Compare to use it. "),
+      el("button", { type: "button", class: "btn small", onclick: () => {
+        if (!undo) return;
+        if ($("bikeEditSel") && $("bikeEditSel").value !== undo.bike) { $("bikeEditSel").value = undo.bike; $("bikeEditSel").dispatchEvent(new Event("change")); }
+        setVal("p_rearA", undo.a); setVal("p_rearB", undo.b); setVal("p_rearC", undo.c); setVal("p_rearD", undo.d); setVal("p_rearTravel", undo.t);
+        $("p_invertRear").checked = undo.inv;
+        $("p_rearA").dispatchEvent(new Event("change", { bubbles: true }));
+        undo = null; box.textContent = "Old linkage put back."; lastNote();
+      } }, "Undo"));
+    box.className = "msg ok";
+  }
+  function lastNote() {
+    const n = $("lcLast"); if (!n) return;
+    try {
+      const d = JSON.parse(localStorage.getItem(KEY + "Done:" + bikeId()) || "null");
+      n.textContent = d ? "Measured " + new Date(d.at).toLocaleDateString() + ": leverage " + r2(d.lr[0]) + " → " + r2(d.lr[1]) + "." : "";
+    } catch (e) { n.textContent = ""; }
+  }
+
+  function init() {
+    body = $("lcBody"); if (!body) return;
+    $("lcOpen").addEventListener("click", () => { S = newSession(); save(); $("lcDone").textContent = ""; render(); body.scrollIntoView({ block: "nearest", behavior: "smooth" }); });
+    document.addEventListener("change", (e) => { if (e.target && e.target.id === "bikeEditSel") lastNote(); });
+    S = load();
+    if (S) S.read = "sensor";
+    if (S && S.step === 4) S.step = needRecording() ? 3 : 2; // results are recomputed
+    render(); lastNote();
+  }
+  window.ShokLinkCal = { analyse, polyFit, expand };
+  (function wait(n) { if (window.SA_APP && $("bikeEditSel")) init(); else if (n < 200) setTimeout(() => wait(n + 1), 50); })(0);
+})();
 </script>
 
 </body>
